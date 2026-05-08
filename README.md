@@ -68,7 +68,7 @@ uv run ymb run                                    # 실제 발송
 | `YOUTUBE_API_KEY` | Google Cloud Console |
 | `TELEGRAM_BOT_TOKEN` | BotFather가 발급한 token |
 | `TELEGRAM_CHAT_ID` | 발송 대상 채팅 ID |
-| `GDRIVE_SERVICE_ACCOUNT_JSON` | Google Cloud 서비스 계정 키(JSON 전체 내용) |
+| `DRIVE_SERVICE_ACCOUNT_JSON` | Google Cloud 서비스 계정 키(JSON 전체 내용) |
 | `GDRIVE_OUTPUT_FOLDER_ID` | Drive 폴더 ID — 서비스 계정에 Editor 권한 공유된 폴더 |
 
 **Drive 폴더 구조** (서비스 계정이 쓸 폴더 안에):
