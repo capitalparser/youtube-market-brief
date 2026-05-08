@@ -1,29 +1,33 @@
-"""LLM client — `claude` CLI subprocess. Anthropic API key NOT used.
+"""LLM client adapters.
 
-Why subprocess: the user's vault Runner pattern (see ~/vault/Harness/runners/wiki_evaluator.yaml)
-invokes `claude` directly. This reuses the Claude Code login session — no
-separate API key, no separate billing. The subprocess interface is:
+Two implementations of the LLMClient Protocol:
 
-    claude -p \
-        --model sonnet \
-        --output-format json \
-        --permission-mode bypassPermissions \
-        --max-turns 1
-    < prompt_text  (via stdin)
+- `ClaudeCLIClient`: invokes the `claude` CLI subprocess. Reuses the user's
+  Claude Code login session — no separate API key. Local-only (CLI must be
+  installed and authed). Suited for laptop runs.
 
-Output is a JSON envelope; `result["result"]` is the model's response text,
-which should contain a fenced ```json ... ``` block matching the per-prompt
-schema. We extract and parse that.
+- `AnthropicAPIClient`: calls the Anthropic Messages API directly using the
+  official SDK. Requires `ANTHROPIC_API_KEY`. Runs anywhere — used by the
+  cloud cron workflow. Applies prompt caching on the system prompt, since
+  the same system prompt is reused across many per-video calls in one run.
+
+Both return responses whose `.text` contains a fenced ```json ... ``` block
+matching the per-prompt schema. The pipeline parses that with `extract_fenced_json`.
 """
 
 from __future__ import annotations
 
 import json
+import logging
 import re
 import subprocess
 import time
 from dataclasses import dataclass
 from typing import Protocol
+
+import anthropic
+
+log = logging.getLogger(__name__)
 
 _FENCED_JSON = re.compile(r"```(?:json)?\s*\n(.+?)\n```", re.DOTALL)
 
@@ -102,6 +106,88 @@ class ClaudeCLIClient:
 
 class LLMCallError(RuntimeError):
     pass
+
+
+class AnthropicAPIClient:
+    """LLM client backed by the Anthropic Messages API.
+
+    Used by the cloud cron workflow where the `claude` CLI is not available.
+    The system prompt is cached (`cache_control: ephemeral`) — the per-video
+    pipeline reuses the same system prompt across many calls in one run, so
+    after the first call the prefix is served from cache (~10% of input cost).
+
+    Default model is `claude-sonnet-4-6`, preserving the original
+    `--model sonnet` choice that drove the local CLI client.
+    """
+
+    def __init__(
+        self,
+        *,
+        api_key: str | None = None,
+        model: str = "claude-sonnet-4-6",
+        max_tokens: int = 8192,
+    ):
+        self.model = model
+        self.max_tokens = max_tokens
+        self._client = anthropic.Anthropic(api_key=api_key)
+
+    def health_check(self) -> bool:
+        try:
+            client = self._client.with_options(timeout=30.0)
+            resp = client.messages.create(
+                model=self.model,
+                max_tokens=16,
+                messages=[{"role": "user", "content": "Reply with just one word: PONG"}],
+            )
+            text = "".join(b.text for b in resp.content if getattr(b, "type", None) == "text")
+            return "PONG" in text.upper()
+        except Exception as e:
+            log.warning("AnthropicAPIClient health_check failed: %s", e)
+            return False
+
+    def call(self, *, system: str, user: str, timeout_sec: int) -> LLMResponse:
+        client = self._client.with_options(timeout=float(timeout_sec))
+        t0 = time.monotonic()
+        try:
+            resp = client.messages.create(
+                model=self.model,
+                max_tokens=self.max_tokens,
+                system=[
+                    {
+                        "type": "text",
+                        "text": system,
+                        "cache_control": {"type": "ephemeral"},
+                    }
+                ],
+                messages=[{"role": "user", "content": user}],
+            )
+        except anthropic.APIError as e:
+            raise LLMCallError(f"Anthropic API error: {e}") from e
+        duration_ms = int((time.monotonic() - t0) * 1000)
+        text = "".join(
+            b.text for b in resp.content if getattr(b, "type", None) == "text"
+        )
+        if not text:
+            raise LLMCallError(
+                f"Anthropic API returned no text content (stop_reason={resp.stop_reason})"
+            )
+        usage = resp.usage
+        envelope = {
+            "model": resp.model,
+            "stop_reason": resp.stop_reason,
+            "usage": {
+                "input_tokens": getattr(usage, "input_tokens", 0),
+                "output_tokens": getattr(usage, "output_tokens", 0),
+                "cache_read_input_tokens": getattr(usage, "cache_read_input_tokens", 0),
+                "cache_creation_input_tokens": getattr(usage, "cache_creation_input_tokens", 0),
+            },
+        }
+        return LLMResponse(
+            text=text,
+            raw_envelope=envelope,
+            duration_ms=duration_ms,
+            session_id=resp.id,
+        )
 
 
 def extract_fenced_json(text: str) -> dict | list:

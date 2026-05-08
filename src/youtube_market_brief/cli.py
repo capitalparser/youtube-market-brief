@@ -70,19 +70,49 @@ def _parse_date(s: str) -> date:
     return date.fromisoformat(s)
 
 
+def _make_llm_client(cfg):
+    """Construct the LLM client based on LLM_PROVIDER config.
+
+    api → AnthropicAPIClient (Anthropic Messages API). Default. Cloud-runnable.
+    cli → ClaudeCLIClient   (subprocess to `claude` CLI). Local-only.
+    """
+    from youtube_market_brief._clients.llm import (
+        AnthropicAPIClient,
+        ClaudeCLIClient,
+    )
+
+    if cfg.llm_provider == "cli":
+        return ClaudeCLIClient(bin_path=cfg.claude_bin, model=cfg.claude_model)
+    if cfg.llm_provider != "api":
+        log.warning(
+            "unknown LLM_PROVIDER=%s — falling back to api", cfg.llm_provider
+        )
+    return AnthropicAPIClient(
+        api_key=cfg.anthropic_api_key or None,
+        model=cfg.anthropic_model,
+    )
+
+
 def cmd_health(args) -> int:
     cfg = load_app_config()
     setup_logging(level=cfg.log_level, logs_dir=cfg.logs_dir, tz=cfg.tz)
-    from youtube_market_brief._clients.llm import ClaudeCLIClient
 
     log.info("project_root=%s vault_root=%s", cfg.project_root, cfg.vault_root)
-    log.info("claude_bin=%s claude_model=%s", cfg.claude_bin, cfg.claude_model)
-    client = ClaudeCLIClient(bin_path=cfg.claude_bin, model=cfg.claude_model)
+    log.info("llm_provider=%s", cfg.llm_provider)
+    if cfg.llm_provider == "cli":
+        log.info("claude_bin=%s claude_model=%s", cfg.claude_bin, cfg.claude_model)
+    else:
+        log.info("anthropic_model=%s key_set=%s", cfg.anthropic_model, bool(cfg.anthropic_api_key))
+    client = _make_llm_client(cfg)
     ok = client.health_check()
     if ok:
-        print("OK: claude CLI responded.")
+        print(f"OK: LLM client responded (provider={cfg.llm_provider}).")
         return 0
-    print("FAIL: claude CLI did not respond. Check `claude --version` and login.", file=sys.stderr)
+    print(
+        f"FAIL: LLM client did not respond (provider={cfg.llm_provider}). "
+        f"Check credentials and connectivity.",
+        file=sys.stderr,
+    )
     return 2
 
 
@@ -93,6 +123,9 @@ def cmd_config(args) -> int:
         "vault_root": str(cfg.vault_root),
         "vault_youtube_root": str(cfg.vault_youtube_root),
         "state_path": str(cfg.state_path),
+        "llm_provider": cfg.llm_provider,
+        "anthropic_model": cfg.anthropic_model,
+        "anthropic_api_key_set": bool(cfg.anthropic_api_key),
         "claude_bin": cfg.claude_bin,
         "claude_model": cfg.claude_model,
         "timezone": cfg.timezone,
@@ -126,7 +159,6 @@ def cmd_config(args) -> int:
 def cmd_run(args) -> int:
     cfg = load_app_config()
     setup_logging(level=cfg.log_level, logs_dir=cfg.logs_dir, tz=cfg.tz)
-    from youtube_market_brief._clients.llm import ClaudeCLIClient
     from youtube_market_brief._clients.telegram import (
         DryRunTelegramClient,
         HttpxTelegramClient,
@@ -143,7 +175,7 @@ def cmd_run(args) -> int:
 
     yt_client = GoogleAPIYouTubeDataClient(api_key=cfg.youtube_api_key)
     transcript_client = YouTubeTranscriptApiClient()
-    llm_client = ClaudeCLIClient(bin_path=cfg.claude_bin, model=cfg.claude_model)
+    llm_client = _make_llm_client(cfg)
     if cfg.dry_run or not (cfg.telegram_bot_token and cfg.telegram_chat_id):
         telegram_client = DryRunTelegramClient(cfg.telegram_dryrun_dir)
     else:
@@ -221,7 +253,6 @@ def cmd_analyze(args) -> int:
     """(Phase 2) Analyze a fixture transcript JSON file (no YouTube/Telegram)."""
     cfg = load_app_config()
     setup_logging(level=cfg.log_level, logs_dir=cfg.logs_dir, tz=cfg.tz)
-    from youtube_market_brief._clients.llm import ClaudeCLIClient
     from youtube_market_brief.config import load_watchlist
     from youtube_market_brief.pipeline.analyze import analyze_video
 
@@ -230,7 +261,7 @@ def cmd_analyze(args) -> int:
     video = _video_from_fixture(fixture)
     transcript = _transcript_from_fixture(fixture)
     watchlist = load_watchlist(cfg.watchlist_path)
-    llm = ClaudeCLIClient(bin_path=cfg.claude_bin, model=cfg.claude_model)
+    llm = _make_llm_client(cfg)
     result = analyze_video(
         video=video,
         transcript=transcript,
@@ -281,7 +312,7 @@ def cmd_aggregate_only(args) -> int:
     cfg = load_app_config()
     setup_logging(level=cfg.log_level, logs_dir=cfg.logs_dir, tz=cfg.tz)
 
-    from youtube_market_brief._clients.llm import ClaudeCLIClient, extract_fenced_json
+    from youtube_market_brief._clients.llm import extract_fenced_json
     from youtube_market_brief._clients.telegram import (
         DryRunTelegramClient,
         HttpxTelegramClient,
@@ -360,7 +391,7 @@ def cmd_aggregate_only(args) -> int:
     )
     system_prompt = (cfg.prompts_dir / "system_daily_brief.ko.md").read_text(encoding="utf-8")
 
-    llm = ClaudeCLIClient(bin_path=cfg.claude_bin, model=cfg.claude_model)
+    llm = _make_llm_client(cfg)
     log.info(
         "aggregate-only: calling LLM (timeout=%ds, prompt=%d chars)",
         cfg.claude_timeout_sec,

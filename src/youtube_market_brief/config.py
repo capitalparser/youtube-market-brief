@@ -22,6 +22,10 @@ class AppConfig:
     telegram_bot_token: str
     telegram_chat_id: str
 
+    llm_provider: str
+    anthropic_api_key: str
+    anthropic_model: str
+
     claude_bin: str
     claude_model: str
     claude_timeout_sec: int
@@ -73,7 +77,12 @@ def load_app_config(
         env_path = project_root / ".env"
     if env_path.exists():
         load_dotenv(env_path)
-    vault_root = vault_root or _detect_vault_root(project_root)
+    if vault_root is None:
+        env_vault = os.environ.get("VAULT_ROOT_PATH", "").strip()
+        if env_vault:
+            vault_root = Path(env_vault).expanduser().resolve()
+        else:
+            vault_root = _detect_vault_root(project_root)
 
     return AppConfig(
         project_root=project_root,
@@ -81,6 +90,9 @@ def load_app_config(
         youtube_api_key=os.environ.get("YOUTUBE_API_KEY", ""),
         telegram_bot_token=os.environ.get("TELEGRAM_BOT_TOKEN", ""),
         telegram_chat_id=os.environ.get("TELEGRAM_CHAT_ID", ""),
+        llm_provider=os.environ.get("LLM_PROVIDER", "api").strip().lower(),
+        anthropic_api_key=os.environ.get("ANTHROPIC_API_KEY", ""),
+        anthropic_model=os.environ.get("ANTHROPIC_MODEL", "claude-sonnet-4-6"),
         claude_bin=os.environ.get("CLAUDE_BIN", "claude"),
         claude_model=os.environ.get("CLAUDE_MODEL", "sonnet"),
         claude_timeout_sec=int(os.environ.get("CLAUDE_TIMEOUT_SEC", "300")),
@@ -97,15 +109,18 @@ def load_app_config(
 
 
 def _detect_vault_root(project_root: Path) -> Path:
-    """Walk up from project_root to find a directory containing AGENTS.md (vault root)."""
+    """Walk up from project_root to find the vault root.
+
+    Vault is identified by a CLAUDE.md (or legacy AGENTS.md) marker plus 00_Wiki/.
+    """
     cur = project_root
     for _ in range(8):
-        if (cur / "AGENTS.md").exists() and (cur / "00_Wiki").exists():
+        has_marker = (cur / "CLAUDE.md").exists() or (cur / "AGENTS.md").exists()
+        if has_marker and (cur / "00_Wiki").exists():
             return cur
         if cur.parent == cur:
             break
         cur = cur.parent
-    # Fallback to default location.
     return Path.home() / "vault"
 
 

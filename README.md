@@ -12,7 +12,7 @@
 |------|------|
 | 트리거 | cron `0 7 * * *` (KST) |
 | 자막 수집 | YouTube Data API v3 (메타) + youtube-transcript-api (자막) |
-| 분석 | `claude` CLI subprocess (`-p --output-format json --model sonnet`). Anthropic API 키 미사용 |
+| 분석 | Anthropic Messages API (`claude-sonnet-4-6`, prompt caching) — cloud-runnable. 로컬 fallback으로 `claude` CLI도 선택 가능 (`LLM_PROVIDER=cli`). |
 | 출력 | 영상별 MD `00_Wiki/youtube/{channel_slug}/{YYYY-MM-DD}__{video_slug}.md` + 일일 브리핑 `_daily/{YYYY-MM-DD}_brief.md` |
 | 발송 | Telegram Bot API. 영상 단위 + 일일 브리핑. 3블록 구조(핵심 인사이트 + 레드팀 시각 + 종목 영향) |
 
@@ -44,12 +44,53 @@ uv run ymb run                                    # 실제 발송
 ## 의존성
 
 - Python 3.12.7 + uv
-- `claude` CLI (사용자 Claude Code 로그인 활성)
-- 외부 API: YouTube Data API v3 (key), Telegram Bot API (token + chat_id)
+- 외부 API: Anthropic Messages API (key 필요), YouTube Data API v3 (key), Telegram Bot API (token + chat_id)
+- 로컬 fallback: `claude` CLI (옵션, `LLM_PROVIDER=cli` 일 때)
 
 ## 출력 위치
 
-- 영상별 MD: `~/vault/00_Wiki/youtube/{channel_slug}/{YYYY-MM-DD}__{video_slug}.md`
-- 일일 브리핑 MD: `~/vault/00_Wiki/youtube/_daily/{YYYY-MM-DD}_brief.md`
-- 상태 파일: `~/vault/Harness/sink/youtube_market_brief/state.json` (gitignored)
-- 로그: `~/vault/Harness/logs/youtube_market_brief/{YYYY-MM-DD}.log` (gitignored)
+- 영상별 MD: `{vault_root}/00_Wiki/youtube/{channel_slug}/{YYYY-MM-DD}__{video_slug}.md`
+- 일일 브리핑 MD: `{vault_root}/00_Wiki/youtube/_daily/{YYYY-MM-DD}_brief.md`
+- 상태 파일: `{vault_root}/Harness/sink/youtube_market_brief/state.json` (gitignored)
+- 로그: `{vault_root}/Harness/logs/youtube_market_brief/{YYYY-MM-DD}.log` (gitignored)
+
+`vault_root`는 `VAULT_ROOT_PATH` env로 override 가능. 기본은 `~/vault` walk-up 자동 탐지.
+
+## Cloud 실행 (GitHub Actions cron)
+
+`.github/workflows/digest.yml`이 매일 KST 07:00 GH Actions runner에서 자동 실행. 결과 MD는 Google Drive에 업로드되고 사용자 Drive Desktop이 로컬에 동기화.
+
+**필요한 GH Secrets** (Settings → Secrets and variables → Actions):
+
+| Secret | 내용 |
+|---|---|
+| `ANTHROPIC_API_KEY` | Anthropic Console에서 발급 |
+| `YOUTUBE_API_KEY` | Google Cloud Console |
+| `TELEGRAM_BOT_TOKEN` | BotFather가 발급한 token |
+| `TELEGRAM_CHAT_ID` | 발송 대상 채팅 ID |
+| `GDRIVE_SERVICE_ACCOUNT_JSON` | Google Cloud 서비스 계정 키(JSON 전체 내용) |
+| `GDRIVE_OUTPUT_FOLDER_ID` | Drive 폴더 ID — 서비스 계정에 Editor 권한 공유된 폴더 |
+
+**Drive 폴더 구조** (서비스 계정이 쓸 폴더 안에):
+
+```
+{root_folder}/
+├── config/                                   # cloud run이 매번 pull
+│   ├── channels.yaml                         # 사용자가 업로드 (없어도 무방, 로컬 config 사용)
+│   └── watchlist.yaml
+├── 00_Wiki/youtube/                          # cloud run이 push (Drive Desktop이 로컬 동기화)
+│   ├── {channel_slug}/{YYYY-MM-DD}__*.md
+│   └── _daily/{YYYY-MM-DD}_brief.md
+└── Harness/sink/youtube_market_brief/
+    └── state.json                            # idempotency state (cloud read+write)
+```
+
+**서비스 계정 만들기**:
+
+1. Google Cloud Console → IAM → Service Accounts → Create
+2. Drive API 활성화 (Library에서)
+3. 서비스 계정 키 발급 (JSON) → GH Secret `GDRIVE_SERVICE_ACCOUNT_JSON`
+4. Drive에서 출력용 폴더 생성, 서비스 계정 이메일에 Editor 권한 공유
+5. 폴더 ID 복사 → GH Secret `GDRIVE_OUTPUT_FOLDER_ID`
+
+자세한 설계 근거: `docs/adr/0005-llm-client-cloud-execution.md`.

@@ -1,0 +1,82 @@
+name: Daily Digest
+
+# 매일 KST 07:00 (UTC 22:00 전날) 실행. 수동 실행도 허용.
+on:
+  schedule:
+    - cron: "0 22 * * *"
+  workflow_dispatch:
+
+concurrency:
+  group: digest
+  cancel-in-progress: false
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      LLM_PROVIDER: api
+      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+      ANTHROPIC_MODEL: claude-sonnet-4-6
+      YOUTUBE_API_KEY: ${{ secrets.YOUTUBE_API_KEY }}
+      TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+      TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+      VAULT_ROOT_PATH: ${{ github.workspace }}/_cloud_vault
+      DRY_RUN: "false"
+      LOG_LEVEL: INFO
+      TIMEZONE: Asia/Seoul
+      RCLONE_DRIVE_FOLDER_ID: ${{ secrets.GDRIVE_OUTPUT_FOLDER_ID }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+        with:
+          enable-cache: true
+
+      - name: Set up Python
+        run: uv python install 3.12.7
+
+      - name: Install dependencies
+        run: uv sync --extra dev
+
+      - name: Install rclone
+        run: sudo apt-get update && sudo apt-get install -y rclone
+
+      - name: Configure rclone (service account)
+        run: |
+          mkdir -p ~/.config/rclone
+          echo '${{ secrets.GDRIVE_SERVICE_ACCOUNT_JSON }}' > /tmp/sa.json
+          cat > ~/.config/rclone/rclone.conf <<EOF
+          [drive]
+          type = drive
+          scope = drive
+          service_account_file = /tmp/sa.json
+          root_folder_id = ${{ secrets.GDRIVE_OUTPUT_FOLDER_ID }}
+          EOF
+
+      - name: Pull existing state from Drive
+        run: |
+          mkdir -p "$VAULT_ROOT_PATH/Harness/sink/youtube_market_brief"
+          rclone copy "drive:Harness/sink/youtube_market_brief/state.json" \
+            "$VAULT_ROOT_PATH/Harness/sink/youtube_market_brief/" \
+            --create-empty-src-dirs --quiet || echo "no prior state, starting fresh"
+
+      - name: Pull config from Drive (channels.yaml + watchlist.yaml)
+        run: |
+          rclone copy "drive:config/channels.yaml" config/ --quiet || echo "no remote channels.yaml, using local"
+          rclone copy "drive:config/watchlist.yaml" config/ --quiet || echo "no remote watchlist.yaml, using local"
+
+      - name: Health check
+        run: uv run ymb health
+
+      - name: Run daily digest
+        run: uv run ymb run
+
+      - name: Push outputs to Drive (MDs + state)
+        if: always()
+        run: |
+          rclone copy "$VAULT_ROOT_PATH/00_Wiki/youtube/" "drive:00_Wiki/youtube/" --quiet || true
+          rclone copy "$VAULT_ROOT_PATH/Harness/sink/youtube_market_brief/state.json" \
+            "drive:Harness/sink/youtube_market_brief/" --quiet || true
