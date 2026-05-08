@@ -34,7 +34,7 @@ def _analysis(video_id: str, mentions: tuple[TickerMention, ...]) -> VideoAnalys
         ),
         tickers=mentions,
         watchlist_hits=tuple(m.symbol for m in mentions if m.in_watchlist and m.symbol),
-        tier="T3" if any(m.in_watchlist for m in mentions) else "T2",
+        tier="deep" if any(m.in_watchlist for m in mentions) else "light",
         tags=(),
         llm_meta=LLMMeta(model="sonnet", duration_ms=10),
         generated_at=datetime(2026, 5, 7, 0, 0, tzinfo=UTC),

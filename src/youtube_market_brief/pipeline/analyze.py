@@ -6,7 +6,7 @@ Steps:
 3. Extract fenced JSON block; validate against expected schema
 4. Reconcile in_watchlist flags + canonical symbols against config
 5. Apply watchlist filter rules (quotes required, exclude '언급만', etc.)
-6. Determine tier (T2/T3) and tags
+6. Determine capture depth (light/deep) and tags
 """
 
 from __future__ import annotations
@@ -85,7 +85,7 @@ def analyze_video(
     mentions = wl_domain.annotate_in_watchlist(mentions, watchlist)
     hits = wl_domain.filter_watchlist_hits(mentions, watchlist)
 
-    tier = "T3" if hits else "T2"
+    tier = "deep" if hits else "light"
     tags = _compute_tags(video=video, mentions=mentions, hits=hits)
 
     return VideoAnalysis(

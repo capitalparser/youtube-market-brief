@@ -7,14 +7,20 @@ from youtube_market_brief.pipeline.discover import discover_new_videos
 from youtube_market_brief.state.store import IdempotencyStore
 
 
-def _v(vid: str, channel_id: str, title: str = "t", duration: int = 600) -> VideoMeta:
+def _v(
+    vid: str,
+    channel_id: str,
+    title: str = "t",
+    duration: int = 600,
+    published_at: datetime | None = None,
+) -> VideoMeta:
     return VideoMeta(
         video_id=vid,
         channel_id=channel_id,
         channel_name="ch",
         channel_slug="ch",
         title=title,
-        published_at_utc=datetime(2026, 5, 7, 0, 0, tzinfo=UTC),
+        published_at_utc=published_at or datetime(2026, 5, 7, 0, 0, tzinfo=UTC),
         url=f"https://youtu.be/{vid}",
         duration_sec=duration,
     )
@@ -88,3 +94,46 @@ def test_discover_disabled_channel_skipped(tmp_path: Path):
     )
     assert res == []
     assert yt.list_calls == []
+
+
+def test_discover_filters_exclusive_upper_bound(tmp_path: Path):
+    store = IdempotencyStore(tmp_path / "state.json")
+    yt = FakeYouTubeClient(
+        videos_by_channel={
+            "UCabc": [
+                _v("in", "UCabc", published_at=datetime(2026, 5, 5, 15, 0, tzinfo=UTC)),
+                _v("out", "UCabc", published_at=datetime(2026, 5, 6, 15, 0, tzinfo=UTC)),
+            ]
+        }
+    )
+    channels = [ChannelConfig(channel_id="UCabc", name_ko="ch", slug="ch", enabled=True)]
+    res = discover_new_videos(
+        channels=channels,
+        yt=yt,
+        store=store,
+        published_after=datetime(2026, 5, 5, 0, 0, tzinfo=UTC),
+        published_before=datetime(2026, 5, 6, 0, 0, tzinfo=UTC),
+    )
+    assert [v.video_id for v in res] == ["in"]
+
+
+def test_discover_dedupes_same_video_across_channels(tmp_path: Path):
+    store = IdempotencyStore(tmp_path / "state.json")
+    same = _v("same", "UCabc")
+    yt = FakeYouTubeClient(
+        videos_by_channel={
+            "UCabc": [same],
+            "UCdef": [_v("same", "UCdef")],
+        }
+    )
+    channels = [
+        ChannelConfig(channel_id="UCabc", name_ko="a", slug="a", enabled=True),
+        ChannelConfig(channel_id="UCdef", name_ko="b", slug="b", enabled=True),
+    ]
+    res = discover_new_videos(
+        channels=channels,
+        yt=yt,
+        store=store,
+        published_after=datetime(2026, 5, 1, tzinfo=UTC),
+    )
+    assert [v.video_id for v in res] == ["same"]

@@ -28,6 +28,10 @@ def write_video_md(
     channel_dir.mkdir(parents=True, exist_ok=True)
     fname = f"{date_kst_iso}__{video_slug(analysis.video.title, analysis.video.video_id)}.md"
     out = channel_dir / fname
+    existing = sorted(channel_dir.glob(f"*-{analysis.video.video_id}.md"))
+    if existing and out not in existing:
+        out = existing[0]
+        log.warning("reusing existing MD for video_id=%s: %s", analysis.video.video_id, out)
     body = render_video_markdown(analysis, captured_at=captured_at)
     out.write_text(body, encoding="utf-8")
     log.info("wrote video MD: %s (%d bytes)", out, len(body.encode("utf-8")))

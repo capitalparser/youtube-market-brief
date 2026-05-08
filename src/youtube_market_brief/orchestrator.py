@@ -68,6 +68,9 @@ def run(
     published_after = datetime.combine(
         target_date, datetime.min.time(), tzinfo=config.tz
     ) - timedelta(hours=24)
+    published_before = datetime.combine(
+        target_date + timedelta(days=1), datetime.min.time(), tzinfo=config.tz
+    )
 
     report = RunReport(date=target_date)
 
@@ -92,6 +95,7 @@ def run(
         yt=clients.youtube,
         store=store,
         published_after=published_after,
+        published_before=published_before,
         skip_shorts=config.skip_shorts,
         on_resolved_channel=_on_resolved,
     )

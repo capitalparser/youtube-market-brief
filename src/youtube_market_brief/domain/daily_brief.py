@@ -104,7 +104,7 @@ def render_daily_brief_markdown(brief: DailyBrief, *, captured_at) -> str:
     parts.append("tags:")
     parts.append("  - youtube")
     parts.append("  - daily_brief")
-    parts.append("tier: T3")
+    parts.append("tier: deep")
     parts.append("---")
     parts.append("")
 

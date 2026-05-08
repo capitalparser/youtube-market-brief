@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import logging
 from collections.abc import Callable, Iterable
-from datetime import datetime
+from datetime import UTC, datetime
 
 from youtube_market_brief._clients.youtube_data import YouTubeDataClient
 from youtube_market_brief.domain.slugify import channel_slug
@@ -20,6 +20,7 @@ def discover_new_videos(
     yt: YouTubeDataClient,
     store: IdempotencyStore,
     published_after: datetime,
+    published_before: datetime | None = None,
     skip_shorts: bool = True,
     max_results_per_channel: int = 25,
     on_resolved_channel: Callable[[str, str], None] | None = None,
@@ -27,11 +28,17 @@ def discover_new_videos(
     """For each enabled channel, list recent videos newer than `published_after`,
     drop those already in the IdempotencyStore, and return the union.
 
+    `published_before`, when provided, is an exclusive upper bound. This keeps
+    backfills for an old date from absorbing newer videos into the wrong daily
+    file namespace.
+
     `on_resolved_channel(channel_slug, resolved_channel_id)` is called when a
     handle is resolved to a channel_id — caller may persist this to channels.yaml
     to avoid future resolution quota cost (E6).
     """
+    published_before_utc = _as_utc(published_before) if published_before else None
     out: list[VideoMeta] = []
+    seen_video_ids: set[str] = set()
     for ch in channels:
         if not ch.enabled:
             continue
@@ -55,11 +62,17 @@ def discover_new_videos(
             log.error("discover failed for channel %s: %s", ch.name_ko, e)
             continue
         for v in videos:
+            published_at = _as_utc(v.published_at_utc)
+            if published_before_utc and published_at >= published_before_utc:
+                continue
             if store.has_video(v.video_id):
+                continue
+            if v.video_id in seen_video_ids:
                 continue
             if skip_shorts and v.duration_sec is not None and v.duration_sec < 90:
                 log.info("skipping short %s (%ss)", v.video_id, v.duration_sec)
                 continue
+            seen_video_ids.add(v.video_id)
             stamped = VideoMeta(
                 video_id=v.video_id,
                 channel_id=v.channel_id,
@@ -73,3 +86,9 @@ def discover_new_videos(
             out.append(stamped)
     out.sort(key=lambda v: v.published_at_utc)
     return out
+
+
+def _as_utc(dt: datetime) -> datetime:
+    if dt.tzinfo is None:
+        return dt.replace(tzinfo=UTC)
+    return dt.astimezone(UTC)
