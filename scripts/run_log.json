@@ -1,0 +1,27 @@
+{
+  "run_at": "2026-05-09T03:29:06.327219+09:00",
+  "steps": {
+    "collect": {
+      "status": "blocked",
+      "reason": "youtube.com not in network allowlist",
+      "new_videos": 0
+    },
+    "enrich": {
+      "status": "skipped",
+      "reason": "no new files"
+    },
+    "backlog": {
+      "status": "found",
+      "unsent_count": 213
+    },
+    "telegram": {
+      "status": "blocked",
+      "reason": "api.telegram.org not in network allowlist",
+      "sent": 0,
+      "failed": 213
+    },
+    "commit": {
+      "status": "nothing_to_commit"
+    }
+  }
+}
