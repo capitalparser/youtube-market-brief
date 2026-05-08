@@ -1,0 +1,35 @@
+# watchlist.yaml — 사용자가 분석을 강제하고 싶은 종목 목록
+# 파일 작성 후 `cp watchlist.yaml.example watchlist.yaml` 한 뒤 편집하라.
+# 비어 있어도 동작 (LLM 자동 발견 only).
+#
+# 필드 설명:
+#   - symbol:  티커 코드. KOSPI/KOSDAQ는 6자리 (예: "005930"), 미국은 알파벳 (예: "NVDA")
+#   - market:  KOSPI / KOSDAQ / NYSE / NASDAQ / ETC
+#   - name_ko: 한국어 정식명
+#   - name_en: 영어 정식명 (선택)
+#   - aliases: 영상에서 자주 등장하는 별칭/약칭 (예: "삼전", "엔비")
+
+tickers:
+  - symbol: "005930"
+    market: KOSPI
+    name_ko: "삼성전자"
+    name_en: "Samsung Electronics"
+    aliases: ["삼전", "삼성전"]
+
+  - symbol: "000660"
+    market: KOSPI
+    name_ko: "SK하이닉스"
+    name_en: "SK Hynix"
+    aliases: ["하이닉스"]
+
+  - symbol: "NVDA"
+    market: NASDAQ
+    name_ko: "엔비디아"
+    name_en: "NVIDIA"
+    aliases: ["엔비"]
+
+  - symbol: "TSLA"
+    market: NASDAQ
+    name_ko: "테슬라"
+    name_en: "Tesla"
+    aliases: []

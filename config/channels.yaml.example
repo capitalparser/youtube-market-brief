@@ -1,0 +1,23 @@
+# channels.yaml — 사용자가 큐레이션한 YouTube 채널 목록
+# 파일 작성 후 `cp channels.yaml.example channels.yaml` 한 뒤 편집하라.
+#
+# 필드 설명:
+#   - channel_id: UCxxxxxxxxxxxxxxxxxxxxxx (24자 prefix `UC`). 미지정 시 handle로 1회 resolve 후 자동 기록됨.
+#   - handle:     "@channel_handle" (선택). channel_id가 있으면 메모용. 없으면 resolve 입력.
+#   - name_ko:    한국어 표시명 (요약·로그용)
+#   - slug:       파일경로 안전 키 (deterministic). 미지정 시 자동 생성. 한 번 정해지면 변경하지 말 것.
+#   - enabled:    false면 해당 run에서 skip
+#   - notes:      메모 (선택)
+
+channels:
+  - channel_id: UCxxxxxxxxxxxxxxxxxxxxxx
+    handle: "@example_channel"
+    name_ko: "예시 투자 채널"
+    slug: "example_channel"
+    enabled: true
+    notes: "거시 + 미국주식 (대본 형식)"
+
+  - handle: "@another_channel"          # channel_id 미지정 → 첫 run에서 resolve
+    name_ko: "또 다른 채널"
+    slug: "another_channel"
+    enabled: true

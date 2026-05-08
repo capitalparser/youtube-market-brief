@@ -1,0 +1,55 @@
+[project]
+name = "youtube-market-brief"
+version = "0.1.0"
+description = "Daily YouTube channel ingestion → 시장·종목 분석 → vault MD + Telegram 발송"
+readme = "README.md"
+requires-python = ">=3.12,<3.13"
+authors = [{ name = "Kim Kyung-jun" }]
+license = { text = "Private" }
+
+dependencies = [
+    "google-api-python-client>=2.149.0",
+    "youtube-transcript-api>=0.6.2",
+    "httpx>=0.27.0",
+    "pyyaml>=6.0.2",
+    "python-dotenv>=1.0.1",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.3.0",
+    "pytest-asyncio>=0.24.0",
+    "ruff>=0.6.0",
+    "syrupy>=4.7.0",
+]
+
+[project.scripts]
+ymb = "youtube_market_brief.cli:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/youtube_market_brief"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+markers = [
+    "live: requires live external services (YouTube API, claude CLI, Telegram). Deselected by default.",
+    "slow: long-running tests.",
+]
+addopts = "-m 'not live'"
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "N", "RUF"]
+ignore = ["E501"]
+
+[tool.ruff.lint.per-file-ignores]
+# Test functions intentionally use Korean tokens that come from the domain
+# (e.g. `긍정적`, `언급만`) — N802 is noisy here and the names aid readability.
+"tests/**/*.py" = ["N802"]

@@ -1,0 +1,30 @@
+# Secrets / config
+.env
+config/channels.yaml
+config/watchlist.yaml
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+.pytest_cache/
+.ruff_cache/
+
+# Build
+dist/
+build/
+*.egg-info/
+
+# Editor
+.idea/
+.vscode/
+*.swp
+
+# OS
+.DS_Store
+
+# Test artifacts
+tests/__snapshots__/
+.coverage
+htmlcov/
