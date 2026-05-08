@@ -1,4 +1,4 @@
-# 01_youtube_market_brief
+# youtube-market-brief
 
 > 매일 KST 07:00, 사용자가 큐레이션한 YouTube 채널들의 신규 영상을 자동 분석하여 vault에 정리하고 Telegram으로 발송한다.
 
