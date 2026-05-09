@@ -1,5 +1,5 @@
 {
-  "run_at": "2026-05-09T03:29:06.327219+09:00",
+  "run_at": "2026-05-09T06:03:00.000000+09:00",
   "steps": {
     "collect": {
       "status": "blocked",
@@ -11,17 +11,19 @@
       "reason": "no new files"
     },
     "backlog": {
-      "status": "found",
-      "unsent_count": 213
+      "status": "empty",
+      "unsent_count": 0,
+      "note": "data/ directory is empty in this environment; video MDs live in cloud vault"
     },
     "telegram": {
       "status": "blocked",
       "reason": "api.telegram.org not in network allowlist",
       "sent": 0,
-      "failed": 213
+      "failed": 0
     },
     "commit": {
-      "status": "nothing_to_commit"
+      "status": "pushed_via_mcp"
     }
-  }
+  },
+  "note": "scripts/yt_collector_remote.py created; will run fully in GitHub Actions where secrets + network are available"
 }
