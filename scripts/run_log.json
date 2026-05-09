@@ -1,23 +1,25 @@
 {
-  "run_at": "2026-05-09T06:03:00.000000+09:00",
+  "run_at": "2026-05-09T21:12:49.000000+09:00",
   "steps": {
     "collect": {
       "status": "blocked",
-      "reason": "youtube.com not in network allowlist",
-      "new_videos": 0
+      "reason": "youtube.com not in network allowlist (HTTP 403)",
+      "new_videos": 0,
+      "channels_attempted": ["@hkglobalmarket", "@MK_Invest", "@kpunch"],
+      "errors": ["resolve:@hkglobalmarket:not_found", "resolve:@MK_Invest:not_found", "resolve:@kpunch:not_found"]
     },
     "enrich": {
       "status": "skipped",
-      "reason": "no new files"
+      "reason": "no new files from collector"
     },
     "backlog": {
       "status": "empty",
       "unsent_count": 0,
-      "note": "data/ directory is empty in this environment; video MDs live in cloud vault"
+      "note": "data/ directory does not exist; no local video MDs to process"
     },
     "telegram": {
       "status": "blocked",
-      "reason": "api.telegram.org not in network allowlist",
+      "reason": "api.telegram.org not in network allowlist; no files to send anyway",
       "sent": 0,
       "failed": 0
     },
@@ -25,5 +27,5 @@
       "status": "pushed_via_mcp"
     }
   },
-  "note": "scripts/yt_collector_remote.py created; will run fully in GitHub Actions where secrets + network are available"
+  "note": "Network-restricted sandbox: YouTube and Telegram blocked. Full pipeline runs in GitHub Actions (digest.yml, cron 0 22 * * *) where ANTHROPIC_API_KEY, YOUTUBE_API_KEY, TELEGRAM_BOT_TOKEN secrets and open network are available."
 }
