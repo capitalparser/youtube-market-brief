@@ -279,8 +279,11 @@ class YtDlpTranscriptClient:
             "no_warnings": True,
         }
         cookie_path = Path(self._cookie_file) if self._cookie_file else None
+        using_cookies = False
         if cookie_path and cookie_path.exists() and cookie_path.stat().st_size > 0:
             ydl_opts["cookiefile"] = str(cookie_path)
+            using_cookies = True
+        log.info("yt-dlp extract_info video_id=%s cookiefile=%s", video_id, ydl_opts.get("cookiefile", "none"))
 
         url = _YT_WATCH.format(video_id=video_id)
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:

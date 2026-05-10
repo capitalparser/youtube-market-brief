@@ -78,7 +78,9 @@ jobs:
           if [ -n "$YOUTUBE_COOKIES_RAW" ]; then
             printf '%s' "$YOUTUBE_COOKIES_RAW" > /tmp/yt_cookies.txt
             echo "cookies written ($(wc -l < /tmp/yt_cookies.txt) lines, $(wc -c < /tmp/yt_cookies.txt) bytes)"
-            head -1 /tmp/yt_cookies.txt | cut -c1-40 || true
+            FIRST_LINE=$(head -1 /tmp/yt_cookies.txt)
+            echo "first_line_starts_with_hash=$(echo "$FIRST_LINE" | grep -c '^#' || echo 0)"
+            echo "has_youtube_domain=$(grep -c '\.youtube\.com' /tmp/yt_cookies.txt || echo 0)"
           else
             touch /tmp/yt_cookies.txt
             echo "no YOUTUBE_COOKIES secret — running without cookies"
