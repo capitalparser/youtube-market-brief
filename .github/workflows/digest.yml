@@ -94,7 +94,24 @@ jobs:
         run: uv run ymb health
 
       - name: Run daily digest
-        run: uv run ymb run
+        # 07:00 KST (cron "0 22 * * *") → catch up yesterday's videos AND
+        #   regenerate yesterday's daily brief from all vault MDs (정리 발송)
+        # 12/18/23 KST → process today's new videos only, skip brief
+        # workflow_dispatch (manual) → process today's videos + brief (default)
+        run: |
+          SCHEDULE="${{ github.event.schedule }}"
+          if [ "$SCHEDULE" = "0 22 * * *" ]; then
+            TARGET=$(TZ=Asia/Seoul date -d "yesterday" +%Y-%m-%d)
+            echo "07:00 KST run — yesterday catch-up + brief: $TARGET"
+            uv run ymb run --date "$TARGET" --no-brief || true
+            uv run ymb aggregate-only --date "$TARGET"
+          elif [ -n "$SCHEDULE" ]; then
+            echo "intraday run ($SCHEDULE) — videos only, no brief"
+            uv run ymb run --no-brief
+          else
+            echo "manual run — videos + brief (default)"
+            uv run ymb run
+          fi
 
       - name: Push outputs to Drive (MDs + state)
         if: always()

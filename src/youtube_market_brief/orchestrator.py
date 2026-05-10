@@ -60,6 +60,7 @@ def run(
     clients: Clients,
     target_date: date | None = None,
     force: bool = False,
+    send_daily_brief: bool = True,
 ) -> RunReport:
     started = time.monotonic()
     now_local = datetime.now(tz=config.tz)
@@ -184,7 +185,7 @@ def run(
                 log.exception("failed to record failure state for %s", v.video_id)
 
     # Daily brief
-    if analyses and (force or not store.daily_brief_sent(target_date)):
+    if analyses and send_daily_brief and (force or not store.daily_brief_sent(target_date)):
         try:
             brief = agg.aggregate_daily(
                 analyses=analyses,

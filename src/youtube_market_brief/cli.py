@@ -34,6 +34,7 @@ def main(argv: list[str] | None = None) -> int:
     p_run.add_argument("--date", type=_parse_date, default=None, help="Target date YYYY-MM-DD (KST). Default: today")
     p_run.add_argument("--dry-run", action="store_true", help="Override DRY_RUN=true (Telegram → file dump)")
     p_run.add_argument("--force", action="store_true", help="Re-process and re-send daily brief even if already done")
+    p_run.add_argument("--no-brief", action="store_true", help="Process videos but skip daily brief generation/send")
     p_run.set_defaults(func=cmd_run)
 
     p_discover = sub.add_parser("discover", help="(Phase 1) discovery smoke test")
@@ -227,6 +228,7 @@ def cmd_run(args) -> int:
         clients=clients,
         target_date=args.date,
         force=args.force,
+        send_daily_brief=not args.no_brief,
     )
     payload = {
         "date": report.date.isoformat(),
