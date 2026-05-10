@@ -16,7 +16,7 @@ import time
 import urllib.error
 import urllib.request
 import xml.etree.ElementTree as ET
-from datetime import datetime, timezone
+from datetime import UTC, datetime, timezone
 from pathlib import Path
 from typing import Any
 
@@ -44,7 +44,7 @@ PREFERRED_LANGS = ("ko", "ko-KR", "en", "en-US", "ja", "zh-Hans", "zh-Hant")
 MAX_TRANSCRIPT_CHARS = int(os.environ.get("TRANSCRIPT_MAX_CHARS", "80000"))
 REPO_ROOT = Path(__file__).parent.parent
 DATA_DIR = REPO_ROOT / "data"
-KST = timezone(datetime.now(timezone.utc).astimezone().utcoffset() or __import__("datetime").timedelta(hours=9))
+KST = timezone(datetime.now(UTC).astimezone().utcoffset() or __import__("datetime").timedelta(hours=9))
 
 try:
     import zoneinfo
@@ -113,7 +113,7 @@ def fetch_rss(channel_id: str) -> list[dict[str, Any]]:
         try:
             pub_dt = datetime.fromisoformat(published_raw.replace("Z", "+00:00"))
         except Exception:
-            pub_dt = datetime.now(timezone.utc)
+            pub_dt = datetime.now(UTC)
 
         videos.append({
             "video_id": video_id,
