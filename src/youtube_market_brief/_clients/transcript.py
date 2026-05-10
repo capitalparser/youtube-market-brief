@@ -241,23 +241,43 @@ class YtDlpTranscriptClient:
         )
 
     def _run_ydl(self, yt_dlp, video_id: str, tmpdir: str) -> None:
-        ydl_opts: dict = {
-            "skip_download": True,
-            "writeautomaticsub": True,
-            "writesubtitles": True,
-            "subtitleslangs": [*_YTDLP_LANG_PREF, "all"],
-            # No subtitlesformat — accept native format (vtt/json3/srv3) without ffmpeg
-            "outtmpl": f"{tmpdir}/%(id)s.%(ext)s",
-            "quiet": True,
-            "no_warnings": True,
-        }
+        """Extract subtitle URLs via yt-dlp (auth only), then download with requests.
+
+        Avoids yt-dlp's format-selection step (source of "Requested format is not
+        available" errors) by using extract_info(download=False) and fetching the
+        subtitle URL directly.
+        """
+        ydl_opts: dict = {"quiet": True, "no_warnings": True}
         cookie_path = Path(self._cookie_file) if self._cookie_file else None
         if cookie_path and cookie_path.exists() and cookie_path.stat().st_size > 0:
             ydl_opts["cookiefile"] = str(cookie_path)
 
         url = _YT_WATCH.format(video_id=video_id)
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-            ydl.download([url])
+            info = ydl.extract_info(url, download=False)
+
+        if not info:
+            return
+
+        auto_subs: dict = info.get("automatic_captions") or {}
+        manual_subs: dict = info.get("subtitles") or {}
+
+        pref_ext = ("vtt", "json3", "srv3", "ttml")
+        for lang in [*_YTDLP_LANG_PREF, "all"]:
+            for subs in (manual_subs, auto_subs):
+                if lang not in subs:
+                    continue
+                for fmt in (subs[lang] or []):
+                    if fmt.get("ext") not in pref_ext:
+                        continue
+                    sub_url = fmt.get("url")
+                    if not sub_url:
+                        continue
+                    resp = requests.get(sub_url, timeout=30)
+                    resp.raise_for_status()
+                    dest = Path(tmpdir) / f"{video_id}.{lang}.{fmt['ext']}"
+                    dest.write_text(resp.text, encoding="utf-8")
+                    return  # one subtitle file is enough
 
 
 def _ytdlp_parse_subtitle(content: str, ext: str) -> tuple[Segment, ...]:
