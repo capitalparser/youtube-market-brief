@@ -270,15 +270,13 @@ class YtDlpTranscriptClient:
     def _run_ydl(self, yt_dlp, video_id: str, tmpdir: str) -> None:
         """Extract subtitle URLs via yt-dlp (auth only), then download with requests.
 
-        Avoids yt-dlp's format-selection step (source of "Requested format is not
-        available" errors) by using extract_info(download=False) and fetching the
-        subtitle URL directly.
+        Uses default web client (not android) so that browser cookies authenticate
+        the session. extract_info(download=False) only fetches metadata — no video
+        stream download, so PO token is not required at this step.
         """
         ydl_opts: dict = {
             "quiet": True,
             "no_warnings": True,
-            # Force Android client — avoids JS runtime requirement on cloud runners
-            "extractor_args": {"youtube": {"player_client": ["android_creator", "android"]}},
         }
         cookie_path = Path(self._cookie_file) if self._cookie_file else None
         if cookie_path and cookie_path.exists() and cookie_path.stat().st_size > 0:
