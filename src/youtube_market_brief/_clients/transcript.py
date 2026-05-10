@@ -1,19 +1,29 @@
-"""youtube-transcript-api wrapper with multi-language fallback.
+"""Transcript clients: youtube-transcript-api (default) + yt-dlp (cloud fallback).
 
-Returns a Transcript for any available caption (preferring Korean, then
-English, then any auto-generated). Returns TranscriptSkip when no captions
-exist or the library cannot fetch them.
+YouTubeTranscriptApiClient  — scrapes YouTube caption endpoint directly.
+                              Fast, but blocked on cloud-provider IPs (GitHub Actions etc.).
+YtDlpTranscriptClient       — uses yt-dlp Python API; different request path and
+                              headers that can bypass IP blocks. Optionally accepts
+                              a Netscape-format cookies file for authenticated requests.
+
+Both implement TranscriptClient Protocol and return the same Transcript/TranscriptSkip types.
+Select via TRANSCRIPT_BACKEND env: "youtube_transcript_api" (default) | "yt_dlp".
 """
 
 from __future__ import annotations
 
+import logging
 import re
+import tempfile
 from datetime import UTC, datetime
+from pathlib import Path
 from typing import Protocol
 
 import requests
 
 from youtube_market_brief.domain.types import Segment, Transcript, TranscriptSkip
+
+log = logging.getLogger(__name__)
 
 try:
     from youtube_transcript_api import YouTubeTranscriptApi
@@ -147,3 +157,137 @@ def _segment_value(segment, name: str, default):
     if isinstance(segment, dict):
         return segment.get(name, default)
     return getattr(segment, name, default)
+
+
+# ---------------------------------------------------------------------------
+# yt-dlp based client
+# ---------------------------------------------------------------------------
+
+_YT_WATCH = "https://www.youtube.com/watch?v={video_id}"
+_YTDLP_LANG_PREF = ["ko", "ko-KR", "en", "en-US", "ja", "zh-Hans", "zh-Hant"]
+
+
+class YtDlpTranscriptClient:
+    """Transcript client backed by yt-dlp.
+
+    Uses yt-dlp's internal downloader to fetch auto-generated or manual
+    subtitles without downloading the video. Unlike youtube-transcript-api,
+    yt-dlp uses different request patterns that can bypass cloud-IP blocks.
+
+    Optional: pass `cookie_file` (path to a Netscape-format cookies.txt) to
+    authenticate as a logged-in user — further reduces chance of being blocked.
+    """
+
+    def __init__(self, cookie_file: str | None = None):
+        self._cookie_file = cookie_file
+
+    def fetch(self, video_id: str) -> Transcript | TranscriptSkip:
+        try:
+            return self._fetch(video_id)
+        except Exception as exc:
+            return TranscriptSkip(
+                video_id=video_id,
+                reason="api_changed",
+                detail=f"yt-dlp {type(exc).__name__}: {str(exc)[:300]}",
+            )
+
+    def _fetch(self, video_id: str) -> Transcript | TranscriptSkip:
+        import yt_dlp  # lazy import — only needed when this client is active
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            info = self._extract_info(yt_dlp, video_id, tmpdir)
+
+        if info is None:
+            return TranscriptSkip(video_id=video_id, reason="no_captions", detail="yt-dlp returned no info")
+
+        # Find the best subtitle entry (automatic subs preferred, then manual)
+        sub_entry, lang, is_auto = _ytdlp_pick_subtitle(info)
+        if sub_entry is None:
+            return TranscriptSkip(video_id=video_id, reason="no_captions", detail="no subtitles available")
+
+        segments = _ytdlp_parse_json3(sub_entry)
+        full_text = re.sub(r"\s+", " ", " ".join(s.text for s in segments)).strip()
+        if not full_text:
+            return TranscriptSkip(video_id=video_id, reason="no_captions", detail="yt-dlp subtitle text is empty")
+
+        return Transcript(
+            video_id=video_id,
+            language=lang,
+            is_auto_generated=is_auto,
+            segments=segments,
+            full_text=full_text,
+            char_count=len(full_text),
+            fetched_at=_now_utc(),
+        )
+
+    def _extract_info(self, yt_dlp, video_id: str, tmpdir: str):
+        ydl_opts: dict = {
+            "skip_download": True,
+            "writeautomaticsub": True,
+            "writesubtitles": True,
+            "subtitleslangs": [*_YTDLP_LANG_PREF, "all"],
+            "subtitlesformat": "json3",
+            "outtmpl": f"{tmpdir}/%(id)s.%(ext)s",
+            "quiet": True,
+            "no_warnings": True,
+        }
+        if self._cookie_file and Path(self._cookie_file).exists():
+            ydl_opts["cookiefile"] = self._cookie_file
+
+        url = _YT_WATCH.format(video_id=video_id)
+        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+            return ydl.extract_info(url, download=False)
+
+
+def _ytdlp_pick_subtitle(info: dict) -> tuple[list | None, str, bool]:
+    """Return (json3_events, lang_code, is_auto_generated) for best available subtitle."""
+    auto_subs: dict = info.get("automatic_captions") or {}
+    manual_subs: dict = info.get("subtitles") or {}
+
+    for lang in _YTDLP_LANG_PREF:
+        for subs, is_auto in ((manual_subs, False), (auto_subs, True)):
+            if lang in subs:
+                entry = _ytdlp_find_json3(subs[lang])
+                if entry is not None:
+                    return entry, lang, is_auto
+
+    # Fallback: first available in any language
+    for subs, is_auto in ((manual_subs, False), (auto_subs, True)):
+        for lang, fmt_list in subs.items():
+            entry = _ytdlp_find_json3(fmt_list)
+            if entry is not None:
+                return entry, lang, is_auto
+
+    return None, "", False
+
+
+def _ytdlp_find_json3(fmt_list: list[dict]) -> list | None:
+    """Find json3 format entry and return its events list, or None."""
+    for fmt in fmt_list:
+        if fmt.get("ext") == "json3":
+            data = fmt.get("data")  # in-memory when download=False
+            if data:
+                import json
+                parsed = json.loads(data) if isinstance(data, (str, bytes)) else data
+                return parsed.get("events", [])
+    return None
+
+
+def _ytdlp_parse_json3(events: list) -> tuple[Segment, ...]:
+    """Convert yt-dlp JSON3 events to Segment tuples."""
+    segments = []
+    for event in events:
+        start_ms = event.get("tStartMs", 0)
+        dur_ms = event.get("dDurationMs", 0)
+        segs = event.get("segs")
+        if not segs:
+            continue
+        text = "".join(s.get("utf8", "") for s in segs).strip()
+        if not text or text == "\n":
+            continue
+        segments.append(Segment(
+            start=start_ms / 1000.0,
+            duration=dur_ms / 1000.0,
+            text=text,
+        ))
+    return tuple(segments)

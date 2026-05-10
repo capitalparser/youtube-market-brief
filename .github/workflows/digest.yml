@@ -28,6 +28,8 @@ jobs:
       RCLONE_DRIVE_FOLDER_ID: ${{ secrets.GDRIVE_OUTPUT_FOLDER_ID }}
       WEBSHARE_PROXY_USERNAME: ${{ secrets.WEBSHARE_PROXY_USERNAME }}
       WEBSHARE_PROXY_PASSWORD: ${{ secrets.WEBSHARE_PROXY_PASSWORD }}
+      TRANSCRIPT_BACKEND: ${{ vars.TRANSCRIPT_BACKEND || 'yt_dlp' }}
+      YOUTUBE_COOKIE_FILE: /tmp/yt_cookies.txt
 
     steps:
       - uses: actions/checkout@v4
@@ -69,6 +71,16 @@ jobs:
         run: |
           rclone copy "drive:config/channels.yaml" config/ --quiet || echo "no remote channels.yaml, using local"
           rclone copy "drive:config/watchlist.yaml" config/ --quiet || echo "no remote watchlist.yaml, using local"
+
+      - name: Write YouTube cookies (optional)
+        run: |
+          if [ -n "${{ secrets.YOUTUBE_COOKIES }}" ]; then
+            echo '${{ secrets.YOUTUBE_COOKIES }}' > /tmp/yt_cookies.txt
+            echo "cookies written"
+          else
+            touch /tmp/yt_cookies.txt
+            echo "no YOUTUBE_COOKIES secret — running without cookies"
+          fi
 
       - name: Health check
         run: uv run ymb health

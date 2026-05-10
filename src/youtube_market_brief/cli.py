@@ -81,6 +81,28 @@ def _make_proxy_config(cfg):
     return None
 
 
+def _make_transcript_client(cfg):
+    """Select transcript backend based on TRANSCRIPT_BACKEND env.
+
+    yt_dlp  — uses yt-dlp; different request path that can bypass cloud-IP
+               blocks. Slower than youtube_transcript_api but more robust.
+    default — youtube_transcript_api (fast, fails on cloud IPs without proxy).
+    """
+    from youtube_market_brief._clients.transcript import (
+        YouTubeTranscriptApiClient,
+        YtDlpTranscriptClient,
+    )
+
+    if cfg.transcript_backend == "yt_dlp":
+        cookie = cfg.youtube_cookie_file or None
+        log.info("transcript backend: yt_dlp (cookie_file=%s)", cookie or "none")
+        return YtDlpTranscriptClient(cookie_file=cookie)
+
+    if cfg.transcript_backend != "youtube_transcript_api":
+        log.warning("unknown TRANSCRIPT_BACKEND=%s — using youtube_transcript_api", cfg.transcript_backend)
+    return YouTubeTranscriptApiClient(proxy_config=_make_proxy_config(cfg))
+
+
 def _make_llm_client(cfg):
     """Construct the LLM client based on LLM_PROVIDER config.
 
@@ -174,7 +196,6 @@ def cmd_run(args) -> int:
         DryRunTelegramClient,
         HttpxTelegramClient,
     )
-    from youtube_market_brief._clients.transcript import YouTubeTranscriptApiClient
     from youtube_market_brief._clients.youtube_data import GoogleAPIYouTubeDataClient
     from youtube_market_brief.orchestrator import Clients, run
 
@@ -185,7 +206,7 @@ def cmd_run(args) -> int:
         cfg.dry_run = True
 
     yt_client = GoogleAPIYouTubeDataClient(api_key=cfg.youtube_api_key)
-    transcript_client = YouTubeTranscriptApiClient(proxy_config=_make_proxy_config(cfg))
+    transcript_client = _make_transcript_client(cfg)
     llm_client = _make_llm_client(cfg)
     if cfg.dry_run or not (cfg.telegram_bot_token and cfg.telegram_chat_id):
         telegram_client = DryRunTelegramClient(cfg.telegram_dryrun_dir)
