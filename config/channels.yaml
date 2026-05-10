@@ -14,3 +14,8 @@ channels:
   slug: kpunch
   enabled: true
   channel_id: UCOB62fKRT7b73X7tRxMuN2g
+- handle: '@wallst_wars'
+  name_ko: MTN 월가워즈
+  slug: wallst_wars
+  enabled: true
+  channel_id: UCzsor4tbVidqL1N_X4VDhcQ
