@@ -100,7 +100,9 @@ def _make_transcript_client(cfg):
 
     if cfg.transcript_backend != "youtube_transcript_api":
         log.warning("unknown TRANSCRIPT_BACKEND=%s — using youtube_transcript_api", cfg.transcript_backend)
-    return YouTubeTranscriptApiClient(proxy_config=_make_proxy_config(cfg))
+    cookie = cfg.youtube_cookie_file or None
+    log.info("transcript backend: youtube_transcript_api (cookie_file=%s)", cookie or "none")
+    return YouTubeTranscriptApiClient(proxy_config=_make_proxy_config(cfg), cookie_file=cookie)
 
 
 def _make_llm_client(cfg):

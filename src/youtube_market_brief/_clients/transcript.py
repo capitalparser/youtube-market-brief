@@ -58,17 +58,41 @@ class TranscriptClient(Protocol):
 class YouTubeTranscriptApiClient:
     """Concrete impl using `youtube_transcript_api`.
 
-    Pass `proxy_config` (a `youtube_transcript_api.proxies.ProxyConfig` instance,
-    e.g. `WebshareProxyConfig`) to route requests through a residential proxy —
-    required when running on cloud-provider IPs that YouTube blocks.
+    Optional `cookie_file` (Netscape-format cookies.txt): loads browser
+    cookies into a requests.Session and passes it as `http_client`. This
+    authenticates requests as a real user, bypassing cloud-IP blocks without
+    needing a proxy.
+
+    Optional `proxy_config`: route through a residential proxy instead.
+    Both can coexist; cookie_file takes precedence for the session.
     """
 
-    def __init__(self, proxy_config=None):
+    def __init__(self, proxy_config=None, cookie_file: str | None = None):
         self._proxy_config = proxy_config
+        self._cookie_file = cookie_file
+
+    def _make_http_client(self):
+        """Return an authenticated requests.Session if cookie_file is set."""
+        if not self._cookie_file:
+            return None
+        cookie_path = Path(self._cookie_file)
+        if not cookie_path.exists() or cookie_path.stat().st_size == 0:
+            return None
+        import http.cookiejar
+        jar = http.cookiejar.MozillaCookieJar(str(cookie_path))
+        try:
+            jar.load(ignore_discard=True, ignore_expires=True)
+        except Exception as exc:
+            log.warning("failed to load cookie file %s: %s", cookie_path, exc)
+            return None
+        session = requests.Session()
+        session.cookies = jar  # type: ignore[assignment]
+        return session
 
     def fetch(self, video_id: str) -> Transcript | TranscriptSkip:
         try:
-            transcript_list = _list_transcripts(video_id, self._proxy_config)
+            http_client = self._make_http_client()
+            transcript_list = _list_transcripts(video_id, self._proxy_config, http_client)
             transcript = _find_preferred_transcript(transcript_list)
             if transcript is None:
                 return TranscriptSkip(
@@ -99,12 +123,15 @@ def _now_utc() -> datetime:
     return datetime.now(tz=UTC)
 
 
-def _list_transcripts(video_id: str, proxy_config=None):
+def _list_transcripts(video_id: str, proxy_config=None, http_client=None):
     if hasattr(YouTubeTranscriptApi, "list_transcripts"):
-        # v0.6.x class method — no proxy support
+        # v0.6.x class method — no proxy/http_client support
         return YouTubeTranscriptApi.list_transcripts(video_id)
-    # v1.x instance method — supports proxy_config
-    api = YouTubeTranscriptApi(proxy_config=proxy_config)
+    # v1.x instance method — supports proxy_config + http_client
+    kwargs: dict = {"proxy_config": proxy_config}
+    if http_client is not None:
+        kwargs["http_client"] = http_client
+    api = YouTubeTranscriptApi(**kwargs)
     return api.list(video_id)
 
 
