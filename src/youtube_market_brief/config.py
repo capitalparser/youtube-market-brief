@@ -30,6 +30,9 @@ class AppConfig:
     claude_model: str
     claude_timeout_sec: int
 
+    webshare_proxy_username: str
+    webshare_proxy_password: str
+
     dry_run: bool
     log_level: str
     transcript_max_chars: int
@@ -96,6 +99,8 @@ def load_app_config(
         claude_bin=os.environ.get("CLAUDE_BIN", "claude"),
         claude_model=os.environ.get("CLAUDE_MODEL", "sonnet"),
         claude_timeout_sec=int(os.environ.get("CLAUDE_TIMEOUT_SEC", "300")),
+        webshare_proxy_username=os.environ.get("WEBSHARE_PROXY_USERNAME", ""),
+        webshare_proxy_password=os.environ.get("WEBSHARE_PROXY_PASSWORD", ""),
         dry_run=os.environ.get("DRY_RUN", "false").lower() == "true",
         log_level=os.environ.get("LOG_LEVEL", "INFO"),
         transcript_max_chars=int(os.environ.get("TRANSCRIPT_MAX_CHARS", "80000")),

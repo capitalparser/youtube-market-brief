@@ -70,6 +70,17 @@ def _parse_date(s: str) -> date:
     return date.fromisoformat(s)
 
 
+def _make_proxy_config(cfg):
+    """Return a WebshareProxyConfig if credentials are set, else None."""
+    if cfg.webshare_proxy_username and cfg.webshare_proxy_password:
+        from youtube_transcript_api.proxies import WebshareProxyConfig
+        return WebshareProxyConfig(
+            proxy_username=cfg.webshare_proxy_username,
+            proxy_password=cfg.webshare_proxy_password,
+        )
+    return None
+
+
 def _make_llm_client(cfg):
     """Construct the LLM client based on LLM_PROVIDER config.
 
@@ -174,7 +185,7 @@ def cmd_run(args) -> int:
         cfg.dry_run = True
 
     yt_client = GoogleAPIYouTubeDataClient(api_key=cfg.youtube_api_key)
-    transcript_client = YouTubeTranscriptApiClient()
+    transcript_client = YouTubeTranscriptApiClient(proxy_config=_make_proxy_config(cfg))
     llm_client = _make_llm_client(cfg)
     if cfg.dry_run or not (cfg.telegram_bot_token and cfg.telegram_chat_id):
         telegram_client = DryRunTelegramClient(cfg.telegram_dryrun_dir)

@@ -22,7 +22,9 @@ except ImportError:  # pragma: no cover - legacy import path
 
 try:
     from youtube_transcript_api._errors import (
+        IpBlocked,
         NoTranscriptFound,
+        RequestBlocked,
         TranscriptsDisabled,
         VideoUnavailable,
     )
@@ -32,6 +34,8 @@ except ImportError:  # pragma: no cover - legacy import path
     NoTranscriptFound = _errors.NoTranscriptFound
     TranscriptsDisabled = _errors.TranscriptsDisabled
     VideoUnavailable = _errors.VideoUnavailable
+    RequestBlocked = getattr(_errors, "RequestBlocked", Exception)
+    IpBlocked = getattr(_errors, "IpBlocked", Exception)
 
 _PREFERRED_LANGS = ("ko", "ko-KR", "en", "en-US", "ja", "zh-Hans", "zh-Hant")
 
@@ -44,21 +48,17 @@ class TranscriptClient(Protocol):
 class YouTubeTranscriptApiClient:
     """Concrete impl using `youtube_transcript_api`.
 
-    Implementation note (Codex):
-    - `from youtube_transcript_api import YouTubeTranscriptApi, _errors`
-    - Try `YouTubeTranscriptApi.list_transcripts(video_id)` → iterate languages
-      in priority order from `_PREFERRED_LANGS`.
-    - For each candidate, call `.fetch()` and build `Segment` tuples.
-    - Catch `TranscriptsDisabled` → SkipReason="disabled"
-    - Catch `NoTranscriptFound` → SkipReason="no_captions"
-    - Catch any other internal-shape error → SkipReason="api_changed"
-      (this signals that the library / YouTube internals diverged — flag it!)
-    - Catch `requests` Timeout → SkipReason="timeout"
+    Pass `proxy_config` (a `youtube_transcript_api.proxies.ProxyConfig` instance,
+    e.g. `WebshareProxyConfig`) to route requests through a residential proxy —
+    required when running on cloud-provider IPs that YouTube blocks.
     """
+
+    def __init__(self, proxy_config=None):
+        self._proxy_config = proxy_config
 
     def fetch(self, video_id: str) -> Transcript | TranscriptSkip:
         try:
-            transcript_list = _list_transcripts(video_id)
+            transcript_list = _list_transcripts(video_id, self._proxy_config)
             transcript = _find_preferred_transcript(transcript_list)
             if transcript is None:
                 return TranscriptSkip(
@@ -67,6 +67,8 @@ class YouTubeTranscriptApiClient:
                     detail="No transcript found for preferred or fallback languages",
                 )
             return _build_transcript(video_id, transcript)
+        except (IpBlocked, RequestBlocked) as exc:
+            return TranscriptSkip(video_id=video_id, reason="ip_blocked", detail=str(exc)[:300])
         except TranscriptsDisabled as exc:
             return TranscriptSkip(video_id=video_id, reason="disabled", detail=str(exc))
         except NoTranscriptFound as exc:
@@ -76,17 +78,24 @@ class YouTubeTranscriptApiClient:
         except (TimeoutError, requests.Timeout) as exc:
             return TranscriptSkip(video_id=video_id, reason="timeout", detail=str(exc))
         except Exception as exc:
-            return TranscriptSkip(video_id=video_id, reason="api_changed", detail=str(exc))
+            return TranscriptSkip(
+                video_id=video_id,
+                reason="api_changed",
+                detail=f"{type(exc).__name__}: {str(exc)[:300]}",
+            )
 
 
 def _now_utc() -> datetime:
     return datetime.now(tz=UTC)
 
 
-def _list_transcripts(video_id: str):
+def _list_transcripts(video_id: str, proxy_config=None):
     if hasattr(YouTubeTranscriptApi, "list_transcripts"):
+        # v0.6.x class method — no proxy support
         return YouTubeTranscriptApi.list_transcripts(video_id)
-    return YouTubeTranscriptApi().list(video_id)
+    # v1.x instance method — supports proxy_config
+    api = YouTubeTranscriptApi(proxy_config=proxy_config)
+    return api.list(video_id)
 
 
 def _find_preferred_transcript(transcript_list):
