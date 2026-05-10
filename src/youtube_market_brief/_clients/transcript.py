@@ -192,42 +192,43 @@ class YtDlpTranscriptClient:
             )
 
     def _fetch(self, video_id: str) -> Transcript | TranscriptSkip:
-        import json as _json
-
         import yt_dlp  # lazy import — only needed when this client is active
 
         with tempfile.TemporaryDirectory() as tmpdir:
-            # download=True with skip_download=True → writes subtitle files, skips video
             self._run_ydl(yt_dlp, video_id, tmpdir)
 
-            # Find written .json3 subtitle files
-            json3_files = sorted(Path(tmpdir).glob(f"{video_id}.*.json3"))
-            if not json3_files:
+            # Accept json3, vtt, srv3, ttml — whatever yt-dlp wrote
+            sub_files = sorted(
+                f for f in Path(tmpdir).iterdir()
+                if f.suffix in (".json3", ".vtt", ".srv3", ".ttml")
+            )
+            if not sub_files:
                 return TranscriptSkip(
                     video_id=video_id, reason="no_captions",
                     detail="yt-dlp: no subtitle files written",
                 )
 
-            # Pick preferred language
+            # Prefer language in priority order
             chosen, chosen_lang = None, ""
             for lang in _YTDLP_LANG_PREF:
-                matches = [f for f in json3_files if f.name.endswith(f".{lang}.json3")]
+                matches = [f for f in sub_files if f".{lang}." in f.name]
                 if matches:
                     chosen, chosen_lang = matches[0], lang
                     break
             if chosen is None:
-                chosen = json3_files[0]
-                parts = chosen.name.split(".")
-                chosen_lang = parts[-2] if len(parts) >= 3 else ""
+                chosen = sub_files[0]
+                parts = chosen.stem.split(".")
+                chosen_lang = parts[-1] if len(parts) >= 2 else ""
 
-            events = _json.loads(chosen.read_text(encoding="utf-8")).get("events", [])
+            text = chosen.read_text(encoding="utf-8")
+            ext = chosen.suffix.lstrip(".")
 
-        segments = _ytdlp_parse_json3(events)
+        segments = _ytdlp_parse_subtitle(text, ext)
         full_text = re.sub(r"\s+", " ", " ".join(s.text for s in segments)).strip()
         if not full_text:
             return TranscriptSkip(
                 video_id=video_id, reason="no_captions",
-                detail="yt-dlp subtitle text is empty",
+                detail=f"yt-dlp subtitle empty (format={ext})",
             )
         return Transcript(
             video_id=video_id,
@@ -245,7 +246,7 @@ class YtDlpTranscriptClient:
             "writeautomaticsub": True,
             "writesubtitles": True,
             "subtitleslangs": [*_YTDLP_LANG_PREF, "all"],
-            "subtitlesformat": "json3",
+            # No subtitlesformat — accept native format (vtt/json3/srv3) without ffmpeg
             "outtmpl": f"{tmpdir}/%(id)s.%(ext)s",
             "quiet": True,
             "no_warnings": True,
@@ -256,11 +257,19 @@ class YtDlpTranscriptClient:
 
         url = _YT_WATCH.format(video_id=video_id)
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-            ydl.download([url])  # download=True → subtitle files written to tmpdir
+            ydl.download([url])
+
+
+def _ytdlp_parse_subtitle(content: str, ext: str) -> tuple[Segment, ...]:
+    """Dispatch to format-specific parser."""
+    if ext == "json3":
+        import json as _j
+        return _ytdlp_parse_json3(_j.loads(content).get("events", []))
+    # vtt / srv3 / ttml / anything else → strip to plain text lines
+    return _ytdlp_parse_vtt(content)
 
 
 def _ytdlp_parse_json3(events: list) -> tuple[Segment, ...]:
-    """Convert yt-dlp JSON3 events to Segment tuples."""
     segments = []
     for event in events:
         start_ms = event.get("tStartMs", 0)
@@ -271,9 +280,22 @@ def _ytdlp_parse_json3(events: list) -> tuple[Segment, ...]:
         text = "".join(s.get("utf8", "") for s in segs).strip()
         if not text or text == "\n":
             continue
-        segments.append(Segment(
-            start=start_ms / 1000.0,
-            duration=dur_ms / 1000.0,
-            text=text,
-        ))
+        segments.append(Segment(start=start_ms / 1000.0, duration=dur_ms / 1000.0, text=text))
+    return tuple(segments)
+
+
+_VTT_TIMESTAMP = re.compile(r"\d{2}:\d{2}:\d{2}\.\d{3} --> ")
+_HTML_TAG = re.compile(r"<[^>]+>")
+
+
+def _ytdlp_parse_vtt(content: str) -> tuple[Segment, ...]:
+    """Parse WebVTT / srv3 / plain subtitle formats into Segments (no timing)."""
+    segments = []
+    for line in content.splitlines():
+        line = line.strip()
+        if not line or line.startswith("WEBVTT") or _VTT_TIMESTAMP.match(line):
+            continue
+        text = _HTML_TAG.sub("", line).strip()
+        if text:
+            segments.append(Segment(start=0.0, duration=0.0, text=text))
     return tuple(segments)
