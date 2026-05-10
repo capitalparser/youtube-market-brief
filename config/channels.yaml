@@ -19,3 +19,18 @@ channels:
   slug: wallst_wars
   enabled: true
   channel_id: UCzsor4tbVidqL1N_X4VDhcQ
+- handle: '@오늘부터회계사'
+  name_ko: 오늘부터 회계사
+  slug: today_accountant
+  enabled: true
+  channel_id: UClhPqabyOHBxJzMkQ7k-pxg
+- handle: '@eo_korea'
+  name_ko: EO Korea
+  slug: eo_korea
+  enabled: true
+  channel_id: UCQ2DWm5Md16Dc3xRwwhVE7Q
+- handle: '@DemoDaySV'
+  name_ko: 데모데이
+  slug: demodaysv
+  enabled: true
+  channel_id: UC1yWMxMin6g7wW2r_vMI38w
