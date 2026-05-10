@@ -1,6 +1,5 @@
 # Secrets / config
 .env
-config/channels.yaml
 config/watchlist.yaml
 
 # Python

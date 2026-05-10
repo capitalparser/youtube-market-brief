@@ -1,0 +1,16 @@
+channels:
+- handle: '@hkglobalmarket'
+  name_ko: HK Global Market
+  slug: hkglobalmarket
+  enabled: true
+  channel_id: UCWskYkV4c4S9D__rsfOl2JA
+- handle: '@MK_Invest'
+  name_ko: MK 인베스트
+  slug: mk_invest
+  enabled: true
+  channel_id: UCIipmgxpUxDmPP-ma3Ahvbw
+- handle: '@kpunch'
+  name_ko: K펀치
+  slug: kpunch
+  enabled: true
+  channel_id: UCOB62fKRT7b73X7tRxMuN2g
