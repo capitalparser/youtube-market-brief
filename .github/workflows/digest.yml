@@ -72,10 +72,13 @@ jobs:
           rclone copy "drive:config/watchlist.yaml" config/ --quiet || echo "no remote watchlist.yaml, skipping"
 
       - name: Write YouTube cookies (optional)
+        env:
+          YOUTUBE_COOKIES_RAW: ${{ secrets.YOUTUBE_COOKIES }}
         run: |
-          if [ -n "${{ secrets.YOUTUBE_COOKIES }}" ]; then
-            echo '${{ secrets.YOUTUBE_COOKIES }}' > /tmp/yt_cookies.txt
-            echo "cookies written"
+          if [ -n "$YOUTUBE_COOKIES_RAW" ]; then
+            printf '%s' "$YOUTUBE_COOKIES_RAW" > /tmp/yt_cookies.txt
+            echo "cookies written ($(wc -l < /tmp/yt_cookies.txt) lines, $(wc -c < /tmp/yt_cookies.txt) bytes)"
+            head -1 /tmp/yt_cookies.txt | cut -c1-40 || true
           else
             touch /tmp/yt_cookies.txt
             echo "no YOUTUBE_COOKIES secret — running without cookies"
