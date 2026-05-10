@@ -23,8 +23,8 @@ class AppConfig:
     telegram_chat_id: str
 
     llm_provider: str
-    anthropic_api_key: str
-    anthropic_model: str
+    openai_api_key: str
+    openai_model: str
 
     claude_bin: str
     claude_model: str
@@ -91,8 +91,8 @@ def load_app_config(
         telegram_bot_token=os.environ.get("TELEGRAM_BOT_TOKEN", ""),
         telegram_chat_id=os.environ.get("TELEGRAM_CHAT_ID", ""),
         llm_provider=os.environ.get("LLM_PROVIDER", "api").strip().lower(),
-        anthropic_api_key=os.environ.get("ANTHROPIC_API_KEY", ""),
-        anthropic_model=os.environ.get("ANTHROPIC_MODEL", "claude-sonnet-4-6"),
+        openai_api_key=os.environ.get("OPENAI_API_KEY", ""),
+        openai_model=os.environ.get("OPENAI_MODEL", "gpt-4o"),
         claude_bin=os.environ.get("CLAUDE_BIN", "claude"),
         claude_model=os.environ.get("CLAUDE_MODEL", "sonnet"),
         claude_timeout_sec=int(os.environ.get("CLAUDE_TIMEOUT_SEC", "300")),

@@ -73,12 +73,12 @@ def _parse_date(s: str) -> date:
 def _make_llm_client(cfg):
     """Construct the LLM client based on LLM_PROVIDER config.
 
-    api → AnthropicAPIClient (Anthropic Messages API). Default. Cloud-runnable.
-    cli → ClaudeCLIClient   (subprocess to `claude` CLI). Local-only.
+    api → OpenAIAPIClient (OpenAI Chat Completions API). Default. Cloud-runnable.
+    cli → ClaudeCLIClient (subprocess to `claude` CLI). Local-only.
     """
     from youtube_market_brief._clients.llm import (
-        AnthropicAPIClient,
         ClaudeCLIClient,
+        OpenAIAPIClient,
     )
 
     if cfg.llm_provider == "cli":
@@ -87,9 +87,9 @@ def _make_llm_client(cfg):
         log.warning(
             "unknown LLM_PROVIDER=%s — falling back to api", cfg.llm_provider
         )
-    return AnthropicAPIClient(
-        api_key=cfg.anthropic_api_key or None,
-        model=cfg.anthropic_model,
+    return OpenAIAPIClient(
+        api_key=cfg.openai_api_key or None,
+        model=cfg.openai_model,
     )
 
 
@@ -102,7 +102,7 @@ def cmd_health(args) -> int:
     if cfg.llm_provider == "cli":
         log.info("claude_bin=%s claude_model=%s", cfg.claude_bin, cfg.claude_model)
     else:
-        log.info("anthropic_model=%s key_set=%s", cfg.anthropic_model, bool(cfg.anthropic_api_key))
+        log.info("openai_model=%s key_set=%s", cfg.openai_model, bool(cfg.openai_api_key))
     client = _make_llm_client(cfg)
     ok = client.health_check()
     if ok:
@@ -124,8 +124,8 @@ def cmd_config(args) -> int:
         "vault_youtube_root": str(cfg.vault_youtube_root),
         "state_path": str(cfg.state_path),
         "llm_provider": cfg.llm_provider,
-        "anthropic_model": cfg.anthropic_model,
-        "anthropic_api_key_set": bool(cfg.anthropic_api_key),
+        "openai_model": cfg.openai_model,
+        "openai_api_key_set": bool(cfg.openai_api_key),
         "claude_bin": cfg.claude_bin,
         "claude_model": cfg.claude_model,
         "timezone": cfg.timezone,

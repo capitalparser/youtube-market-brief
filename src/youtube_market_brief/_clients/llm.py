@@ -6,10 +6,9 @@ Two implementations of the LLMClient Protocol:
   Claude Code login session — no separate API key. Local-only (CLI must be
   installed and authed). Suited for laptop runs.
 
-- `AnthropicAPIClient`: calls the Anthropic Messages API directly using the
-  official SDK. Requires `ANTHROPIC_API_KEY`. Runs anywhere — used by the
-  cloud cron workflow. Applies prompt caching on the system prompt, since
-  the same system prompt is reused across many per-video calls in one run.
+- `OpenAIAPIClient`: calls the OpenAI Chat Completions API directly using the
+  official SDK. Requires `OPENAI_API_KEY`. Runs anywhere — used by the
+  cloud cron workflow.
 
 Both return responses whose `.text` contains a fenced ```json ... ``` block
 matching the per-prompt schema. The pipeline parses that with `extract_fenced_json`.
@@ -25,7 +24,7 @@ import time
 from dataclasses import dataclass
 from typing import Protocol
 
-import anthropic
+import openai
 
 log = logging.getLogger(__name__)
 
@@ -108,78 +107,64 @@ class LLMCallError(RuntimeError):
     pass
 
 
-class AnthropicAPIClient:
-    """LLM client backed by the Anthropic Messages API.
+class OpenAIAPIClient:
+    """LLM client backed by the OpenAI Chat Completions API.
 
     Used by the cloud cron workflow where the `claude` CLI is not available.
-    The system prompt is cached (`cache_control: ephemeral`) — the per-video
-    pipeline reuses the same system prompt across many calls in one run, so
-    after the first call the prefix is served from cache (~10% of input cost).
-
-    Default model is `claude-sonnet-4-6`, preserving the original
-    `--model sonnet` choice that drove the local CLI client.
+    Requires `OPENAI_API_KEY`. Default model is `gpt-4o`.
     """
 
     def __init__(
         self,
         *,
         api_key: str | None = None,
-        model: str = "claude-sonnet-4-6",
+        model: str = "gpt-4o",
         max_tokens: int = 8192,
     ):
         self.model = model
         self.max_tokens = max_tokens
-        self._client = anthropic.Anthropic(api_key=api_key)
+        self._client = openai.OpenAI(api_key=api_key)
 
     def health_check(self) -> bool:
         try:
-            client = self._client.with_options(timeout=30.0)
-            resp = client.messages.create(
+            resp = self._client.chat.completions.create(
                 model=self.model,
                 max_tokens=16,
-                messages=[{"role": "user", "content": "Reply with just one word: PONG"}],
+                messages=[{"role": "user", "content": "Reply with the single word: OK"}],
+                timeout=30.0,
             )
-            text = "".join(b.text for b in resp.content if getattr(b, "type", None) == "text")
-            return "PONG" in text.upper()
+            return bool(resp.choices[0].message.content)
         except Exception as e:
-            log.warning("AnthropicAPIClient health_check failed: %s", e)
+            log.warning("OpenAIAPIClient health_check failed: %s", e)
             return False
 
     def call(self, *, system: str, user: str, timeout_sec: int) -> LLMResponse:
-        client = self._client.with_options(timeout=float(timeout_sec))
         t0 = time.monotonic()
         try:
-            resp = client.messages.create(
+            resp = self._client.chat.completions.create(
                 model=self.model,
                 max_tokens=self.max_tokens,
-                system=[
-                    {
-                        "type": "text",
-                        "text": system,
-                        "cache_control": {"type": "ephemeral"},
-                    }
+                messages=[
+                    {"role": "system", "content": system},
+                    {"role": "user", "content": user},
                 ],
-                messages=[{"role": "user", "content": user}],
+                timeout=float(timeout_sec),
             )
-        except anthropic.APIError as e:
-            raise LLMCallError(f"Anthropic API error: {e}") from e
+        except openai.APIError as e:
+            raise LLMCallError(f"OpenAI API error: {e}") from e
         duration_ms = int((time.monotonic() - t0) * 1000)
-        text = "".join(
-            b.text for b in resp.content if getattr(b, "type", None) == "text"
-        )
+        text = resp.choices[0].message.content or ""
         if not text:
             raise LLMCallError(
-                f"Anthropic API returned no text content (stop_reason={resp.stop_reason})"
+                f"OpenAI API returned no text content (finish_reason={resp.choices[0].finish_reason})"
             )
         usage = resp.usage
         envelope = {
             "model": resp.model,
-            "stop_reason": resp.stop_reason,
+            "finish_reason": resp.choices[0].finish_reason,
             "usage": {
-                "input_tokens": getattr(usage, "input_tokens", 0),
-                "output_tokens": getattr(usage, "output_tokens", 0),
-                "cache_read_input_tokens": getattr(usage, "cache_read_input_tokens", 0),
-                "cache_creation_input_tokens": getattr(usage, "cache_creation_input_tokens", 0),
+                "prompt_tokens": getattr(usage, "prompt_tokens", 0),
+                "completion_tokens": getattr(usage, "completion_tokens", 0),
             },
         }
         return LLMResponse(
