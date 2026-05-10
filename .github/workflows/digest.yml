@@ -1,9 +1,13 @@
 name: Daily Digest
 
-# 매일 KST 07:00 (UTC 22:00 전날) 실행. 수동 실행도 허용.
+# 매일 KST 07:00 / 12:00 / 18:00 / 23:00 실행. 수동 실행도 허용.
+# state.json + daily_brief_sent로 idempotent — 신규 영상만 재처리.
 on:
   schedule:
-    - cron: "0 22 * * *"
+    - cron: "0 22 * * *"  # 07:00 KST
+    - cron: "0 3 * * *"   # 12:00 KST
+    - cron: "0 9 * * *"   # 18:00 KST
+    - cron: "0 14 * * *"  # 23:00 KST
   workflow_dispatch:
 
 concurrency:
