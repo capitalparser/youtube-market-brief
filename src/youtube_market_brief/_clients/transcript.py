@@ -192,35 +192,54 @@ class YtDlpTranscriptClient:
             )
 
     def _fetch(self, video_id: str) -> Transcript | TranscriptSkip:
+        import json as _json
+
         import yt_dlp  # lazy import — only needed when this client is active
 
         with tempfile.TemporaryDirectory() as tmpdir:
-            info = self._extract_info(yt_dlp, video_id, tmpdir)
+            # download=True with skip_download=True → writes subtitle files, skips video
+            self._run_ydl(yt_dlp, video_id, tmpdir)
 
-        if info is None:
-            return TranscriptSkip(video_id=video_id, reason="no_captions", detail="yt-dlp returned no info")
+            # Find written .json3 subtitle files
+            json3_files = sorted(Path(tmpdir).glob(f"{video_id}.*.json3"))
+            if not json3_files:
+                return TranscriptSkip(
+                    video_id=video_id, reason="no_captions",
+                    detail="yt-dlp: no subtitle files written",
+                )
 
-        # Find the best subtitle entry (automatic subs preferred, then manual)
-        sub_entry, lang, is_auto = _ytdlp_pick_subtitle(info)
-        if sub_entry is None:
-            return TranscriptSkip(video_id=video_id, reason="no_captions", detail="no subtitles available")
+            # Pick preferred language
+            chosen, chosen_lang = None, ""
+            for lang in _YTDLP_LANG_PREF:
+                matches = [f for f in json3_files if f.name.endswith(f".{lang}.json3")]
+                if matches:
+                    chosen, chosen_lang = matches[0], lang
+                    break
+            if chosen is None:
+                chosen = json3_files[0]
+                parts = chosen.name.split(".")
+                chosen_lang = parts[-2] if len(parts) >= 3 else ""
 
-        segments = _ytdlp_parse_json3(sub_entry)
+            events = _json.loads(chosen.read_text(encoding="utf-8")).get("events", [])
+
+        segments = _ytdlp_parse_json3(events)
         full_text = re.sub(r"\s+", " ", " ".join(s.text for s in segments)).strip()
         if not full_text:
-            return TranscriptSkip(video_id=video_id, reason="no_captions", detail="yt-dlp subtitle text is empty")
-
+            return TranscriptSkip(
+                video_id=video_id, reason="no_captions",
+                detail="yt-dlp subtitle text is empty",
+            )
         return Transcript(
             video_id=video_id,
-            language=lang,
-            is_auto_generated=is_auto,
+            language=chosen_lang,
+            is_auto_generated=True,
             segments=segments,
             full_text=full_text,
             char_count=len(full_text),
             fetched_at=_now_utc(),
         )
 
-    def _extract_info(self, yt_dlp, video_id: str, tmpdir: str):
+    def _run_ydl(self, yt_dlp, video_id: str, tmpdir: str) -> None:
         ydl_opts: dict = {
             "skip_download": True,
             "writeautomaticsub": True,
@@ -237,41 +256,7 @@ class YtDlpTranscriptClient:
 
         url = _YT_WATCH.format(video_id=video_id)
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-            return ydl.extract_info(url, download=False)
-
-
-def _ytdlp_pick_subtitle(info: dict) -> tuple[list | None, str, bool]:
-    """Return (json3_events, lang_code, is_auto_generated) for best available subtitle."""
-    auto_subs: dict = info.get("automatic_captions") or {}
-    manual_subs: dict = info.get("subtitles") or {}
-
-    for lang in _YTDLP_LANG_PREF:
-        for subs, is_auto in ((manual_subs, False), (auto_subs, True)):
-            if lang in subs:
-                entry = _ytdlp_find_json3(subs[lang])
-                if entry is not None:
-                    return entry, lang, is_auto
-
-    # Fallback: first available in any language
-    for subs, is_auto in ((manual_subs, False), (auto_subs, True)):
-        for lang, fmt_list in subs.items():
-            entry = _ytdlp_find_json3(fmt_list)
-            if entry is not None:
-                return entry, lang, is_auto
-
-    return None, "", False
-
-
-def _ytdlp_find_json3(fmt_list: list[dict]) -> list | None:
-    """Find json3 format entry and return its events list, or None."""
-    for fmt in fmt_list:
-        if fmt.get("ext") == "json3":
-            data = fmt.get("data")  # in-memory when download=False
-            if data:
-                import json
-                parsed = json.loads(data) if isinstance(data, (str, bytes)) else data
-                return parsed.get("events", [])
-    return None
+            ydl.download([url])  # download=True → subtitle files written to tmpdir
 
 
 def _ytdlp_parse_json3(events: list) -> tuple[Segment, ...]:
