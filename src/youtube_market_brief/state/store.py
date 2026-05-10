@@ -66,6 +66,16 @@ class IdempotencyStore:
     def has_video(self, video_id: str) -> bool:
         return video_id in self._data["videos"]
 
+    def is_done(self, video_id: str) -> bool:
+        """True only when video was successfully processed (outcome=="ok").
+
+        Transient failures (ip_blocked, api_changed, timeout) are recorded as
+        skipped_no_caption but should be retried on the next run — this method
+        returns False for those so discover re-queues them.
+        """
+        state = self.get_video(video_id)
+        return state is not None and state.outcome == "ok"
+
     def get_video(self, video_id: str) -> VideoState | None:
         raw = self._data["videos"].get(video_id)
         if raw is None:

@@ -65,7 +65,7 @@ def discover_new_videos(
             published_at = _as_utc(v.published_at_utc)
             if published_before_utc and published_at >= published_before_utc:
                 continue
-            if store.has_video(v.video_id):
+            if store.is_done(v.video_id):
                 continue
             if v.video_id in seen_video_ids:
                 continue
