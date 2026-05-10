@@ -247,7 +247,12 @@ class YtDlpTranscriptClient:
         available" errors) by using extract_info(download=False) and fetching the
         subtitle URL directly.
         """
-        ydl_opts: dict = {"quiet": True, "no_warnings": True}
+        ydl_opts: dict = {
+            "quiet": True,
+            "no_warnings": True,
+            # Force Android client — avoids JS runtime requirement on cloud runners
+            "extractor_args": {"youtube": {"player_client": ["android_creator", "android"]}},
+        }
         cookie_path = Path(self._cookie_file) if self._cookie_file else None
         if cookie_path and cookie_path.exists() and cookie_path.stat().st_size > 0:
             ydl_opts["cookiefile"] = str(cookie_path)
