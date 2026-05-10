@@ -67,10 +67,9 @@ jobs:
             "$VAULT_ROOT_PATH/Harness/sink/youtube_market_brief/" \
             --create-empty-src-dirs --quiet || echo "no prior state, starting fresh"
 
-      - name: Pull config from Drive (channels.yaml + watchlist.yaml)
+      - name: Pull config from Drive (watchlist.yaml only)
         run: |
-          rclone copy "drive:config/channels.yaml" config/ --quiet || echo "no remote channels.yaml, using local"
-          rclone copy "drive:config/watchlist.yaml" config/ --quiet || echo "no remote watchlist.yaml, using local"
+          rclone copy "drive:config/watchlist.yaml" config/ --quiet || echo "no remote watchlist.yaml, skipping"
 
       - name: Write YouTube cookies (optional)
         run: |
