@@ -15,9 +15,10 @@ dist/
 build/
 *.egg-info/
 
-# Editor
+# Editor / agent local config
 .idea/
 .vscode/
+.claude/
 *.swp
 
 # OS
