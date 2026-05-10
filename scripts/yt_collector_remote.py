@@ -32,13 +32,26 @@ except Exception:
     TRANSCRIPT_AVAILABLE = False
 
 # ---------------------------------------------------------------------------
-# Channel configuration — 3 Korean financial YouTube channels
+# Channel configuration — loaded from config/channels.yaml if available
 # ---------------------------------------------------------------------------
-CHANNELS: list[dict[str, str]] = [
-    {"handle": "@hkglobalmarket", "slug": "hkglobalmarket", "name_ko": "HK글로벌마켓"},
-    {"handle": "@MK_Invest",      "slug": "mk_invest",      "name_ko": "MK인베스트"},
-    {"handle": "@kpunch",         "slug": "kpunch",         "name_ko": "한국경제"},
-]
+def _load_channels() -> list[dict[str, str]]:
+    cfg_path = Path(__file__).parent.parent / "config" / "channels.yaml"
+    if cfg_path.exists():
+        try:
+            import importlib.util
+            if importlib.util.find_spec("yaml") is not None:
+                import yaml  # type: ignore[import-untyped]
+                data = yaml.safe_load(cfg_path.read_text(encoding="utf-8"))
+                return [c for c in data.get("channels", []) if c.get("enabled", True)]
+        except Exception:
+            pass
+    return [
+        {"handle": "@hkglobalmarket", "slug": "hkglobalmarket", "name_ko": "HK글로벌마켓"},
+        {"handle": "@MK_Invest",      "slug": "mk_invest",      "name_ko": "MK인베스트"},
+        {"handle": "@kpunch",         "slug": "kpunch",         "name_ko": "한국경제"},
+    ]
+
+CHANNELS: list[dict[str, str]] = _load_channels()
 
 PREFERRED_LANGS = ("ko", "ko-KR", "en", "en-US", "ja", "zh-Hans", "zh-Hant")
 MAX_TRANSCRIPT_CHARS = int(os.environ.get("TRANSCRIPT_MAX_CHARS", "80000"))
