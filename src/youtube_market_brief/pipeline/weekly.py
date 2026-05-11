@@ -20,7 +20,6 @@ from youtube_market_brief.domain.types import (
     RedTeamItem,
     TickerRollup,
     TickerRollupVideoEntry,
-    TickerRollupVideoEntry,
     VideoMeta,
     WeeklyRollup,
 )
@@ -96,11 +95,15 @@ def _deserialize_brief(sidecar_path: Path, target_date: Date) -> DailyBrief:
     videos = tuple(
         VideoMeta(
             video_id=str(v.get("video_id", "")),
-            channel_id="",
-            channel_name="",
+            channel_id=str(v.get("channel_id", "")),
+            channel_name=str(v.get("channel_name", "")),
             channel_slug=str(v.get("channel_slug", "")),
             title=str(v.get("title", "")),
-            published_at_utc=datetime.fromisoformat("2026-01-01T00:00:00+00:00"),
+            published_at_utc=(
+                datetime.fromisoformat(v["published_at_utc"])
+                if v.get("published_at_utc")
+                else datetime.fromisoformat("2026-01-01T00:00:00+00:00")
+            ),
             url=str(v.get("url", "")),
         )
         for v in (data.get("videos") or [])

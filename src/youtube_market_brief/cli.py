@@ -573,11 +573,12 @@ def cmd_aggregate_only(args) -> int:
     return 0 if result.ok else 1
 
 
-def cmd_weekly_brief(args) -> int:
+def cmd_weekly_brief(args, cfg=None) -> int:
     """Compose weekly rollup brief from existing daily .analysis.json sidecars."""
     from datetime import date as _Date, datetime as _dt
 
-    cfg = load_app_config()
+    if cfg is None:
+        cfg = load_app_config()
     setup_logging(level=cfg.log_level, logs_dir=cfg.logs_dir, tz=cfg.tz)
 
     from youtube_market_brief.pipeline.weekly import (
@@ -618,8 +619,13 @@ def cmd_weekly_brief(args) -> int:
     )
     print(f"wrote: {md_path}")
 
-    if args.dry_run or args.no_telegram or cfg.dry_run:
-        print("(Telegram skipped)")
+    if (
+        args.dry_run
+        or args.no_telegram
+        or cfg.dry_run
+        or not (cfg.telegram_bot_token and cfg.telegram_chat_id)
+    ):
+        print("(Telegram skipped — dry-run, --no-telegram, or missing credentials)")
         return 0
 
     from youtube_market_brief._clients.telegram import HttpxTelegramClient

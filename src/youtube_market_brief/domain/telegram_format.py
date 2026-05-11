@@ -288,7 +288,10 @@ def _wrap_first_line(text: str) -> str:
 
 
 def format_messages(
-    *, per_video: VideoAnalysis | None = None, daily: DailyBrief | None = None,
+    *,
+    per_video: VideoAnalysis | None = None,
+    daily: DailyBrief | None = None,
+    weekly: "WeeklyRollup | None" = None,
     vault_md_path_relative: str | None = None,
 ) -> Iterable[str]:
     """Convenience: format, split, and decorate for a single send target."""
@@ -300,5 +303,11 @@ def format_messages(
         )
     elif daily is not None:
         yield from decorate_chunks(split_message(format_daily_brief(daily)))
+    elif weekly is not None:
+        if vault_md_path_relative is None:
+            raise ValueError("vault_md_path_relative required for weekly format")
+        yield from decorate_chunks(
+            split_message(format_weekly_brief(weekly, vault_md_path_relative=vault_md_path_relative))
+        )
     else:
-        raise ValueError("either per_video or daily must be provided")
+        raise ValueError("either per_video, daily, or weekly must be provided")

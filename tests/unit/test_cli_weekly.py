@@ -103,3 +103,82 @@ def test_last_monday():
     assert last_monday(date(2026, 5, 12)) == date(2026, 5, 11)
     # 2026-05-17 is Sunday → last Monday is 5-11
     assert last_monday(date(2026, 5, 17)) == date(2026, 5, 11)
+
+
+def test_cmd_weekly_brief_skips_telegram_when_credentials_missing(tmp_path, monkeypatch, capsys):
+    """cmd_weekly_brief must not attempt HTTP send when bot_token/chat_id are empty."""
+    import json
+    from datetime import date
+    from types import SimpleNamespace
+    from youtube_market_brief.cli import cmd_weekly_brief
+    from youtube_market_brief.config import AppConfig
+    from pathlib import Path
+
+    # Set up vault with 1 sidecar so aggregate_weekly returns a rollup
+    vault = tmp_path / "vault"
+    daily_root = vault / "00_Wiki" / "youtube" / "_daily"
+    weekly_root = vault / "00_Wiki" / "youtube" / "_weekly"
+    daily_root.mkdir(parents=True)
+    sidecar = daily_root / "2026-05-05_brief.analysis.json"
+    sidecar.write_text(json.dumps({
+        "date": "2026-05-05", "captured_at": "2026-05-12T00:00:00",
+        "market_read": "m",
+        "key_insights": [{"text": "i", "sector_tags": [], "theme_tags": []}],
+        "red_team": [], "ticker_rollup": [], "videos": [],
+        "llm_meta": {"model": "t", "duration_ms": 0, "claude_session_id": None},
+    }, ensure_ascii=False), encoding="utf-8")
+
+    cfg = AppConfig(
+        project_root=tmp_path / "proj",
+        vault_root=vault,
+        youtube_api_key="", telegram_bot_token="", telegram_chat_id="",
+        llm_provider="api", openai_api_key="", openai_model="",
+        claude_bin="", claude_model="", claude_timeout_sec=300,
+        webshare_proxy_username="", webshare_proxy_password="",
+        transcript_backend="", youtube_cookie_file="",
+        dry_run=False, log_level="INFO", transcript_max_chars=80000,
+        max_videos_per_run=20, skip_shorts=True, timezone="Asia/Seoul",
+        channels_path=Path("/dev/null"),
+        watchlist_path=Path("/dev/null"),
+        prompts_dir=Path("/dev/null"),
+    )
+
+    args = SimpleNamespace(week_start="2026-05-05", dry_run=False, no_telegram=False)
+    rc = cmd_weekly_brief(args, cfg)
+    assert rc == 0
+    captured = capsys.readouterr()
+    assert "Telegram skipped" in captured.out
+
+
+def test_load_weekly_briefs_preserves_video_meta_round_trip(tmp_path):
+    """Sidecar should round-trip VideoMeta fields (channel_id, channel_name, published_at_utc)."""
+    import json
+    from datetime import date
+    from youtube_market_brief.pipeline.weekly import load_weekly_briefs
+
+    daily_root = tmp_path / "_daily"
+    daily_root.mkdir()
+    sidecar = daily_root / "2026-05-05_brief.analysis.json"
+    sidecar.write_text(json.dumps({
+        "date": "2026-05-05", "captured_at": "2026-05-12T00:00:00",
+        "market_read": "m",
+        "key_insights": [{"text": "i", "sector_tags": [], "theme_tags": []}],
+        "red_team": [],
+        "ticker_rollup": [],
+        "videos": [
+            {
+                "video_id": "abc", "channel_id": "UC123", "channel_name": "HK Global",
+                "channel_slug": "hk", "title": "테스트", "url": "https://youtu.be/abc",
+                "published_at_utc": "2026-05-05T12:00:00+00:00",
+            }
+        ],
+        "llm_meta": {"model": "t", "duration_ms": 0, "claude_session_id": None},
+    }, ensure_ascii=False), encoding="utf-8")
+
+    briefs = load_weekly_briefs(vault_daily_root=daily_root, week_start=date(2026, 5, 5))
+    assert len(briefs) == 1
+    v = briefs[0].videos[0]
+    assert v.channel_id == "UC123"
+    assert v.channel_name == "HK Global"
+    assert v.published_at_utc.year == 2026
+    assert v.published_at_utc.month == 5

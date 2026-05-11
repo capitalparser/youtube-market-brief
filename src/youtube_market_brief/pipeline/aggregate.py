@@ -148,7 +148,15 @@ def write_daily_brief_md(
             for r in brief.ticker_rollup
         ],
         "videos": [
-            {"video_id": v.video_id, "channel_slug": v.channel_slug, "title": v.title, "url": v.url}
+            {
+                "video_id": v.video_id,
+                "channel_id": v.channel_id,
+                "channel_name": v.channel_name,
+                "channel_slug": v.channel_slug,
+                "title": v.title,
+                "published_at_utc": v.published_at_utc.isoformat(),
+                "url": v.url,
+            }
             for v in brief.videos
         ],
         "llm_meta": {

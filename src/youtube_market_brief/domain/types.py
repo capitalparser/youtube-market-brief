@@ -199,7 +199,7 @@ class ChannelConfig:
 @dataclass(frozen=True)
 class WeeklyTickerDayEntry:
     date: date
-    direction: Direction | NetDirection
+    direction: NetDirection
     mention_count: int
 
 
@@ -211,7 +211,7 @@ class WeeklyTickerEntry:
     sector_tag: str | None
     days_mentioned: int
     total_mentions: int
-    directions: tuple[Direction | NetDirection, ...]
+    directions: tuple[NetDirection, ...]
     net_weekly_direction: NetDirection
     per_day: tuple[WeeklyTickerDayEntry, ...]
 

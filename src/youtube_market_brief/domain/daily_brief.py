@@ -232,7 +232,7 @@ def compute_weekly_rollup(
         first_tr = day_pairs[0][1]
         ticker_entries.append(
             WeeklyTickerEntry(
-                symbol=first_tr.symbol if in_wl else (first_tr.symbol or None),
+                symbol=first_tr.symbol or None,
                 display=first_tr.display,
                 in_watchlist=in_wl,
                 sector_tag=None,  # ticker_rollup doesn't carry sector — P3 MVP scope
