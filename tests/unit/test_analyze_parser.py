@@ -90,3 +90,36 @@ def test_parse_rejects_non_dict_ticker_element():
     payload["tickers"][0] = "NVDA"  # malformed: plain string
     with pytest.raises(ValueError, match="tickers"):
         _parse_video_payload(payload)
+
+
+def test_parse_rejects_empty_red_team():
+    """red_team must have 2-4 items; empty list must raise ValueError."""
+    payload = json.loads(FIXTURE.read_text(encoding="utf-8"))
+    payload["red_team"] = []
+    with pytest.raises(ValueError, match="red_team"):
+        _parse_video_payload(payload)
+
+
+def test_parse_rejects_single_item_red_team():
+    """red_team must have at least 2 items."""
+    payload = json.loads(FIXTURE.read_text(encoding="utf-8"))
+    payload["red_team"] = [{"text": "only one", "sector_tags": [], "theme_tags": []}]
+    with pytest.raises(ValueError, match="red_team"):
+        _parse_video_payload(payload)
+
+
+def test_parse_rejects_five_item_red_team():
+    """red_team must not exceed 4 items."""
+    payload = json.loads(FIXTURE.read_text(encoding="utf-8"))
+    item = {"text": "extra", "sector_tags": [], "theme_tags": []}
+    payload["red_team"] = [item] * 5
+    with pytest.raises(ValueError, match="red_team"):
+        _parse_video_payload(payload)
+
+
+def test_parse_accepts_two_item_red_team():
+    """red_team with exactly 2 items should pass."""
+    payload = json.loads(FIXTURE.read_text(encoding="utf-8"))
+    assert len(payload["red_team"]) == 2  # fixture has 2 after update
+    parsed = _parse_video_payload(payload)
+    assert len(parsed["red_team"]) == 2

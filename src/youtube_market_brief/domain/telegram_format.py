@@ -28,10 +28,10 @@ def _esc(s: str) -> str:
 
 
 def _text_of(item) -> str:
-    """Daily brief의 KeyInsight/RedTeamItem 또는 plain string 모두 흡수.
+    """Extract text from KeyInsight/RedTeamItem object, with string fallback.
 
-    DailyBrief.key_insights / red_team은 Task 7까지 tuple[str, ...]로 유지되므로
-    이 helper가 두 형태를 모두 처리한다.
+    The string fallback is defensive — preserved in case legacy .analysis.json
+    sidecars are read back in via future re-processing.
     """
     return getattr(item, "text", None) or str(item)
 

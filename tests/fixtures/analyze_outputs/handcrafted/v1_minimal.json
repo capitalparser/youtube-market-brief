@@ -6,7 +6,8 @@
     {"text": "원화 약세 영향", "sector_tags": [], "theme_tags": ["korea_discount"]}
   ],
   "red_team": [
-    {"text": "capex ROI 의심", "sector_tags": ["semiconductors"], "theme_tags": ["ai_meltup_bubble"]}
+    {"text": "capex ROI 의심", "sector_tags": ["semiconductors"], "theme_tags": ["ai_meltup_bubble"]},
+    {"text": "공급 과잉 리스크", "sector_tags": ["semiconductors"], "theme_tags": ["memory_supercycle"]}
   ],
   "tickers": [
     {

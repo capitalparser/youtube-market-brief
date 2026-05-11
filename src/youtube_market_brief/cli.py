@@ -385,11 +385,16 @@ def cmd_aggregate_only(args) -> int:
     from youtube_market_brief.domain.types import (
         DailyBrief,
         LLMMeta,
+        RedTeamItem,
         TickerRollup,
         TickerRollupVideoEntry,
         VideoMeta,
     )
-    from youtube_market_brief.pipeline.aggregate import write_daily_brief_md
+    from youtube_market_brief.pipeline.aggregate import (
+        _coerce_insight,
+        _coerce_redteam,
+        write_daily_brief_md,
+    )
     from youtube_market_brief.pipeline.notify import notify_daily
     from youtube_market_brief.state.store import IdempotencyStore
 
@@ -472,10 +477,18 @@ def cmd_aggregate_only(args) -> int:
         return 2
 
     market_read = (payload.get("market_read") or "").strip()
-    key_insights = tuple(payload.get("key_insights") or [])
-    red_team = tuple(payload.get("red_team") or []) or (
-        "(영상 간 합의가 약하거나 thesis가 분산되어 통합 반론 도출이 어려움)",
-    )
+    key_insights = tuple(_coerce_insight(i) for i in (payload.get("key_insights") or []))
+    red_team_raw = payload.get("red_team") or []
+    if red_team_raw:
+        red_team = tuple(_coerce_redteam(i) for i in red_team_raw)
+    else:
+        red_team = (
+            RedTeamItem(
+                text="(영상 간 합의가 약하거나 thesis가 분산되어 통합 반론 도출이 어려움)",
+                sector_tags=(),
+                theme_tags=(),
+            ),
+        )
 
     rollups: list[TickerRollup] = []
     for r in payload.get("ticker_rollup") or []:

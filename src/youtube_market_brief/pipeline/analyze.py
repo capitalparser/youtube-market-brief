@@ -87,23 +87,14 @@ def analyze_video(
         for item in parsed["key_insights"]
     )
     red_team_raw = parsed["red_team"]
-    if red_team_raw:
-        red_team: tuple[RedTeamItem, ...] = tuple(
-            RedTeamItem(
-                text=str(item["text"]).strip(),
-                sector_tags=tuple(item.get("sector_tags") or []),
-                theme_tags=tuple(item.get("theme_tags") or []),
-            )
-            for item in red_team_raw
+    red_team: tuple[RedTeamItem, ...] = tuple(
+        RedTeamItem(
+            text=str(item["text"]).strip(),
+            sector_tags=tuple(item.get("sector_tags") or []),
+            theme_tags=tuple(item.get("theme_tags") or []),
         )
-    else:
-        red_team = (
-            RedTeamItem(
-                text="(영상이 단편 사실 보도, 별도 반론 없음)",
-                sector_tags=(),
-                theme_tags=(),
-            ),
-        )
+        for item in red_team_raw
+    )
 
     raw_tickers = parsed["tickers"]
 
@@ -212,8 +203,8 @@ def _parse_video_payload(payload) -> dict:
         raise ValueError("key_insights must be 3-5 items")
     _validate_tagged_items(payload["key_insights"], "key_insights")
 
-    if not isinstance(payload["red_team"], list):
-        raise ValueError("red_team must be list")
+    if not isinstance(payload["red_team"], list) or not (2 <= len(payload["red_team"]) <= 4):
+        raise ValueError("red_team must be 2-4 items")
     _validate_tagged_items(payload["red_team"], "red_team")
 
     if not isinstance(payload["tickers"], list):

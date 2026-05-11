@@ -94,11 +94,11 @@ class TickerMention:
     symbol: str | None
     display: str
     in_watchlist: bool
-    sector_tag: str | None      # NEW
     direction: Direction
     reasoning: str
     quotes: tuple[str, ...]
     confidence: Confidence
+    sector_tag: str | None = None  # defaulted; moved to end to satisfy dataclass ordering
 
 
 @dataclass(frozen=True)
