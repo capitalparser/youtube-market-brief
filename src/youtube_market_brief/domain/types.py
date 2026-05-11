@@ -151,9 +151,8 @@ class TickerRollup:
 class DailyBrief:
     date: date
     market_read: str
-    # NOTE: still tuple[str, ...] during P1 migration; promoted to KeyInsight/RedTeamItem tuples in Task 7.
-    key_insights: tuple[str, ...]
-    red_team: tuple[str, ...]
+    key_insights: tuple[KeyInsight, ...]
+    red_team: tuple[RedTeamItem, ...]
     ticker_rollup: tuple[TickerRollup, ...]
     videos: tuple[VideoMeta, ...]
     llm_meta: LLMMeta

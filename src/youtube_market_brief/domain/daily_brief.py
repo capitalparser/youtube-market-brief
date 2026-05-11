@@ -95,10 +95,19 @@ def render_daily_brief_markdown(brief: DailyBrief, *, captured_at) -> str:
     """Render the daily brief markdown document."""
     parts: list[str] = []
 
-    # Frontmatter
+    # Aggregate sector/theme tag union (mirrors video MD frontmatter footprint)
+    ki_sectors = sorted({tag for ki in brief.key_insights for tag in ki.sector_tags})
+    ki_themes = sorted({tag for ki in brief.key_insights for tag in ki.theme_tags})
+    rt_sectors = sorted({tag for rt in brief.red_team for tag in rt.sector_tags})
+    rt_themes = sorted({tag for rt in brief.red_team for tag in rt.theme_tags})
+
     parts.append("---")
     parts.append(f"captured_at: {captured_at.isoformat()}")
     parts.append(f"date: {brief.date.isoformat()}")
+    parts.append(f"insight_sector_tags: {ki_sectors}")
+    parts.append(f"insight_theme_tags: {ki_themes}")
+    parts.append(f"red_team_sector_tags: {rt_sectors}")
+    parts.append(f"red_team_theme_tags: {rt_themes}")
     parts.append("source_type: youtube_daily_brief")
     parts.append("source_url: ''")
     parts.append("tags:")
@@ -115,12 +124,12 @@ def render_daily_brief_markdown(brief: DailyBrief, *, captured_at) -> str:
 
     parts.append("## 🔑 핵심 인사이트\n")
     for ins in brief.key_insights:
-        parts.append(f"- {ins}")
+        parts.append(f"- {ins.text}")
     parts.append("")
 
     parts.append("## 🚨 레드팀 시각\n")
     for rt in brief.red_team:
-        parts.append(f"- {rt}")
+        parts.append(f"- {rt.text}")
     parts.append("")
 
     wl = [r for r in brief.ticker_rollup if r.in_watchlist]

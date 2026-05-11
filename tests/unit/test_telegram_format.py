@@ -124,8 +124,8 @@ def test_format_daily_brief_escapes_html_special_chars():
     brief = DailyBrief(
         date=date(2026, 5, 1),
         market_read="risk < reward & momentum",
-        key_insights=("a < b",),
-        red_team=("c & d",),
+        key_insights=(KeyInsight(text="a < b"),),
+        red_team=(RedTeamItem(text="c & d"),),
         ticker_rollup=(),
         videos=(),
         llm_meta=_llm_meta(),
