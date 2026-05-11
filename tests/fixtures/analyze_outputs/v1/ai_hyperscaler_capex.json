@@ -1,0 +1,164 @@
+{
+  "video_id": "synthetic_ai_002",
+  "tier": "deep",
+  "headline_3line": [
+    "빅테크 3사 2026년 합산 Capex 3,500억 달러, 60% 이상이 AI 인프라에 집중",
+    "엔비디아 데이터센터 매출 2026년 2배 성장 전망, 주가 연초 대비 40% 상승",
+    "AI ROI 미가시화·전력 인프라 병목이 하이퍼스케일러 사이클의 핵심 변수로 부상"
+  ],
+  "key_insights": [
+    {
+      "text": "빅테크 3사 합산 capex 3,500억 달러 중 60% 이상이 AI 인프라에 배분된다. 절대금액으로 약 2,100억 달러가 AI 자본지출로 흐르는 역대 최대 규모 사이클이며, 수요 가시성은 내부 확인 단계에 진입했다.",
+      "sector_tags": [
+        "semiconductors",
+        "tech_hardware"
+      ],
+      "theme_tags": [
+        "hyperscaler_capex"
+      ]
+    },
+    {
+      "text": "마이크로소프트 CFO가 어닝콜에서 'AI 수요가 공급 능력을 지속 초과'라고 직접 언급했다. 단순 전망이 아닌 현재 진행형 공급 병목 신호로, OpenAI 독점 파트너십과 결합 시 Azure 점유율 확대 모멘텀이 강하다.",
+      "sector_tags": [
+        "software_ai_services",
+        "tech_hardware"
+      ],
+      "theme_tags": [
+        "hyperscaler_capex",
+        "ai_agent_adoption"
+      ]
+    },
+    {
+      "text": "구글 클라우드 YoY 35% 성장, TPU v6 자체 칩 대폭 확장으로 엔비디아 의존도 축소를 추진 중이다. 내재화 전략이 현실화될 경우 엔비디아의 하이퍼스케일러 고객 집중 리스크가 중장기적으로 부각될 수 있다.",
+      "sector_tags": [
+        "semiconductors",
+        "software_ai_services"
+      ],
+      "theme_tags": [
+        "hyperscaler_capex"
+      ]
+    },
+    {
+      "text": "데이터센터 전력 수요 급증으로 전력 인프라·원자력 섹터에 수혜가 확산 중이다. AI 투자 효과가 반도체·소프트웨어를 넘어 에너지 밸류체인 전반으로 퍼지는 구조적 시그널이다.",
+      "sector_tags": [
+        "power_utilities",
+        "energy"
+      ],
+      "theme_tags": [
+        "hyperscaler_capex"
+      ]
+    },
+    {
+      "text": "기업 AI 도입에도 불구하고 생산성 향상이 재무제표에 아직 반영되지 않는다는 ROI 회의론이 명시됐다. capex 집행과 ROI 인식 간 시차가 2026년 사이클 지속 여부를 가르는 핵심 쟁점이다.",
+      "sector_tags": [
+        "software_ai_services"
+      ],
+      "theme_tags": [
+        "ai_meltup_bubble",
+        "ai_agent_adoption"
+      ]
+    }
+  ],
+  "red_team": [
+    {
+      "text": "회계감사인 시각: 엔비디아 데이터센터 매출 '2배 성장' 전망의 출처가 어닝콜 가이던스인지 외부 애널리스트 추정인지 불분명하다. 컨센서스 범위·전제 미검증 인용은 투자 판단 오류를 유발한다.",
+      "sector_tags": [
+        "semiconductors"
+      ],
+      "theme_tags": [
+        "hyperscaler_capex"
+      ]
+    },
+    {
+      "text": "투자자 시각: NVDA 주가 연초 대비 40% 상승은 capex 사이클 지속을 이미 상당 부분 선반영했을 가능성이 높다. 현시점 신규 진입은 밸류에이션 프리미엄 부담을 안고 사이클 고점 리스크에 노출된다.",
+      "sector_tags": [
+        "semiconductors"
+      ],
+      "theme_tags": [
+        "ai_meltup_bubble",
+        "hyperscaler_capex"
+      ]
+    },
+    {
+      "text": "재무 정보 전문가 시각: 구글 클라우드 35% 성장률은 제시됐으나 영업이익률·FCF 기여도는 일절 언급되지 않았다. 수익성 지표 없이 성장률만 부각하는 서술은 투자 매력을 과장할 수 있다.",
+      "sector_tags": [
+        "software_ai_services"
+      ],
+      "theme_tags": [
+        "hyperscaler_capex"
+      ]
+    },
+    {
+      "text": "시장 분석가 시각: AWS AI 모델 역량 열세 평가는 포지셔닝 리스크이나, 클라우드 인프라 점유율 1위 지위와 Trainium3 자체 칩 전략이 narrative 전환을 일으킬 경우 단기 반등 가능성도 병존한다.",
+      "sector_tags": [
+        "software_ai_services",
+        "tech_hardware"
+      ],
+      "theme_tags": [
+        "hyperscaler_capex"
+      ]
+    }
+  ],
+  "watchlist_hits": [
+    "NVDA"
+  ],
+  "tickers": [
+    {
+      "symbol": "NVDA",
+      "display": "엔비디아",
+      "in_watchlist": true,
+      "sector_tag": "semiconductors",
+      "direction": "긍정적",
+      "confidence": "medium",
+      "reasoning": "하이퍼스케일러 3사의 AI capex 확대가 데이터센터 GPU 수요를 직접 구동하며 2026년 데이터센터 매출 2배 성장 전망이 제시됐다. 주가도 연초 대비 40% 상승하며 시장 기대를 반영 중이나 고점 리스크도 병존한다.",
+      "quotes": [
+        "엔비디아의 데이터센터 매출은 2026년에도 전년 대비 2배 이상 성장할 것으로 전망됩니다.",
+        "엔비디아 주가는 연초 대비 약 40% 상승하며 시장의 기대를 반영하고 있습니다."
+      ]
+    },
+    {
+      "symbol": "MSFT",
+      "display": "Microsoft",
+      "in_watchlist": false,
+      "sector_tag": "software_ai_services",
+      "direction": "긍정적",
+      "confidence": "medium",
+      "reasoning": "Azure AI 인프라 집중 확장과 OpenAI 독점 파트너십, CFO의 AI 수요 > 공급 직접 발언이 긍정적 업사이드 시그널로 제시됐다.",
+      "quotes": [
+        "AI 수요가 우리의 공급 능력을 지속적으로 초과하고 있다"
+      ]
+    },
+    {
+      "symbol": "GOOGL",
+      "display": "Alphabet (Google)",
+      "in_watchlist": false,
+      "sector_tag": "software_ai_services",
+      "direction": "긍정적",
+      "confidence": "medium",
+      "reasoning": "구글 클라우드 35% YoY 성장과 TPU 자체 칩 내재화로 엔비디아 의존도를 축소 중이나, 수익성 지표는 미언급으로 성장 지속가능성 검증이 필요하다.",
+      "quotes": [
+        "구글 클라우드 매출 성장률이 전년 대비 35%를 기록했습니다."
+      ]
+    },
+    {
+      "symbol": "AMZN",
+      "display": "Amazon (AWS)",
+      "in_watchlist": false,
+      "sector_tag": "software_ai_services",
+      "direction": "중립",
+      "confidence": "low",
+      "reasoning": "Trainium3로 엔비디아 대안을 제시했으나 AI 모델 역량이 경쟁사 대비 뒤처진다는 평가가 병존해 포지셔닝 불확실성이 크다.",
+      "quotes": [
+        "시장에서는 AWS의 AI 모델 역량이 Microsoft, Google에 비해 다소 뒤처진다는 평가가 있습니다."
+      ]
+    }
+  ],
+  "tags": [
+    "youtube",
+    "test_market_analysis",
+    "NVDA",
+    "Microsoft",
+    "Alphabet (Google)",
+    "Amazon (AWS)"
+  ]
+}
