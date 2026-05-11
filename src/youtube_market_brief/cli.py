@@ -189,6 +189,20 @@ def cmd_config(args) -> int:
             print(f"\nMISSING: {', '.join(missing)}", file=sys.stderr)
             return 2
         print("\nOK: required env + config present.")
+
+        # P1: taxonomy drift detection
+        from youtube_market_brief.config import _validate_taxonomy_alignment
+        drift = _validate_taxonomy_alignment(vault_root=cfg.vault_root)
+        if drift:
+            print("[taxonomy drift detected]", file=sys.stderr)
+            for line in drift:
+                print(f"  - {line}", file=sys.stderr)
+            print(
+                "  → src/youtube_market_brief/domain/taxonomy.py 또는 vault MD 슬러그를 정합시키시오.",
+                file=sys.stderr,
+            )
+            return 1
+        print("✓ taxonomy aligned (sectors + themes)")
     return 0
 
 

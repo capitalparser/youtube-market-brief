@@ -174,6 +174,44 @@ def load_watchlist(path: Path) -> Watchlist:
     return Watchlist(entries=tuple(e for e in entries if e.symbol))
 
 
+def _validate_taxonomy_alignment(*, vault_root: Path) -> list[str]:
+    """Compare domain.taxonomy slugs with vault Market_Insights MD slugs.
+
+    Returns a list of human-readable drift messages. Empty list = aligned.
+    """
+    from youtube_market_brief.domain.taxonomy import SECTOR_SLUGS, THEME_SLUGS
+
+    drift: list[str] = []
+    sectors_dir = vault_root / "02_Areas" / "Market_Insights" / "sectors"
+    themes_dir = vault_root / "02_Areas" / "Market_Insights" / "themes"
+
+    if not sectors_dir.exists():
+        drift.append(f"[sectors] dir missing: {sectors_dir}")
+    else:
+        vault_sectors = {p.stem for p in sectors_dir.glob("*.md")}
+        taxonomy_sectors = set(SECTOR_SLUGS)
+        extra = vault_sectors - taxonomy_sectors
+        missing = taxonomy_sectors - vault_sectors
+        if extra:
+            drift.append(f"[sectors] vault has but taxonomy lacks: {sorted(extra)}")
+        if missing:
+            drift.append(f"[sectors] taxonomy has but vault lacks: {sorted(missing)}")
+
+    if not themes_dir.exists():
+        drift.append(f"[themes] dir missing: {themes_dir}")
+    else:
+        vault_themes = {p.stem for p in themes_dir.glob("*.md")}
+        taxonomy_themes = set(THEME_SLUGS)
+        extra = vault_themes - taxonomy_themes
+        missing = taxonomy_themes - vault_themes
+        if extra:
+            drift.append(f"[themes] vault has but taxonomy lacks: {sorted(extra)}")
+        if missing:
+            drift.append(f"[themes] taxonomy has but vault lacks: {sorted(missing)}")
+
+    return drift
+
+
 def persist_resolved_channel_id(channels_path: Path, slug: str, channel_id: str) -> None:
     """Update channels.yaml to record the resolved channel_id for an entry by slug.
 
