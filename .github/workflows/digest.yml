@@ -93,6 +93,15 @@ jobs:
       - name: Health check
         run: uv run ymb health
 
+      - name: Pull yesterday vault MDs from Drive (07:00 KST only)
+        if: github.event.schedule == '0 22 * * *' || github.event_name == 'workflow_dispatch'
+        run: |
+          TARGET=$(TZ=Asia/Seoul date -d "yesterday" +%Y-%m-%d)
+          echo "Pulling vault MDs for $TARGET from Drive"
+          mkdir -p "$VAULT_ROOT_PATH/00_Wiki/youtube"
+          rclone copy "drive:00_Wiki/youtube/" "$VAULT_ROOT_PATH/00_Wiki/youtube/" \
+            --include "${TARGET}__*.md" --quiet || echo "no prior MDs for $TARGET on Drive"
+
       - name: Run daily digest
         # 07:00 KST (cron "0 22 * * *") → catch up yesterday's videos AND
         #   regenerate yesterday's daily brief from all vault MDs (정리 발송)

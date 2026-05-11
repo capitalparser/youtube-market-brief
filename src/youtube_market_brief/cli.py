@@ -398,8 +398,11 @@ def cmd_aggregate_only(args) -> int:
     md_paths = sorted(cfg.vault_youtube_root.glob(f"*/{pattern}"))
     md_paths = [p for p in md_paths if not p.parent.name.startswith("_")]
     if not md_paths:
-        print(f"No vault MDs found for {target_date.isoformat()}", file=sys.stderr)
-        return 1
+        # No MDs locally — either nothing was processed that day or MDs weren't pulled
+        # from Drive. This is not an error; the 07:00 KST run may legitimately have
+        # nothing to aggregate if the previous day had no new videos.
+        log.info("aggregate-only %s: no vault MDs found, skipping", target_date.isoformat())
+        return 0
 
     log.info("aggregate-only %s: found %d vault MD(s)", target_date.isoformat(), len(md_paths))
 
