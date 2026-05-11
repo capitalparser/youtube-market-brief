@@ -59,6 +59,7 @@ class WatchlistEntry:
     symbol: str
     market: Market
     name_ko: str
+    sector: str = ""             # NEW, defaulted
     name_en: str | None = None
     aliases: tuple[str, ...] = ()
 
@@ -75,10 +76,25 @@ class Watchlist:
 
 
 @dataclass(frozen=True)
+class KeyInsight:
+    text: str
+    sector_tags: tuple[str, ...] = ()
+    theme_tags: tuple[str, ...] = ()
+
+
+@dataclass(frozen=True)
+class RedTeamItem:
+    text: str
+    sector_tags: tuple[str, ...] = ()
+    theme_tags: tuple[str, ...] = ()
+
+
+@dataclass(frozen=True)
 class TickerMention:
     symbol: str | None
     display: str
     in_watchlist: bool
+    sector_tag: str | None      # NEW
     direction: Direction
     reasoning: str
     quotes: tuple[str, ...]
@@ -88,8 +104,8 @@ class TickerMention:
 @dataclass(frozen=True)
 class TranscriptSummary:
     headline_3line: tuple[str, str, str]
-    key_insights: tuple[str, ...]
-    red_team: tuple[str, ...]
+    key_insights: tuple[KeyInsight, ...]
+    red_team: tuple[RedTeamItem, ...]
     chars_used: int
     was_truncated: bool
 
