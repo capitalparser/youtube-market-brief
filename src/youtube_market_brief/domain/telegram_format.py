@@ -26,6 +26,16 @@ SOFT_CAP = 4000
 def _esc(s: str) -> str:
     return html.escape(s, quote=False)
 
+
+def _text_of(item) -> str:
+    """Daily brief의 KeyInsight/RedTeamItem 또는 plain string 모두 흡수.
+
+    DailyBrief.key_insights / red_team은 Task 7까지 tuple[str, ...]로 유지되므로
+    이 helper가 두 형태를 모두 처리한다.
+    """
+    return getattr(item, "text", None) or str(item)
+
+
 _DIRECTION_EMOJI = {
     "긍정적": "🟢",
     "중립": "⚪",
@@ -46,11 +56,11 @@ def format_per_video(analysis: VideoAnalysis, *, vault_md_path_relative: str) ->
     parts.append("")
     parts.append("🎯 핵심 인사이트")
     for ins in s.key_insights:
-        parts.append(f"• {_esc(ins)}")
+        parts.append(f"• {_esc(ins.text)}")
     parts.append("")
     parts.append("🚨 레드팀 시각")
     for rt in s.red_team:
-        parts.append(f"• {_esc(rt)}")
+        parts.append(f"• {_esc(rt.text)}")
     parts.append("")
 
     label_suffix = (
@@ -75,11 +85,11 @@ def format_daily_brief(brief: DailyBrief) -> str:
     parts.append("")
     parts.append("🔑 핵심 인사이트")
     for ins in brief.key_insights:
-        parts.append(f"• {_esc(ins)}")
+        parts.append(f"• {_esc(_text_of(ins))}")
     parts.append("")
     parts.append("🚨 레드팀 시각")
     for rt in brief.red_team:
-        parts.append(f"• {_esc(rt)}")
+        parts.append(f"• {_esc(_text_of(rt))}")
     parts.append("")
 
     wl = [r for r in brief.ticker_rollup if r.in_watchlist]

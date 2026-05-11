@@ -9,7 +9,9 @@ from youtube_market_brief.domain.telegram_format import (
 )
 from youtube_market_brief.domain.types import (
     DailyBrief,
+    KeyInsight,
     LLMMeta,
+    RedTeamItem,
     TickerMention,
     TranscriptSummary,
     VideoAnalysis,
@@ -81,8 +83,8 @@ def test_format_per_video_escapes_html_special_chars():
     )
     summary = TranscriptSummary(
         headline_3line=("h1", "h2", "h3"),
-        key_insights=("위험 < 기회",),
-        red_team=("Tom & Jerry",),
+        key_insights=(KeyInsight(text="위험 < 기회"),),
+        red_team=(RedTeamItem(text="Tom & Jerry"),),
         chars_used=0,
         was_truncated=False,
     )
@@ -90,6 +92,7 @@ def test_format_per_video_escapes_html_special_chars():
         symbol="000660",
         display="SK <하이닉스>",
         in_watchlist=True,
+        sector_tag=None,
         direction="긍정적",
         reasoning="capex & demand",
         quotes=(),
@@ -133,3 +136,43 @@ def test_format_daily_brief_escapes_html_special_chars():
     assert "risk &lt; reward &amp; momentum" in out
     assert "a &lt; b" in out
     assert "c &amp; d" in out
+
+
+def test_format_per_video_extracts_text_from_key_insight_objects():
+    """Telegram message renders KeyInsight.text only — sector_tags not exposed to user."""
+    video = VideoMeta(
+        video_id="vid1",
+        channel_id="cid",
+        channel_name="테스트채널",
+        channel_slug="test",
+        title="테스트 영상",
+        published_at_utc=datetime(2026, 5, 1, tzinfo=UTC),
+        url="https://example.com/v=1",
+    )
+    summary = TranscriptSummary(
+        headline_3line=("h1", "h2", "h3"),
+        key_insights=(
+            KeyInsight(text="반도체 수요 회복", sector_tags=("semiconductors",), theme_tags=()),
+        ),
+        red_team=(
+            RedTeamItem(text="공급 과잉 우려", sector_tags=("semiconductors",), theme_tags=()),
+        ),
+        chars_used=0,
+        was_truncated=False,
+    )
+    analysis = VideoAnalysis(
+        video=video,
+        transcript_summary=summary,
+        tickers=(),
+        watchlist_hits=(),
+        tier="light",
+        tags=(),
+        llm_meta=_llm_meta(),
+        generated_at=datetime(2026, 5, 1, tzinfo=UTC),
+    )
+    out = format_per_video(analysis, vault_md_path_relative="some/path.md")
+    # KeyInsight.text is rendered.
+    assert "반도체 수요 회복" in out
+    assert "공급 과잉 우려" in out
+    # sector_tags are NOT exposed in the Telegram message.
+    assert "semiconductors" not in out
