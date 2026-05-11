@@ -151,6 +151,7 @@ class TickerRollup:
 class DailyBrief:
     date: date
     market_read: str
+    # NOTE: still tuple[str, ...] during P1 migration; promoted to KeyInsight/RedTeamItem tuples in Task 7.
     key_insights: tuple[str, ...]
     red_team: tuple[str, ...]
     ticker_rollup: tuple[TickerRollup, ...]

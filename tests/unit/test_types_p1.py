@@ -32,6 +32,7 @@ def test_red_team_item_dataclass_shape():
     )
     assert rt.text == "caution"
     assert rt.sector_tags == ("financials",)
+    assert rt.theme_tags == ("us_fiscal_debt",)
 
 
 def test_red_team_item_is_frozen():
