@@ -166,6 +166,7 @@ def load_watchlist(path: Path) -> Watchlist:
                 symbol=str(t.get("symbol", "")).strip(),
                 market=t.get("market", "ETC"),
                 name_ko=t.get("name_ko", "").strip(),
+                sector=str(t.get("sector", "")).strip(),
                 name_en=(t.get("name_en") or None),
                 aliases=tuple(a for a in (t.get("aliases") or []) if isinstance(a, str)),
             )

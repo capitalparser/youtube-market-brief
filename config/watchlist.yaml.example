@@ -7,6 +7,9 @@
 #   - market:  KOSPI / KOSDAQ / NYSE / NASDAQ / ETC
 #   - name_ko: 한국어 정식명
 #   - name_en: 영어 정식명 (선택)
+#   - sector:  섹터 슬러그 (선택). 허용값: semiconductors, software_ai_services,
+#              tech_hardware, financials, power_utilities, industrials_defense,
+#              energy, materials, consumer_discretionary, consumer_staples
 #   - aliases: 영상에서 자주 등장하는 별칭/약칭 (예: "삼전", "엔비")
 
 tickers:
@@ -14,22 +17,26 @@ tickers:
     market: KOSPI
     name_ko: "삼성전자"
     name_en: "Samsung Electronics"
+    sector: "semiconductors"
     aliases: ["삼전", "삼성전"]
 
   - symbol: "000660"
     market: KOSPI
     name_ko: "SK하이닉스"
     name_en: "SK Hynix"
+    sector: "semiconductors"
     aliases: ["하이닉스"]
 
   - symbol: "NVDA"
     market: NASDAQ
     name_ko: "엔비디아"
     name_en: "NVIDIA"
+    sector: "semiconductors"
     aliases: ["엔비"]
 
   - symbol: "TSLA"
     market: NASDAQ
     name_ko: "테슬라"
     name_en: "Tesla"
+    sector: "consumer_discretionary"
     aliases: []
