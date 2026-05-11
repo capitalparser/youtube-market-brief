@@ -7,6 +7,7 @@ display names with canonical symbols.
 
 from __future__ import annotations
 
+import logging
 from collections.abc import Iterable
 
 from youtube_market_brief.domain.types import (
@@ -14,6 +15,8 @@ from youtube_market_brief.domain.types import (
     Watchlist,
     WatchlistEntry,
 )
+
+log = logging.getLogger(__name__)
 
 
 def resolve_symbol(mention: TickerMention, watchlist: Watchlist) -> WatchlistEntry | None:
@@ -78,8 +81,7 @@ def annotate_in_watchlist(
         if entry is not None:
             sector_tag = entry.sector if entry.sector else m.sector_tag
             if entry.sector and m.sector_tag and entry.sector != m.sector_tag:
-                import logging
-                logging.getLogger(__name__).warning(
+                log.warning(
                     "ticker %s sector conflict: llm=%s watchlist=%s — using watchlist",
                     entry.symbol, m.sector_tag, entry.sector,
                 )
