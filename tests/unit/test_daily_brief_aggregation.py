@@ -1,3 +1,4 @@
+import yaml
 from datetime import UTC, date, datetime
 
 from youtube_market_brief.domain.daily_brief import render_daily_brief_markdown
@@ -7,6 +8,12 @@ from youtube_market_brief.domain.types import (
     LLMMeta,
     RedTeamItem,
 )
+
+
+def _parse_fm(md: str) -> dict:
+    """Extract and YAML-parse the frontmatter block from a markdown string."""
+    fm_str = md.split("---\n", 1)[1].split("\n---\n", 1)[0]
+    return yaml.safe_load(fm_str)
 
 
 def test_daily_brief_md_frontmatter_aggregates_insight_sectors():
@@ -23,10 +30,11 @@ def test_daily_brief_md_frontmatter_aggregates_insight_sectors():
         llm_meta=LLMMeta(model="t", duration_ms=0),
     )
     md = render_daily_brief_markdown(brief, captured_at=datetime(2026, 5, 11, tzinfo=UTC))
-    assert "insight_sector_tags: ['financials', 'semiconductors']" in md
-    assert "insight_theme_tags: ['hyperscaler_capex']" in md
-    assert "red_team_sector_tags: ['energy']" in md
-    assert "red_team_theme_tags: ['geopolitics_middle_east']" in md
+    fm = _parse_fm(md)
+    assert fm["insight_sector_tags"] == ["financials", "semiconductors"]
+    assert fm["insight_theme_tags"] == ["hyperscaler_capex"]
+    assert fm["red_team_sector_tags"] == ["energy"]
+    assert fm["red_team_theme_tags"] == ["geopolitics_middle_east"]
 
 
 def test_daily_brief_md_body_renders_text_only():
@@ -56,5 +64,6 @@ def test_daily_brief_md_empty_tag_union_yields_empty_lists():
         llm_meta=LLMMeta(model="t", duration_ms=0),
     )
     md = render_daily_brief_markdown(brief, captured_at=datetime(2026, 5, 11, tzinfo=UTC))
-    assert "insight_sector_tags: []" in md
-    assert "red_team_sector_tags: []" in md
+    fm = _parse_fm(md)
+    assert fm["insight_sector_tags"] == []
+    assert fm["red_team_sector_tags"] == []

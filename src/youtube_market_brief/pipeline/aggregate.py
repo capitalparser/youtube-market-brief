@@ -26,6 +26,28 @@ from youtube_market_brief.domain.types import (
 log = logging.getLogger(__name__)
 
 
+def _coerce_insight(item) -> KeyInsight:
+    """Accept v1 dict or transitional string, normalize to KeyInsight."""
+    if isinstance(item, dict):
+        return KeyInsight(
+            text=str(item.get("text", "")).strip(),
+            sector_tags=tuple(item.get("sector_tags") or []),
+            theme_tags=tuple(item.get("theme_tags") or []),
+        )
+    return KeyInsight(text=str(item).strip(), sector_tags=(), theme_tags=())
+
+
+def _coerce_redteam(item) -> RedTeamItem:
+    """Accept v1 dict or transitional string, normalize to RedTeamItem."""
+    if isinstance(item, dict):
+        return RedTeamItem(
+            text=str(item.get("text", "")).strip(),
+            sector_tags=tuple(item.get("sector_tags") or []),
+            theme_tags=tuple(item.get("theme_tags") or []),
+        )
+    return RedTeamItem(text=str(item).strip(), sector_tags=(), theme_tags=())
+
+
 def aggregate_daily(
     *,
     analyses: Iterable[VideoAnalysis],
@@ -55,24 +77,6 @@ def aggregate_daily(
     if not isinstance(payload, dict):
         raise ValueError("daily brief payload not a dict")
     market_read = payload.get("market_read", "").strip()
-
-    def _coerce_insight(item):
-        if isinstance(item, dict):
-            return KeyInsight(
-                text=str(item.get("text", "")).strip(),
-                sector_tags=tuple(item.get("sector_tags") or []),
-                theme_tags=tuple(item.get("theme_tags") or []),
-            )
-        return KeyInsight(text=str(item).strip(), sector_tags=(), theme_tags=())
-
-    def _coerce_redteam(item):
-        if isinstance(item, dict):
-            return RedTeamItem(
-                text=str(item.get("text", "")).strip(),
-                sector_tags=tuple(item.get("sector_tags") or []),
-                theme_tags=tuple(item.get("theme_tags") or []),
-            )
-        return RedTeamItem(text=str(item).strip(), sector_tags=(), theme_tags=())
 
     key_insights = tuple(_coerce_insight(i) for i in payload.get("key_insights", []))
     red_team_raw = payload.get("red_team", [])

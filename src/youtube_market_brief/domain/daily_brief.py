@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import yaml
 from collections import OrderedDict
 from collections.abc import Iterable
 
@@ -91,6 +92,11 @@ def _one_line(s: str, max_len: int = 80) -> str:
     return s if len(s) <= max_len else s[: max_len - 1] + "…"
 
 
+def _yaml_inline_list(items: list[str]) -> str:
+    """Emit a YAML flow-style sequence: [a, b] or []."""
+    return yaml.safe_dump(items, default_flow_style=True, allow_unicode=True).strip()
+
+
 def render_daily_brief_markdown(brief: DailyBrief, *, captured_at) -> str:
     """Render the daily brief markdown document."""
     parts: list[str] = []
@@ -104,10 +110,10 @@ def render_daily_brief_markdown(brief: DailyBrief, *, captured_at) -> str:
     parts.append("---")
     parts.append(f"captured_at: {captured_at.isoformat()}")
     parts.append(f"date: {brief.date.isoformat()}")
-    parts.append(f"insight_sector_tags: {ki_sectors}")
-    parts.append(f"insight_theme_tags: {ki_themes}")
-    parts.append(f"red_team_sector_tags: {rt_sectors}")
-    parts.append(f"red_team_theme_tags: {rt_themes}")
+    parts.append(f"insight_sector_tags: {_yaml_inline_list(ki_sectors)}")
+    parts.append(f"insight_theme_tags: {_yaml_inline_list(ki_themes)}")
+    parts.append(f"red_team_sector_tags: {_yaml_inline_list(rt_sectors)}")
+    parts.append(f"red_team_theme_tags: {_yaml_inline_list(rt_themes)}")
     parts.append("source_type: youtube_daily_brief")
     parts.append("source_url: ''")
     parts.append("tags:")
