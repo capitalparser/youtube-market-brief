@@ -60,6 +60,16 @@ def main(argv: list[str] | None = None) -> int:
     )
     p_agg.set_defaults(func=cmd_aggregate_only)
 
+    p_weekly = sub.add_parser("weekly-brief", help="Compose weekly rollup brief")
+    p_weekly.add_argument(
+        "--week-start",
+        type=str,
+        help="Monday of target week (YYYY-MM-DD). Default: most recent Monday.",
+    )
+    p_weekly.add_argument("--dry-run", action="store_true", help="Skip Telegram send")
+    p_weekly.add_argument("--no-telegram", action="store_true", help="Skip Telegram (alias for --dry-run)")
+    p_weekly.set_defaults(func=cmd_weekly_brief)
+
     args = parser.parse_args(argv)
     if not getattr(args, "cmd", None):
         parser.print_help()
@@ -561,6 +571,74 @@ def cmd_aggregate_only(args) -> int:
     )
     store.flush()
     return 0 if result.ok else 1
+
+
+def cmd_weekly_brief(args) -> int:
+    """Compose weekly rollup brief from existing daily .analysis.json sidecars."""
+    from datetime import date as _Date, datetime as _dt
+
+    cfg = load_app_config()
+    setup_logging(level=cfg.log_level, logs_dir=cfg.logs_dir, tz=cfg.tz)
+
+    from youtube_market_brief.pipeline.weekly import (
+        aggregate_weekly,
+        last_monday,
+        write_weekly_md,
+    )
+
+    today = _dt.now(tz=cfg.tz).date()
+    if args.week_start:
+        try:
+            week_start = _Date.fromisoformat(args.week_start)
+        except ValueError:
+            print(
+                f"invalid --week-start: {args.week_start} (expected YYYY-MM-DD)",
+                file=sys.stderr,
+            )
+            return 2
+    else:
+        week_start = last_monday(today)
+
+    rollup = aggregate_weekly(
+        week_start=week_start,
+        vault_daily_root=cfg.vault_daily_root,
+    )
+    if rollup is None:
+        print(
+            f"no daily briefs found for week starting {week_start.isoformat()}",
+            file=sys.stderr,
+        )
+        return 1
+
+    captured_at = _dt.now(tz=cfg.tz)
+    md_path = write_weekly_md(
+        rollup,
+        vault_weekly_root=cfg.vault_weekly_root,
+        captured_at=captured_at,
+    )
+    print(f"wrote: {md_path}")
+
+    if args.dry_run or args.no_telegram or cfg.dry_run:
+        print("(Telegram skipped)")
+        return 0
+
+    from youtube_market_brief._clients.telegram import HttpxTelegramClient
+    from youtube_market_brief.pipeline.notify import notify_weekly
+
+    telegram = HttpxTelegramClient(
+        bot_token=cfg.telegram_bot_token,
+        chat_id=cfg.telegram_chat_id,
+    )
+    try:
+        md_path_rel = str(md_path.relative_to(cfg.vault_root))
+    except ValueError:
+        md_path_rel = str(md_path)
+    result = notify_weekly(rollup, telegram=telegram, vault_md_path_relative=md_path_rel)
+    if result.ok:
+        print(f"Telegram sent: {len(result.message_ids)} chunk(s)")
+        return 0
+    print(f"Telegram failed: {result.error}", file=sys.stderr)
+    return 1
 
 
 def _extract_key_sections(body: str) -> str:
