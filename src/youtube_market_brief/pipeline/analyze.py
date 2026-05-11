@@ -20,6 +20,7 @@ import yaml
 
 from youtube_market_brief._clients.llm import LLMClient, extract_fenced_json
 from youtube_market_brief.domain import watchlist as wl_domain
+from youtube_market_brief.domain.taxonomy import is_valid_sector, is_valid_theme
 from youtube_market_brief.domain.types import (
     KeyInsight,
     LLMMeta,
@@ -169,6 +170,27 @@ def _compose_user_prompt(*, video: VideoMeta, transcript: Transcript, watchlist:
     )
 
 
+def _validate_tagged_items(items: list, field_name: str) -> None:
+    """Strict validation for KeyInsight/RedTeamItem-shaped payload elements.
+
+    Each item must be {"text": str, "sector_tags": list[str], "theme_tags": list[str]}.
+    Slugs are validated against SECTOR_SLUGS / THEME_SLUGS (no whitespace stripping).
+    """
+    for i, item in enumerate(items):
+        if not isinstance(item, dict) or "text" not in item:
+            raise ValueError(f"{field_name}[{i}] must be object with 'text'")
+        if not isinstance(item.get("sector_tags", []), list):
+            raise ValueError(f"{field_name}[{i}].sector_tags must be list")
+        for s in item.get("sector_tags") or []:
+            if not is_valid_sector(s):
+                raise ValueError(f"{field_name}[{i}].sector_tags invalid slug: {s!r}")
+        if not isinstance(item.get("theme_tags", []), list):
+            raise ValueError(f"{field_name}[{i}].theme_tags must be list")
+        for t in item.get("theme_tags") or []:
+            if not is_valid_theme(t):
+                raise ValueError(f"{field_name}[{i}].theme_tags invalid slug: {t!r}")
+
+
 def _parse_video_payload(payload) -> dict:
     """v1 schema strict validation.
 
@@ -177,8 +199,6 @@ def _parse_video_payload(payload) -> dict:
     sector_tags / theme_tags / sector_tag: SECTOR_SLUGS / THEME_SLUGS 엄격 검증
     (whitespace-padded 슬러그는 contract violation으로 거절).
     """
-    from youtube_market_brief.domain.taxonomy import is_valid_sector, is_valid_theme
-
     if not isinstance(payload, dict):
         raise ValueError("expected JSON object at top level")
     for key in ("headline_3line", "key_insights", "red_team", "tickers", "watchlist_hits"):
@@ -190,39 +210,17 @@ def _parse_video_payload(payload) -> dict:
 
     if not isinstance(payload["key_insights"], list) or not (3 <= len(payload["key_insights"]) <= 5):
         raise ValueError("key_insights must be 3-5 items")
-    for i, item in enumerate(payload["key_insights"]):
-        if not isinstance(item, dict) or "text" not in item:
-            raise ValueError(f"key_insights[{i}] must be object with 'text'")
-        if not isinstance(item.get("sector_tags", []), list):
-            raise ValueError(f"key_insights[{i}].sector_tags must be list")
-        for s in item.get("sector_tags") or []:
-            if not is_valid_sector(s):
-                raise ValueError(f"key_insights[{i}].sector_tags invalid slug: {s!r}")
-        if not isinstance(item.get("theme_tags", []), list):
-            raise ValueError(f"key_insights[{i}].theme_tags must be list")
-        for t in item.get("theme_tags") or []:
-            if not is_valid_theme(t):
-                raise ValueError(f"key_insights[{i}].theme_tags invalid slug: {t!r}")
+    _validate_tagged_items(payload["key_insights"], "key_insights")
 
     if not isinstance(payload["red_team"], list):
         raise ValueError("red_team must be list")
-    for i, item in enumerate(payload["red_team"]):
-        if not isinstance(item, dict) or "text" not in item:
-            raise ValueError(f"red_team[{i}] must be object with 'text'")
-        if not isinstance(item.get("sector_tags", []), list):
-            raise ValueError(f"red_team[{i}].sector_tags must be list")
-        for s in item.get("sector_tags") or []:
-            if not is_valid_sector(s):
-                raise ValueError(f"red_team[{i}].sector_tags invalid slug: {s!r}")
-        if not isinstance(item.get("theme_tags", []), list):
-            raise ValueError(f"red_team[{i}].theme_tags must be list")
-        for t in item.get("theme_tags") or []:
-            if not is_valid_theme(t):
-                raise ValueError(f"red_team[{i}].theme_tags invalid slug: {t!r}")
+    _validate_tagged_items(payload["red_team"], "red_team")
 
     if not isinstance(payload["tickers"], list):
         raise ValueError("tickers must be list")
     for i, t in enumerate(payload["tickers"]):
+        if not isinstance(t, dict):
+            raise ValueError(f"tickers[{i}] must be object")
         sector_tag = t.get("sector_tag")
         if sector_tag is not None and not is_valid_sector(sector_tag):
             raise ValueError(f"tickers[{i}].sector_tag invalid: {sector_tag!r}")

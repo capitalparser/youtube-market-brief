@@ -83,3 +83,10 @@ def test_parse_allows_null_ticker_sector_tag():
     payload["tickers"][0]["sector_tag"] = None
     parsed = _parse_video_payload(payload)
     assert parsed["tickers"][0]["sector_tag"] is None
+
+
+def test_parse_rejects_non_dict_ticker_element():
+    payload = json.loads(FIXTURE.read_text(encoding="utf-8"))
+    payload["tickers"][0] = "NVDA"  # malformed: plain string
+    with pytest.raises(ValueError, match="tickers"):
+        _parse_video_payload(payload)
