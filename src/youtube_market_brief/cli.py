@@ -324,14 +324,29 @@ def cmd_analyze(args) -> int:
         "video_id": result.video.video_id,
         "tier": result.tier,
         "headline_3line": list(result.transcript_summary.headline_3line),
-        "key_insights": list(result.transcript_summary.key_insights),
-        "red_team": list(result.transcript_summary.red_team),
+        "key_insights": [
+            {
+                "text": ki.text,
+                "sector_tags": list(ki.sector_tags),
+                "theme_tags": list(ki.theme_tags),
+            }
+            for ki in result.transcript_summary.key_insights
+        ],
+        "red_team": [
+            {
+                "text": rt.text,
+                "sector_tags": list(rt.sector_tags),
+                "theme_tags": list(rt.theme_tags),
+            }
+            for rt in result.transcript_summary.red_team
+        ],
         "watchlist_hits": list(result.watchlist_hits),
         "tickers": [
             {
                 "symbol": t.symbol,
                 "display": t.display,
                 "in_watchlist": t.in_watchlist,
+                "sector_tag": t.sector_tag,
                 "direction": t.direction,
                 "confidence": t.confidence,
                 "reasoning": t.reasoning,
