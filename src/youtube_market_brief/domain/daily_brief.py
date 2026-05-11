@@ -308,6 +308,103 @@ def compute_weekly_rollup(
     )
 
 
+def render_weekly_brief_markdown(rollup: "WeeklyRollup", *, captured_at) -> str:
+    """Render weekly brief markdown document."""
+    parts: list[str] = []
+
+    # Frontmatter
+    parts.append("---")
+    parts.append(f"captured_at: {captured_at.isoformat()}")
+    parts.append(f"week_start: {rollup.week_start.isoformat()}")
+    parts.append(f"week_end: {rollup.week_end.isoformat()}")
+    parts.append(f"daily_briefs_present: {_yaml_inline_list([d.isoformat() for d in rollup.daily_briefs_present])}")
+    parts.append(f"daily_briefs_missing: {_yaml_inline_list([d.isoformat() for d in rollup.daily_briefs_missing])}")
+    parts.append(f"total_videos: {rollup.total_videos}")
+    parts.append(f"sector_slugs_union: {_yaml_inline_list(sorted({s.sector_slug for s in rollup.sectors}))}")
+    parts.append(f"theme_slugs_union: {_yaml_inline_list(sorted({t.theme_slug for t in rollup.themes}))}")
+    parts.append("source_type: youtube_weekly_brief")
+    parts.append("source_url: ''")
+    parts.append("tags:")
+    parts.append("  - youtube")
+    parts.append("  - weekly_brief")
+    parts.append("tier: deep")
+    parts.append("---")
+    parts.append("")
+
+    parts.append(f"# 📅 {rollup.week_start.isoformat()} ~ {rollup.week_end.isoformat()} 주간 시장 브리핑\n")
+    parts.append(
+        f"처리 영상 {rollup.total_videos}건 · "
+        f"정상 brief {len(rollup.daily_briefs_present)}/7일"
+        + (f" · 누락 {len(rollup.daily_briefs_missing)}일" if rollup.daily_briefs_missing else "")
+        + "\n"
+    )
+
+    # Watchlist ticker
+    wl_tickers = [t for t in rollup.tickers if t.in_watchlist]
+    if wl_tickers:
+        parts.append("## 📊 워치리스트 종목 주간 누적\n")
+        parts.append("| 종목 | 주간 방향 | 등장 일수 | 영상수 | 일자별 |")
+        parts.append("|------|----------|---------|--------|--------|")
+        for t in wl_tickers:
+            emoji = _DIRECTION_EMOJI.get(t.net_weekly_direction, "")
+            label = t.display + (f" ({t.symbol})" if t.symbol else "")
+            per_day_str = ", ".join(
+                f"{d.date.strftime('%m-%d')} {_DIRECTION_EMOJI.get(d.direction, '')}"
+                for d in t.per_day
+            )
+            parts.append(
+                f"| {label} | {emoji} {t.net_weekly_direction} "
+                f"| {t.days_mentioned}/7일 | {t.total_mentions} | {per_day_str} |"
+            )
+        parts.append("")
+
+    # Auto-discovered (≥2 days)
+    auto_tickers = [t for t in rollup.tickers if not t.in_watchlist and t.days_mentioned >= 2]
+    if auto_tickers:
+        parts.append("## 🔍 자동 발견 종목 (주간 ≥2일 등장)\n")
+        for t in auto_tickers:
+            emoji = _DIRECTION_EMOJI.get(t.net_weekly_direction, "")
+            label = t.display + (f" ({t.symbol})" if t.symbol else "")
+            parts.append(
+                f"- **{label}** {emoji} {t.net_weekly_direction} — "
+                f"{t.days_mentioned}일 등장, {t.total_mentions} 영상"
+            )
+        parts.append("")
+
+    # Sector heatmap
+    if rollup.sectors:
+        parts.append("## 🎯 Sector 7-day heatmap\n")
+        parts.append("| Sector | 등장 일수 | 영상수 | 관련 ticker |")
+        parts.append("|--------|----------|--------|------------|")
+        for s in rollup.sectors:
+            related = ", ".join(s.related_tickers) if s.related_tickers else "—"
+            parts.append(
+                f"| {s.sector_slug} | {s.insight_days}/7일 | {s.total_insight_mentions} | {related} |"
+            )
+        parts.append("")
+
+    # Theme heatmap
+    if rollup.themes:
+        parts.append("## 🎨 Theme 7-day heatmap\n")
+        parts.append("| Theme | 등장 일수 | 영상수 | 관련 ticker |")
+        parts.append("|-------|----------|--------|------------|")
+        for t in rollup.themes:
+            related = ", ".join(t.related_tickers) if t.related_tickers else "—"
+            parts.append(
+                f"| {t.theme_slug} | {t.insight_days}/7일 | {t.total_insight_mentions} | {related} |"
+            )
+        parts.append("")
+
+    # Missing briefs
+    if rollup.daily_briefs_missing:
+        parts.append("## 📝 누락된 daily brief\n")
+        for d in rollup.daily_briefs_missing:
+            parts.append(f"- {d.isoformat()} — `Harness/logs/youtube_market_brief/{d.isoformat()}.log` 확인")
+        parts.append("")
+
+    return "\n".join(parts).rstrip() + "\n"
+
+
 def _weekly_net_direction(directions: tuple) -> "NetDirection":
     """Majority logic. Tie → 혼조."""
     if not directions:

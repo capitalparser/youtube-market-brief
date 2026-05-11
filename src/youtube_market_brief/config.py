@@ -56,6 +56,10 @@ class AppConfig:
         return self.vault_root / "00_Wiki" / "youtube" / "_daily"
 
     @property
+    def vault_weekly_root(self) -> Path:
+        return self.vault_root / "00_Wiki" / "youtube" / "_weekly"
+
+    @property
     def state_path(self) -> Path:
         return self.vault_root / "Harness" / "sink" / "youtube_market_brief" / "state.json"
 
