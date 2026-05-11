@@ -194,3 +194,51 @@ class ChannelConfig:
     channel_id: str | None = None
     handle: str | None = None
     notes: str | None = None
+
+
+@dataclass(frozen=True)
+class WeeklyTickerDayEntry:
+    date: date
+    direction: Direction | NetDirection
+    mention_count: int
+
+
+@dataclass(frozen=True)
+class WeeklyTickerEntry:
+    symbol: str | None
+    display: str
+    in_watchlist: bool
+    sector_tag: str | None
+    days_mentioned: int
+    total_mentions: int
+    directions: tuple[Direction | NetDirection, ...]
+    net_weekly_direction: NetDirection
+    per_day: tuple[WeeklyTickerDayEntry, ...]
+
+
+@dataclass(frozen=True)
+class WeeklySectorEntry:
+    sector_slug: str
+    insight_days: int
+    total_insight_mentions: int
+    related_tickers: tuple[str, ...]
+
+
+@dataclass(frozen=True)
+class WeeklyThemeEntry:
+    theme_slug: str
+    insight_days: int
+    total_insight_mentions: int
+    related_tickers: tuple[str, ...]
+
+
+@dataclass(frozen=True)
+class WeeklyRollup:
+    week_start: date
+    week_end: date
+    daily_briefs_present: tuple[date, ...]
+    daily_briefs_missing: tuple[date, ...]
+    tickers: tuple[WeeklyTickerEntry, ...]
+    sectors: tuple[WeeklySectorEntry, ...]
+    themes: tuple[WeeklyThemeEntry, ...]
+    total_videos: int
