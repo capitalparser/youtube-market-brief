@@ -102,10 +102,13 @@ tickers:
     market: KOSPI
     name_ko: 삼성전자
     name_en: Samsung Electronics
+    sector: semiconductors      # 허용값: semiconductors, software_ai_services, tech_hardware, financials,
+                                #          power_utilities, industrials_defense, energy, materials,
+                                #          consumer_discretionary, consumer_staples
     aliases: ['samsung', 'sec']
 ```
 
-watchlist가 비어있으면 LLM 자동 발견 ticker만 출력에 들어간다.
+watchlist가 비어있으면 LLM 자동 발견 ticker만 출력에 들어간다. `sector` 미입력 시 LLM이 발견한 값을 그대로 사용한다.
 
 ## Cloud 실행 (GitHub Actions)
 
@@ -161,9 +164,13 @@ ERROR: [youtube] xxxx: Sign in to confirm you're not a bot.
 ## 출력 위치
 
 - 영상별 MD: `{vault_root}/00_Wiki/youtube/{channel_slug}/{YYYY-MM-DD}__{video_slug}.md`
+- 영상별 분석 sidecar: `{vault_root}/00_Wiki/youtube/{channel_slug}/{YYYY-MM-DD}__{video_slug}.analysis.json` (P2 propagation source)
 - 일일 브리핑 MD: `{vault_root}/00_Wiki/youtube/_daily/{YYYY-MM-DD}_brief.md`
+- 일일 브리핑 sidecar: `{vault_root}/00_Wiki/youtube/_daily/{YYYY-MM-DD}_brief.analysis.json`
 - 상태 파일: `{vault_root}/Harness/sink/youtube_market_brief/state.json` (gitignored)
 - 로그: `{vault_root}/Harness/logs/youtube_market_brief/{YYYY-MM-DD}.log` (gitignored)
+
+> **v1 schema (2026-05-11~):** `key_insights` / `red_team`은 object 형태 `{text, sector_tags, theme_tags}`. ticker에는 `sector_tag` 단일값. 자세한 내용은 `docs/adr/0006-prompt-persona-schema-realignment.md` 참조.
 
 ## 디렉토리
 

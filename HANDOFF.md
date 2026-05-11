@@ -75,3 +75,22 @@ ADR-0003 §"Codex 잔여 범위"에 정의됨. 요약:
 ---
 
 _이 템플릿은 신규 프로젝트 스캐폴드 시 `promote_idea` runner가 그대로 복사하여 배포한다._
+
+---
+
+## P1 완료 (2026-05-11)
+
+- prompt persona: 4-role composite (감사인 + 재무 정보 전문가 + 투자자 + 시장 분석가)
+- output schema:
+  - `key_insights` / `red_team` → object `{text, sector_tags, theme_tags}`
+  - ticker에 `sector_tag` 단일값 (watchlist 우선, 자동 발견은 LLM)
+  - `WatchlistEntry.sector` 필드 추가
+- JSON sidecar: 영상 MD + daily brief MD 옆에 `.analysis.json` 작성 — P2 propagation source of truth
+- taxonomy: `domain/taxonomy.py`가 sector/theme slug single source. `ymb config validate`에 drift 감지
+- migration: non-retroactive (기존 vault MD는 그대로)
+- 자세한 결정 근거: `docs/adr/0006-prompt-persona-schema-realignment.md`
+
+### P2 (propagation 자동화)는 다음 작업
+- `.analysis.json` sidecar를 parsing
+- 각 insight의 `sector_tags` / `theme_tags`를 `02_Areas/Market_Insights/{sectors,themes}/*.md` 카드의 "최근 바뀐 점" 표에 row append
+- stance / confidence / time_horizon은 카드 owner(사용자) 판단 영역 — LLM 위임 거절. 변화 이벤트 기록까지만 자동
