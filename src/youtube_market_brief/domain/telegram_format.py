@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import html
 from collections.abc import Iterable
+from typing import TYPE_CHECKING
 
 from youtube_market_brief.domain.types import (
     DailyBrief,
@@ -19,6 +20,9 @@ from youtube_market_brief.domain.types import (
     TickerRollup,
     VideoAnalysis,
 )
+
+if TYPE_CHECKING:
+    from youtube_market_brief.domain.types import WeeklyRollup
 
 SOFT_CAP = 4000
 
@@ -110,6 +114,67 @@ def format_daily_brief(brief: DailyBrief) -> str:
     for v in brief.videos:
         parts.append(f"• {_esc(v.title)} — {_esc(v.url)}")
 
+    return "\n".join(parts)
+
+
+def format_weekly_brief(rollup: "WeeklyRollup", *, vault_md_path_relative: str) -> str:
+    """Telegram message for weekly brief. P1 HTML format
+    (decorate_chunks wraps the first line in <blockquote><b>)."""
+    parts: list[str] = []
+    parts.append(
+        f"📅 {_esc(rollup.week_start.isoformat())} ~ {_esc(rollup.week_end.isoformat())} "
+        "주간 시장 브리핑"
+    )
+    parts.append(
+        f"🔢 처리 영상 {rollup.total_videos}건 · "
+        f"정상 brief {len(rollup.daily_briefs_present)}/7일"
+        + (f" · 누락 {len(rollup.daily_briefs_missing)}일" if rollup.daily_briefs_missing else "")
+    )
+    parts.append("")
+
+    wl_tickers = [t for t in rollup.tickers if t.in_watchlist]
+    if wl_tickers:
+        parts.append("📊 워치리스트 주간 누적")
+        for t in wl_tickers:
+            emoji = _DIRECTION_EMOJI.get(t.net_weekly_direction, "")
+            label = _esc(t.display) + (f" ({_esc(t.symbol)})" if t.symbol else "")
+            parts.append(
+                f"• {label} {emoji} {_esc(t.net_weekly_direction)} — "
+                f"{t.days_mentioned}/7일, {t.total_mentions} 영상"
+            )
+        parts.append("")
+
+    auto_tickers = [t for t in rollup.tickers if not t.in_watchlist and t.days_mentioned >= 2]
+    if auto_tickers:
+        parts.append("🔍 자동 발견 (주간 ≥2일)")
+        for t in auto_tickers:
+            emoji = _DIRECTION_EMOJI.get(t.net_weekly_direction, "")
+            label = _esc(t.display) + (f" ({_esc(t.symbol)})" if t.symbol else "")
+            parts.append(
+                f"• {label} {emoji} {_esc(t.net_weekly_direction)} — "
+                f"{t.days_mentioned}일, {t.total_mentions} 영상"
+            )
+        parts.append("")
+
+    if rollup.sectors:
+        parts.append("🎯 Sector 7-day heatmap")
+        for s in rollup.sectors[:5]:
+            parts.append(
+                f"• {_esc(s.sector_slug)} — {s.insight_days}/7일, "
+                f"{s.total_insight_mentions} 영상"
+            )
+        parts.append("")
+
+    if rollup.themes:
+        parts.append("🎨 Theme 7-day heatmap")
+        for t in rollup.themes[:5]:
+            parts.append(
+                f"• {_esc(t.theme_slug)} — {t.insight_days}/7일, "
+                f"{t.total_insight_mentions} 영상"
+            )
+        parts.append("")
+
+    parts.append(f"📝 vault: {_esc(vault_md_path_relative)}")
     return "\n".join(parts)
 
 

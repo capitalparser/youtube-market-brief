@@ -13,7 +13,7 @@ Confidence = Literal["high", "medium", "low"]
 Tier = Literal["light", "deep"]
 SkipReason = Literal["no_captions", "disabled", "geo_blocked", "api_changed", "timeout"]
 Outcome = Literal["ok", "skipped_no_caption", "failed"]
-NotifyTarget = Literal["per_video", "daily"]
+NotifyTarget = Literal["per_video", "daily", "weekly"]
 
 
 @dataclass(frozen=True)
