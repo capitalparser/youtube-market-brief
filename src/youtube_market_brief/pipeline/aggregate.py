@@ -113,12 +113,56 @@ def write_daily_brief_md(
     vault_daily_root: Path,
     captured_at: datetime,
 ) -> Path:
-    """Write the daily brief MD. Returns the absolute path written."""
+    """Write the daily brief MD + JSON sidecar. Returns the absolute path of the MD."""
     vault_daily_root.mkdir(parents=True, exist_ok=True)
     out = vault_daily_root / f"{brief.date.isoformat()}_brief.md"
     body = render_daily_brief_markdown(brief, captured_at=captured_at)
     out.write_text(body, encoding="utf-8")
     log.info("wrote daily brief MD: %s", out)
+
+    sidecar = out.with_suffix(".analysis.json")
+    sidecar_data = {
+        "date": brief.date.isoformat(),
+        "captured_at": captured_at.isoformat(),
+        "market_read": brief.market_read,
+        "key_insights": [
+            {"text": ki.text, "sector_tags": list(ki.sector_tags), "theme_tags": list(ki.theme_tags)}
+            for ki in brief.key_insights
+        ],
+        "red_team": [
+            {"text": rt.text, "sector_tags": list(rt.sector_tags), "theme_tags": list(rt.theme_tags)}
+            for rt in brief.red_team
+        ],
+        "ticker_rollup": [
+            {
+                "symbol": r.symbol,
+                "display": r.display,
+                "in_watchlist": r.in_watchlist,
+                "net_direction": r.net_direction,
+                "mention_count": r.mention_count,
+                "per_video": [
+                    {"video_id": e.video_id, "direction": e.direction, "one_line_reason": e.one_line_reason}
+                    for e in r.per_video
+                ],
+            }
+            for r in brief.ticker_rollup
+        ],
+        "videos": [
+            {"video_id": v.video_id, "channel_slug": v.channel_slug, "title": v.title, "url": v.url}
+            for v in brief.videos
+        ],
+        "llm_meta": {
+            "model": brief.llm_meta.model,
+            "duration_ms": brief.llm_meta.duration_ms,
+            "claude_session_id": brief.llm_meta.claude_session_id,
+        },
+    }
+    sidecar.write_text(
+        json.dumps(sidecar_data, ensure_ascii=False, indent=2),
+        encoding="utf-8",
+    )
+    log.info("wrote daily brief sidecar: %s", sidecar)
+
     return out
 
 
