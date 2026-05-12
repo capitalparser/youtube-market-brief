@@ -1,8 +1,8 @@
 #!/bin/bash
-# rescue.sh — 로컬 자동 fallback runner.
+# rescue.sh — 로컈 자동 fallback runner.
 #
 # 트리거 조건: Drive에 오늘(KST) 일일 브리핑 MD가 없거나, brief.md는 있지만
-# state.json의 daily.{TODAY}.brief_sent != true이면 로컬에서 ymb run 실행 후
+# state.json의 daily.{TODAY}.brief_sent != true이면 로컈에서 ymb run 실행 후
 # 결과를 Drive로 push.
 # launchd `com.kjun.ymb-rescue.plist`가 매일 KST 08:30 + RunAtLoad로 호출.
 
@@ -46,7 +46,7 @@ log: ${LOG_FILE}"
 
 log "start today=$TODAY"
 
-# 1. cloud가 갖고 있는 state.json을 로컬로 pull.
+# 1. cloud가 갖고 있는 state.json을 로컈로 pull.
 #    (skip 판정과 멱등성 둘 다 사용)
 mkdir -p "$STATE_DIR"
 rclone copy "${DRIVE_REMOTE}:Harness/sink/youtube_market_brief/state.json" \
@@ -116,7 +116,7 @@ rclone copy "$STATE_FILE" \
 }
 
 if [ -n "$push_failed" ]; then
-    notify_failure "Drive push 실패: $push_failed (로컬 발송은 완료, 다음 회차 cloud가 stale state pull할 수 있음)"
+    notify_failure "Drive push 실패: $push_failed (로컈 발송은 완료, 다음 회차 cloud가 stale state pull할 수 있음)"
 fi
 
 log "done"
