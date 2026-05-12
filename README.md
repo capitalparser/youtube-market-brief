@@ -66,15 +66,15 @@ uv run ymb run                                       # 실제 발송
 
 | 변수 | 필수 | 기본값 | 설명 |
 |---|---|---|---|
-| `LLM_PROVIDER` | – | `api` | `api` (OpenAI) \| `cli` (`claude` CLI 로컬) |
+| `LLM_PROVIDER` | – | `api` | `api` (OpenAI) \| `cli` (`claude` CLI 로컈) |
 | `OPENAI_API_KEY` | ✓ | – | `LLM_PROVIDER=api`일 때 필수 |
 | `OPENAI_MODEL` | – | `gpt-4o` | 권장: `gpt-4.1` (cloud workflow는 이 값 사용) |
 | `YOUTUBE_API_KEY` | ✓ | – | YouTube Data API v3 키 |
 | `TELEGRAM_BOT_TOKEN` | ✓ | – | BotFather 발급 토큰 |
 | `TELEGRAM_CHAT_ID` | ✓ | – | 대상 chat ID |
-| `TRANSCRIPT_BACKEND` | – | `youtube_transcript_api` | `yt_dlp` 권장 (cloud IP 우회). 로컬은 default 가능 |
+| `TRANSCRIPT_BACKEND` | – | `youtube_transcript_api` | `yt_dlp` 권장 (cloud IP 우회). 로컈은 default 가능 |
 | `YOUTUBE_COOKIE_FILE` | – | – | Netscape cookies.txt 경로. cloud에서 yt-dlp 인증용 |
-| `WEBSHARE_PROXY_USERNAME` / `_PASSWORD` | – | – | residential proxy (옵션, 미사용 시 비워둠) |
+| `WEBSHARE_PROXY_USERNAME` / `_PASSWORD` | – | – | residential proxy (옵션, 미사용 시 비워둔) |
 | `VAULT_ROOT_PATH` | – | walk-up 자동 탐지 | vault 루트 명시 override |
 | `DRY_RUN` | – | `false` | `true`면 Telegram을 파일로 dump |
 | `MAX_VIDEOS_PER_RUN` | – | `20` | 1회 실행 처리 cap |
@@ -91,7 +91,7 @@ channels:
     name_ko: HK Global Market
     slug: hkglobalmarket
     enabled: true
-    channel_id: UCWskYkV4c4S9D__rsfOl2JA   # 처음엔 비워도 됨, 첫 실행 시 자동 resolve + persist
+    channel_id: UCWskYkV4c4S9D__rsfOl2JA   # 첫번에는 비워도 됨, 첫 실행 시 자동 resolve + persist
 ```
 
 **`config/watchlist.yaml`** — 종목 watchlist (gitignored, 개인 정보).
@@ -122,7 +122,7 @@ watchlist가 비어있으면 LLM 자동 발견 ticker만 출력에 들어간다.
 | `YOUTUBE_COOKIES` | **Netscape 형식 cookies.txt 전체 내용** (yt-dlp 인증용, 클라우드 IP 우회의 핵심) |
 | `DRIVE_SERVICE_ACCOUNT_JSON` | Google Cloud 서비스 계정 키(JSON 전체) |
 | `GDRIVE_OUTPUT_FOLDER_ID` | Drive 출력 폴더 ID — 서비스 계정에 Editor 공유됨 |
-| `WEBSHARE_PROXY_USERNAME` / `_PASSWORD` | (옵션) — 사용 안 하면 비워둠 |
+| `WEBSHARE_PROXY_USERNAME` / `_PASSWORD` | (옵션) — 사용 안 하면 비워둔 |
 
 **Drive 폴더 구조** (서비스 계정이 쓸 폴더 안):
 
