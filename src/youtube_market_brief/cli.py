@@ -203,7 +203,6 @@ def cmd_run(args) -> int:
     from youtube_market_brief.orchestrator import Clients, run
 
     if args.dry_run:
-        # Override env for this invocation
         import os
         os.environ["DRY_RUN"] = "true"
         cfg.dry_run = True
@@ -332,13 +331,7 @@ def cmd_analyze(args) -> int:
 
 
 def cmd_aggregate_only(args) -> int:
-    """Rebuild daily brief from existing per-video MDs in vault.
-
-    No video reprocessing — reads MD files matching `{date}__*.md` under each
-    channel folder, sends them as raw markdown context to the LLM along with
-    the daily-brief system prompt, parses the structured response, writes the
-    daily brief MD, and (optionally) sends to Telegram.
-    """
+    """Rebuild daily brief from existing per-video MDs in vault."""
     import re
     from datetime import datetime as _dt
     from pathlib import Path
@@ -374,9 +367,9 @@ def cmd_aggregate_only(args) -> int:
 
     log.info("aggregate-only %s: found %d vault MD(s)", target_date.isoformat(), len(md_paths))
 
-    fm_re = re.compile(r"^---\n(.+?)\n---\n(.*)$", re.DOTALL)
+    fm_re = re.compile(r"^---\n(.+?)\n---\n(.*)", re.DOTALL)
     title_re = re.compile(r"^# (.+)$", re.MULTILINE)
-    meta_re = re.compile(r"^> ([^·]+) · ([^·]+) · \[원본\]\((.+?)\)", re.MULTILINE)
+    meta_re = re.compile(r"^> ([^·]+) · ([^·]+) · \[指小原本\]\((.+?)\)", re.MULTILINE)
 
     video_metas: list[VideoMeta] = []
     sections: list[str] = []
@@ -519,18 +512,12 @@ def cmd_aggregate_only(args) -> int:
 
 
 def _extract_key_sections(body: str) -> str:
-    """Aggressively compress a video MD body to ~500-800 bytes.
-
-    Keeps: title (truncated), 핵심 인사이트 (first 3, each ≤120 chars), 레드팀
-    (first 2, each ≤120 chars), 종목 영향 ticker bullet headers (no 근거/인용).
-    Drops: 3줄 헤드라인 (redundant with title), all sub-bullets, all quote blocks.
-    """
+    """Aggressively compress a video MD body to ~500-800 bytes."""
     import re
 
     lines = body.splitlines()
     out: list[str] = []
 
-    # Title line, truncated
     if lines:
         title = lines[0].lstrip("# ").strip()
         if len(title) > 80:
@@ -542,7 +529,6 @@ def _extract_key_sections(body: str) -> str:
         if not m:
             return []
         rest = body[m.end():]
-        # Cut at next ## header
         next_header = re.search(r"^##\s+", rest, re.MULTILINE)
         if next_header:
             rest = rest[: next_header.start()]
@@ -556,27 +542,23 @@ def _extract_key_sections(body: str) -> str:
                 bullets.append(f"- {content}")
         return bullets
 
-    # 핵심 인사이트: 3건, 각 120자
-    insights = _grab_bullets("🎯 핵심 인사이트", max_count=3, max_chars=120)
+    insights = _grab_bullets("\U0001f3af 핵심 인사이트", max_count=3, max_chars=120)
     if insights:
         out.append("[인사이트]")
         out.extend(insights)
 
-    # 레드팀: 2건, 각 120자
-    red_team = _grab_bullets("🚨 레드팀 시각", max_count=2, max_chars=120)
+    red_team = _grab_bullets("\U0001f6a8 레드팀 시각", max_count=2, max_chars=120)
     if red_team:
         out.append("[레드팀]")
         out.extend(red_team)
 
-    # 종목 영향: ticker 한 줄씩 (워치리스트 + 자동발견 합쳐 6개)
-    sec_match = re.search(r"^##\s+📊 종목 영향.*?$", body, re.MULTILINE)
+    sec_match = re.search(r"^##\s+\U0001f4ca 종목 영향.*?$", body, re.MULTILINE)
     if sec_match:
         rest = body[sec_match.end():]
         ticker_lines = []
         for line in rest.splitlines():
             stripped = line.strip()
             if stripped.startswith("- **") and len(ticker_lines) < 6:
-                # Bold ticker bullet → keep as-is (truncate if huge)
                 if len(stripped) > 200:
                     stripped = stripped[:200] + "…"
                 ticker_lines.append(stripped)
