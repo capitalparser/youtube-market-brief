@@ -1,9 +1,9 @@
 {
-  "run_at": "2026-05-14T07:00:00.000000+09:00",
+  "run_at": "2026-05-14T21:07:59+09:00",
   "steps": {
     "collect": {
       "status": "blocked",
-      "reason": "youtube.com not in network allowlist (HTTP 403)",
+      "reason": "youtube.com not in network allowlist (HTTP 403 - Host not in allowlist)",
       "new_videos": 0,
       "channels_attempted": ["@hkglobalmarket", "@MK_Invest", "@kpunch", "@wallst_wars", "@오늘부터회계사", "@eo_korea", "@DemoDaySV"],
       "errors": [
@@ -27,7 +27,7 @@
     },
     "telegram": {
       "status": "blocked",
-      "reason": "api.telegram.org not in network allowlist; no files to send anyway",
+      "reason": "api.telegram.org not in network allowlist (HTTP 403 - Host not in allowlist); no files to send anyway",
       "sent": 0,
       "failed": 0
     },
