@@ -2,10 +2,11 @@
 
 from __future__ import annotations
 
-import yaml
 from collections import Counter, OrderedDict
 from collections.abc import Iterable
-from datetime import date as Date, timedelta
+from datetime import date, timedelta
+
+import yaml
 
 from youtube_market_brief.domain.types import (
     DailyBrief,
@@ -15,6 +16,11 @@ from youtube_market_brief.domain.types import (
     TickerRollup,
     TickerRollupVideoEntry,
     VideoAnalysis,
+    WeeklyRollup,
+    WeeklySectorEntry,
+    WeeklyThemeEntry,
+    WeeklyTickerDayEntry,
+    WeeklyTickerEntry,
 )
 
 _DIRECTION_EMOJI = {
@@ -47,6 +53,7 @@ def compute_rollup(analyses: Iterable[VideoAnalysis]) -> tuple[TickerRollup, ...
     rollups: list[TickerRollup] = []
     for (in_wl, key_str), pairs in buckets.items():
         directions: list[Direction] = [t.direction for _, t in pairs]
+        sector_tag = next((t.sector_tag for _, t in pairs if t.sector_tag), None)
         rollups.append(
             TickerRollup(
                 symbol=key_str if in_wl else (pairs[0][1].symbol if pairs[0][1].symbol else None),
@@ -62,6 +69,7 @@ def compute_rollup(analyses: Iterable[VideoAnalysis]) -> tuple[TickerRollup, ...
                     )
                     for a, t in pairs
                 ),
+                sector_tag=sector_tag,
             )
         )
 
@@ -179,21 +187,13 @@ def render_daily_brief_markdown(brief: DailyBrief, *, captured_at) -> str:
 def compute_weekly_rollup(
     briefs: Iterable[DailyBrief],
     *,
-    week_start: Date,
-) -> "WeeklyRollup | None":
+    week_start: date,
+) -> WeeklyRollup | None:
     """Aggregate up to 7 daily briefs into a WeeklyRollup. Deterministic, no LLM.
 
     week_start should be the Monday of the target week. week_end = week_start + 6 days.
     Briefs outside this range are silently filtered.
     """
-    from youtube_market_brief.domain.types import (
-        WeeklyRollup,
-        WeeklyTickerEntry,
-        WeeklyTickerDayEntry,
-        WeeklySectorEntry,
-        WeeklyThemeEntry,
-    )
-
     week_end = week_start + timedelta(days=6)
     bl = sorted(
         [b for b in briefs if week_start <= b.date <= week_end],
@@ -210,7 +210,7 @@ def compute_weekly_rollup(
     )
 
     # === Ticker aggregation: bucket by (in_watchlist, key_str) ===
-    ticker_buckets: dict[tuple[bool, str], list[tuple[Date, TickerRollup]]] = {}
+    ticker_buckets: dict[tuple[bool, str], list[tuple[date, TickerRollup]]] = {}
     for b in bl:
         for tr in b.ticker_rollup:
             key_str = tr.symbol if (tr.in_watchlist and tr.symbol) else tr.display.strip()
@@ -235,7 +235,7 @@ def compute_weekly_rollup(
                 symbol=first_tr.symbol or None,
                 display=first_tr.display,
                 in_watchlist=in_wl,
-                sector_tag=None,  # ticker_rollup doesn't carry sector — P3 MVP scope
+                sector_tag=first_tr.sector_tag,
                 days_mentioned=len(day_pairs),
                 total_mentions=total_mentions,
                 directions=directions,
@@ -254,9 +254,9 @@ def compute_weekly_rollup(
     )
 
     # === Sector / theme aggregation from key_insights + red_team ===
-    sector_day_counts: dict[str, set[Date]] = {}
+    sector_day_counts: dict[str, set[date]] = {}
     sector_total: Counter = Counter()
-    theme_day_counts: dict[str, set[Date]] = {}
+    theme_day_counts: dict[str, set[date]] = {}
     theme_total: Counter = Counter()
     for b in bl:
         for ki in b.key_insights:
@@ -274,12 +274,17 @@ def compute_weekly_rollup(
                 theme_day_counts.setdefault(t, set()).add(b.date)
                 theme_total[t] += 1
 
+    tickers_by_sector: dict[str, set[str]] = {}
+    for entry in ticker_entries:
+        if entry.sector_tag:
+            tickers_by_sector.setdefault(entry.sector_tag, set()).add(entry.symbol or entry.display)
+
     sectors = tuple(
         WeeklySectorEntry(
             sector_slug=slug,
             insight_days=len(days),
             total_insight_mentions=sector_total[slug],
-            related_tickers=(),  # P3 MVP: no per-row sector→ticker join
+            related_tickers=tuple(sorted(tickers_by_sector.get(slug, set()))),
         )
         for slug, days in sorted(sector_day_counts.items(), key=lambda kv: (-len(kv[1]), kv[0]))
     )
@@ -308,7 +313,7 @@ def compute_weekly_rollup(
     )
 
 
-def render_weekly_brief_markdown(rollup: "WeeklyRollup", *, captured_at) -> str:
+def render_weekly_brief_markdown(rollup: WeeklyRollup, *, captured_at) -> str:
     """Render weekly brief markdown document."""
     parts: list[str] = []
 
@@ -405,7 +410,7 @@ def render_weekly_brief_markdown(rollup: "WeeklyRollup", *, captured_at) -> str:
     return "\n".join(parts).rstrip() + "\n"
 
 
-def _weekly_net_direction(directions: tuple) -> "NetDirection":
+def _weekly_net_direction(directions: tuple) -> NetDirection:
     """Majority logic. Tie → 혼조."""
     if not directions:
         return "언급만"

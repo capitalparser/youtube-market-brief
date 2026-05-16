@@ -6,7 +6,7 @@ from __future__ import annotations
 
 import json
 import logging
-from datetime import date as Date, datetime, timedelta
+from datetime import date, datetime, timedelta
 from pathlib import Path
 
 from youtube_market_brief.domain.daily_brief import (
@@ -27,12 +27,12 @@ from youtube_market_brief.domain.types import (
 log = logging.getLogger(__name__)
 
 
-def last_monday(today: Date) -> Date:
+def last_monday(today: date) -> date:
     """Most recent Monday on or before `today`."""
     return today - timedelta(days=today.weekday())
 
 
-def load_weekly_briefs(*, vault_daily_root: Path, week_start: Date) -> list[DailyBrief]:
+def load_weekly_briefs(*, vault_daily_root: Path, week_start: date) -> list[DailyBrief]:
     """Load up to 7 .analysis.json sidecars from vault_daily_root for the target week.
 
     Missing days are silently skipped (warning logged). Out-of-range files are
@@ -51,7 +51,7 @@ def load_weekly_briefs(*, vault_daily_root: Path, week_start: Date) -> list[Dail
     return briefs
 
 
-def _deserialize_brief(sidecar_path: Path, target_date: Date) -> DailyBrief:
+def _deserialize_brief(sidecar_path: Path, target_date: date) -> DailyBrief:
     """Inverse of write_daily_brief_md's sidecar serialization."""
     data = json.loads(sidecar_path.read_text(encoding="utf-8"))
     key_insights = tuple(
@@ -77,6 +77,7 @@ def _deserialize_brief(sidecar_path: Path, target_date: Date) -> DailyBrief:
             symbol=r.get("symbol"),
             display=str(r.get("display", "")),
             in_watchlist=bool(r.get("in_watchlist")),
+            sector_tag=r.get("sector_tag"),
             net_direction=r.get("net_direction", "언급만"),
             mention_count=int(r.get("mention_count", 0)),
             per_video=tuple(
@@ -125,9 +126,7 @@ def _deserialize_brief(sidecar_path: Path, target_date: Date) -> DailyBrief:
     )
 
 
-def aggregate_weekly(
-    *, week_start: Date, vault_daily_root: Path
-) -> WeeklyRollup | None:
+def aggregate_weekly(*, week_start: date, vault_daily_root: Path) -> WeeklyRollup | None:
     """Load briefs + compute weekly rollup. None if zero briefs found."""
     briefs = load_weekly_briefs(vault_daily_root=vault_daily_root, week_start=week_start)
     if not briefs:

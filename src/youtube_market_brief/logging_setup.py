@@ -14,6 +14,17 @@ class SecretRedactionFilter(logging.Filter):
     """Redact credentials that third-party HTTP loggers may place in URLs."""
 
     _telegram_bot_url = re.compile(r"bot[0-9]+:[A-Za-z0-9_-]+/sendMessage")
+    _assignment = re.compile(
+        r"(?i)\b("
+        r"OPENAI_API_KEY|YOUTUBE_API_KEY|TELEGRAM_BOT_TOKEN|TELEGRAM_CHAT_ID|"
+        r"WEBSHARE_PROXY_PASSWORD|YOUTUBE_COOKIES|YOUTUBE_COOKIE_FILE|"
+        r"DRIVE_SERVICE_ACCOUNT_JSON|GDRIVE_SERVICE_ACCOUNT_JSON"
+        r")=([^\s]+)"
+    )
+    _cookie_names = re.compile(
+        r"(?i)\b(LOGIN_INFO|SAPISID|APISID|HSID|SSID|SID|__Secure-[A-Za-z0-9_-]+)=([^;\s]+)"
+    )
+    _bearer = re.compile(r"(?i)\bBearer\s+[A-Za-z0-9._~+/=-]+")
 
     def filter(self, record: logging.LogRecord) -> bool:
         record.msg = self._redact(record.msg)
@@ -24,7 +35,10 @@ class SecretRedactionFilter(logging.Filter):
     def _redact(self, value):
         if not isinstance(value, str):
             return value
-        return self._telegram_bot_url.sub("bot<TELEGRAM_BOT_TOKEN>/sendMessage", value)
+        value = self._telegram_bot_url.sub("bot<TELEGRAM_BOT_TOKEN>/sendMessage", value)
+        value = self._assignment.sub(r"\1=<redacted>", value)
+        value = self._cookie_names.sub(r"\1=<redacted>", value)
+        return self._bearer.sub("Bearer <redacted>", value)
 
 
 def setup_logging(*, level: str, logs_dir: Path, tz: ZoneInfo) -> None:

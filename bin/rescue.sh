@@ -115,6 +115,13 @@ rclone copy "$STATE_FILE" \
     push_failed="${push_failed:+$push_failed,}state"
 }
 
+if "$VAULT_ROOT/Harness/scripts/sync_market_insights_to_drive.sh" >>"$LOG_FILE" 2>&1; then
+    log "market insights mobile sync ok"
+else
+    log "market insights mobile sync failed"
+    push_failed="${push_failed:+$push_failed,}market_insights"
+fi
+
 if [ -n "$push_failed" ]; then
     notify_failure "Drive push 실패: $push_failed (로컬 발송은 완료, 다음 회차 cloud가 stale state pull할 수 있음)"
 fi

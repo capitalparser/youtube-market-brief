@@ -1,5 +1,7 @@
 import json
 from datetime import UTC, date, datetime
+from pathlib import Path
+from types import SimpleNamespace
 
 
 def test_load_weekly_briefs_reads_present_days(tmp_path):
@@ -74,8 +76,8 @@ def test_aggregate_weekly_with_briefs_returns_rollup(tmp_path):
 
 
 def test_write_weekly_md_creates_md_and_sidecar(tmp_path):
-    from youtube_market_brief.pipeline.weekly import write_weekly_md
     from youtube_market_brief.domain.types import WeeklyRollup
+    from youtube_market_brief.pipeline.weekly import write_weekly_md
 
     rollup = WeeklyRollup(
         week_start=date(2026, 5, 5), week_end=date(2026, 5, 11),
@@ -107,17 +109,12 @@ def test_last_monday():
 
 def test_cmd_weekly_brief_skips_telegram_when_credentials_missing(tmp_path, monkeypatch, capsys):
     """cmd_weekly_brief must not attempt HTTP send when bot_token/chat_id are empty."""
-    import json
-    from datetime import date
-    from types import SimpleNamespace
     from youtube_market_brief.cli import cmd_weekly_brief
     from youtube_market_brief.config import AppConfig
-    from pathlib import Path
 
     # Set up vault with 1 sidecar so aggregate_weekly returns a rollup
     vault = tmp_path / "vault"
     daily_root = vault / "00_Wiki" / "youtube" / "_daily"
-    weekly_root = vault / "00_Wiki" / "youtube" / "_weekly"
     daily_root.mkdir(parents=True)
     sidecar = daily_root / "2026-05-05_brief.analysis.json"
     sidecar.write_text(json.dumps({
@@ -135,7 +132,9 @@ def test_cmd_weekly_brief_skips_telegram_when_credentials_missing(tmp_path, monk
         llm_provider="api", openai_api_key="", openai_model="",
         claude_bin="", claude_model="", claude_timeout_sec=300,
         webshare_proxy_username="", webshare_proxy_password="",
+        youtube_proxy_url="",
         transcript_backend="", youtube_cookie_file="",
+        enable_stt_fallback=False, stt_model="gpt-4o-mini-transcribe", stt_audio_max_mb=24,
         dry_run=False, log_level="INFO", transcript_max_chars=80000,
         max_videos_per_run=20, skip_shorts=True, timezone="Asia/Seoul",
         channels_path=Path("/dev/null"),
@@ -152,8 +151,6 @@ def test_cmd_weekly_brief_skips_telegram_when_credentials_missing(tmp_path, monk
 
 def test_load_weekly_briefs_preserves_video_meta_round_trip(tmp_path):
     """Sidecar should round-trip VideoMeta fields (channel_id, channel_name, published_at_utc)."""
-    import json
-    from datetime import date
     from youtube_market_brief.pipeline.weekly import load_weekly_briefs
 
     daily_root = tmp_path / "_daily"

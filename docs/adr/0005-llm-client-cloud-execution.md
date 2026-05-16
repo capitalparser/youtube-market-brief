@@ -1,6 +1,6 @@
 # ADR-0005: claude CLI subprocess → Anthropic API + cloud cron 실행
 
-- 상태: Accepted
+- 상태: Superseded by ADR-0007
 - 날짜: 2026-05-08
 
 ## 배경

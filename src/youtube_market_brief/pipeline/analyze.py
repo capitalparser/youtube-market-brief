@@ -83,6 +83,12 @@ def analyze_video(
             text=str(item["text"]).strip(),
             sector_tags=tuple(item.get("sector_tags") or []),
             theme_tags=tuple(item.get("theme_tags") or []),
+            why_important=str(item.get("why_important", "")).strip(),
+            structural_shift=str(item.get("structural_shift", "")).strip(),
+            pattern_connection=str(item.get("pattern_connection", "")).strip(),
+            counter_signal=str(item.get("counter_signal", "")).strip(),
+            workflow_implication=str(item.get("workflow_implication", "")).strip(),
+            signal_density=str(item.get("signal_density", "")).strip(),
         )
         for item in parsed["key_insights"]
     )
@@ -92,6 +98,12 @@ def analyze_video(
             text=str(item["text"]).strip(),
             sector_tags=tuple(item.get("sector_tags") or []),
             theme_tags=tuple(item.get("theme_tags") or []),
+            why_important=str(item.get("why_important", "")).strip(),
+            structural_shift=str(item.get("structural_shift", "")).strip(),
+            pattern_connection=str(item.get("pattern_connection", "")).strip(),
+            counter_signal=str(item.get("counter_signal", "")).strip(),
+            workflow_implication=str(item.get("workflow_implication", "")).strip(),
+            signal_density=str(item.get("signal_density", "")).strip(),
         )
         for item in red_team_raw
     )
@@ -120,7 +132,7 @@ def analyze_video(
         tier=tier,
         tags=tags,
         llm_meta=LLMMeta(
-            model="sonnet",
+            model=str(resp.raw_envelope.get("model") or "claude-cli"),
             duration_ms=duration_ms,
             was_retry=was_retry,
             claude_session_id=session_id,

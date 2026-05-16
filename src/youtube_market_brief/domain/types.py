@@ -11,7 +11,14 @@ Direction = Literal["긍정적", "중립", "부정적", "언급만"]
 NetDirection = Literal["긍정적", "중립", "부정적", "혼조", "언급만"]
 Confidence = Literal["high", "medium", "low"]
 Tier = Literal["light", "deep"]
-SkipReason = Literal["no_captions", "disabled", "geo_blocked", "api_changed", "timeout"]
+SkipReason = Literal[
+    "no_captions",
+    "disabled",
+    "geo_blocked",
+    "api_changed",
+    "ip_blocked",
+    "timeout",
+]
 Outcome = Literal["ok", "skipped_no_caption", "failed"]
 NotifyTarget = Literal["per_video", "daily", "weekly"]
 
@@ -80,6 +87,12 @@ class KeyInsight:
     text: str
     sector_tags: tuple[str, ...] = ()
     theme_tags: tuple[str, ...] = ()
+    why_important: str = ""
+    structural_shift: str = ""
+    pattern_connection: str = ""
+    counter_signal: str = ""
+    workflow_implication: str = ""
+    signal_density: str = ""
 
 
 @dataclass(frozen=True)
@@ -87,6 +100,12 @@ class RedTeamItem:
     text: str
     sector_tags: tuple[str, ...] = ()
     theme_tags: tuple[str, ...] = ()
+    why_important: str = ""
+    structural_shift: str = ""
+    pattern_connection: str = ""
+    counter_signal: str = ""
+    workflow_implication: str = ""
+    signal_density: str = ""
 
 
 @dataclass(frozen=True)
@@ -145,6 +164,7 @@ class TickerRollup:
     net_direction: NetDirection
     mention_count: int
     per_video: tuple[TickerRollupVideoEntry, ...]
+    sector_tag: str | None = None
 
 
 @dataclass(frozen=True)

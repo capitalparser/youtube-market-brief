@@ -1,7 +1,9 @@
 from datetime import UTC, date, datetime
+from pathlib import Path
 
 import yaml
 
+from youtube_market_brief.config import AppConfig
 from youtube_market_brief.domain.daily_brief import render_weekly_brief_markdown
 from youtube_market_brief.domain.types import (
     WeeklyRollup,
@@ -85,8 +87,6 @@ def test_weekly_md_notes_missing_briefs():
 
 
 def test_app_config_has_vault_weekly_root():
-    from youtube_market_brief.config import AppConfig
-    from pathlib import Path
     cfg = AppConfig(
         project_root=Path("/tmp"),
         vault_root=Path("/tmp/vault"),
@@ -94,7 +94,9 @@ def test_app_config_has_vault_weekly_root():
         llm_provider="api", openai_api_key="", openai_model="",
         claude_bin="", claude_model="", claude_timeout_sec=300,
         webshare_proxy_username="", webshare_proxy_password="",
+        youtube_proxy_url="",
         transcript_backend="", youtube_cookie_file="",
+        enable_stt_fallback=False, stt_model="gpt-4o-mini-transcribe", stt_audio_max_mb=24,
         dry_run=False, log_level="INFO", transcript_max_chars=80000,
         max_videos_per_run=20, skip_shorts=True, timezone="Asia/Seoul",
         channels_path=Path("/tmp/c.yaml"),

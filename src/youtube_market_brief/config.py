@@ -32,9 +32,13 @@ class AppConfig:
 
     webshare_proxy_username: str
     webshare_proxy_password: str
+    youtube_proxy_url: str
 
-    transcript_backend: str  # "youtube_transcript_api" | "yt_dlp"
+    transcript_backend: str  # "auto" | "youtube_transcript_api" | "yt_dlp"
     youtube_cookie_file: str  # path to Netscape cookies.txt (optional)
+    enable_stt_fallback: bool
+    stt_model: str
+    stt_audio_max_mb: int
 
     dry_run: bool
     log_level: str
@@ -108,8 +112,12 @@ def load_app_config(
         claude_timeout_sec=int(os.environ.get("CLAUDE_TIMEOUT_SEC", "300")),
         webshare_proxy_username=os.environ.get("WEBSHARE_PROXY_USERNAME", ""),
         webshare_proxy_password=os.environ.get("WEBSHARE_PROXY_PASSWORD", ""),
-        transcript_backend=os.environ.get("TRANSCRIPT_BACKEND", "youtube_transcript_api"),
+        youtube_proxy_url=os.environ.get("YOUTUBE_PROXY_URL", ""),
+        transcript_backend=os.environ.get("TRANSCRIPT_BACKEND", "auto").strip().lower(),
         youtube_cookie_file=os.environ.get("YOUTUBE_COOKIE_FILE", ""),
+        enable_stt_fallback=os.environ.get("ENABLE_STT_FALLBACK", "false").lower() == "true",
+        stt_model=os.environ.get("STT_MODEL", "gpt-4o-mini-transcribe"),
+        stt_audio_max_mb=int(os.environ.get("STT_AUDIO_MAX_MB", "24")),
         dry_run=os.environ.get("DRY_RUN", "false").lower() == "true",
         log_level=os.environ.get("LOG_LEVEL", "INFO"),
         transcript_max_chars=int(os.environ.get("TRANSCRIPT_MAX_CHARS", "80000")),

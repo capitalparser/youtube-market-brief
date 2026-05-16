@@ -33,6 +33,12 @@ def _coerce_insight(item) -> KeyInsight:
             text=str(item.get("text", "")).strip(),
             sector_tags=tuple(item.get("sector_tags") or []),
             theme_tags=tuple(item.get("theme_tags") or []),
+            why_important=str(item.get("why_important", "")).strip(),
+            structural_shift=str(item.get("structural_shift", "")).strip(),
+            pattern_connection=str(item.get("pattern_connection", "")).strip(),
+            counter_signal=str(item.get("counter_signal", "")).strip(),
+            workflow_implication=str(item.get("workflow_implication", "")).strip(),
+            signal_density=str(item.get("signal_density", "")).strip(),
         )
     return KeyInsight(text=str(item).strip(), sector_tags=(), theme_tags=())
 
@@ -44,6 +50,12 @@ def _coerce_redteam(item) -> RedTeamItem:
             text=str(item.get("text", "")).strip(),
             sector_tags=tuple(item.get("sector_tags") or []),
             theme_tags=tuple(item.get("theme_tags") or []),
+            why_important=str(item.get("why_important", "")).strip(),
+            structural_shift=str(item.get("structural_shift", "")).strip(),
+            pattern_connection=str(item.get("pattern_connection", "")).strip(),
+            counter_signal=str(item.get("counter_signal", "")).strip(),
+            workflow_implication=str(item.get("workflow_implication", "")).strip(),
+            signal_density=str(item.get("signal_density", "")).strip(),
         )
     return RedTeamItem(text=str(item).strip(), sector_tags=(), theme_tags=())
 
@@ -99,7 +111,7 @@ def aggregate_daily(
         ticker_rollup=enriched,
         videos=tuple(a.video for a in al),
         llm_meta=LLMMeta(
-            model="sonnet",
+            model=str(resp.raw_envelope.get("model") or "llm"),
             duration_ms=resp.duration_ms,
             was_retry=False,
             claude_session_id=resp.session_id,
@@ -126,11 +138,11 @@ def write_daily_brief_md(
         "captured_at": captured_at.isoformat(),
         "market_read": brief.market_read,
         "key_insights": [
-            {"text": ki.text, "sector_tags": list(ki.sector_tags), "theme_tags": list(ki.theme_tags)}
+            serialize_reasoning_item(ki)
             for ki in brief.key_insights
         ],
         "red_team": [
-            {"text": rt.text, "sector_tags": list(rt.sector_tags), "theme_tags": list(rt.theme_tags)}
+            serialize_reasoning_item(rt)
             for rt in brief.red_team
         ],
         "ticker_rollup": [
@@ -138,6 +150,7 @@ def write_daily_brief_md(
                 "symbol": r.symbol,
                 "display": r.display,
                 "in_watchlist": r.in_watchlist,
+                "sector_tag": r.sector_tag,
                 "net_direction": r.net_direction,
                 "mention_count": r.mention_count,
                 "per_video": [
@@ -184,11 +197,11 @@ def _serialize_analysis(a: VideoAnalysis) -> dict:
         },
         "headline_3line": list(a.transcript_summary.headline_3line),
         "key_insights": [
-            {"text": ki.text, "sector_tags": list(ki.sector_tags), "theme_tags": list(ki.theme_tags)}
+            serialize_reasoning_item(ki)
             for ki in a.transcript_summary.key_insights
         ],
         "red_team": [
-            {"text": rt.text, "sector_tags": list(rt.sector_tags), "theme_tags": list(rt.theme_tags)}
+            serialize_reasoning_item(rt)
             for rt in a.transcript_summary.red_team
         ],
         "tickers": [
@@ -206,6 +219,28 @@ def _serialize_analysis(a: VideoAnalysis) -> dict:
         ],
         "watchlist_hits": list(a.watchlist_hits),
     }
+
+
+def serialize_reasoning_item(item: KeyInsight | RedTeamItem) -> dict:
+    """Serialize insight/red-team item with optional distillation fields."""
+    data = {
+        "text": item.text,
+        "sector_tags": list(item.sector_tags),
+        "theme_tags": list(item.theme_tags),
+    }
+    optional_fields = (
+        "why_important",
+        "structural_shift",
+        "pattern_connection",
+        "counter_signal",
+        "workflow_implication",
+        "signal_density",
+    )
+    for field in optional_fields:
+        value = getattr(item, field)
+        if value:
+            data[field] = value
+    return data
 
 
 def _maybe_enrich_rollup(
@@ -243,6 +278,7 @@ def _maybe_enrich_rollup(
                     net_direction=det.net_direction,
                     mention_count=det.mention_count,
                     per_video=new_pv,
+                    sector_tag=det.sector_tag,
                 )
             )
         else:

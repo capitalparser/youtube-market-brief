@@ -12,17 +12,14 @@ from __future__ import annotations
 
 import html
 from collections.abc import Iterable
-from typing import TYPE_CHECKING
 
 from youtube_market_brief.domain.types import (
     DailyBrief,
     TickerMention,
     TickerRollup,
     VideoAnalysis,
+    WeeklyRollup,
 )
-
-if TYPE_CHECKING:
-    from youtube_market_brief.domain.types import WeeklyRollup
 
 SOFT_CAP = 4000
 
@@ -117,7 +114,7 @@ def format_daily_brief(brief: DailyBrief) -> str:
     return "\n".join(parts)
 
 
-def format_weekly_brief(rollup: "WeeklyRollup", *, vault_md_path_relative: str) -> str:
+def format_weekly_brief(rollup: WeeklyRollup, *, vault_md_path_relative: str) -> str:
     """Telegram message for weekly brief. P1 HTML format
     (decorate_chunks wraps the first line in <blockquote><b>)."""
     parts: list[str] = []
@@ -291,7 +288,7 @@ def format_messages(
     *,
     per_video: VideoAnalysis | None = None,
     daily: DailyBrief | None = None,
-    weekly: "WeeklyRollup | None" = None,
+    weekly: WeeklyRollup | None = None,
     vault_md_path_relative: str | None = None,
 ) -> Iterable[str]:
     """Convenience: format, split, and decorate for a single send target."""

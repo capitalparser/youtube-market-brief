@@ -13,11 +13,25 @@ from youtube_market_brief.domain.types import (
 
 def test_key_insight_dataclass_shape():
     ki = KeyInsight(
-        text="hi", sector_tags=("semiconductors",), theme_tags=()
+        text="hi",
+        sector_tags=("semiconductors",),
+        theme_tags=(),
+        why_important="중요",
+        structural_shift="구조 변화",
+        pattern_connection="반복 패턴",
+        counter_signal="반례",
+        workflow_implication="업무 적용",
+        signal_density="high",
     )
     assert ki.text == "hi"
     assert ki.sector_tags == ("semiconductors",)
     assert ki.theme_tags == ()
+    assert ki.why_important == "중요"
+    assert ki.structural_shift == "구조 변화"
+    assert ki.pattern_connection == "반복 패턴"
+    assert ki.counter_signal == "반례"
+    assert ki.workflow_implication == "업무 적용"
+    assert ki.signal_density == "high"
 
 
 def test_key_insight_is_frozen():
@@ -28,11 +42,17 @@ def test_key_insight_is_frozen():
 
 def test_red_team_item_dataclass_shape():
     rt = RedTeamItem(
-        text="caution", sector_tags=("financials",), theme_tags=("us_fiscal_debt",)
+        text="caution",
+        sector_tags=("financials",),
+        theme_tags=("us_fiscal_debt",),
+        counter_signal="반대 신호",
+        signal_density="medium",
     )
     assert rt.text == "caution"
     assert rt.sector_tags == ("financials",)
     assert rt.theme_tags == ("us_fiscal_debt",)
+    assert rt.counter_signal == "반대 신호"
+    assert rt.signal_density == "medium"
 
 
 def test_red_team_item_is_frozen():

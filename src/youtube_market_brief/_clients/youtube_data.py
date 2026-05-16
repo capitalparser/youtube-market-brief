@@ -10,6 +10,7 @@ from __future__ import annotations
 import re
 from datetime import UTC, datetime
 from typing import Protocol
+from urllib.parse import parse_qs, urlparse
 
 from youtube_market_brief.domain.types import VideoMeta
 
@@ -180,6 +181,71 @@ class GoogleAPIYouTubeDataClient:
 
         return sorted(videos, key=lambda v: v.published_at_utc)
 
+    def get_videos(self, video_ids: list[str]) -> list[VideoMeta]:
+        """Fetch metadata for explicit video IDs."""
+        youtube = self._youtube()
+        unique_ids = list(dict.fromkeys(v for v in video_ids if v))
+        if not unique_ids:
+            return []
+
+        videos: list[VideoMeta] = []
+        for chunk in _chunks(unique_ids, 50):
+            response = (
+                youtube.videos()
+                .list(
+                    id=",".join(chunk),
+                    part="contentDetails,snippet,liveStreamingDetails",
+                )
+                .execute()
+            )
+            for item in response.get("items", []):
+                snippet = item.get("snippet", {})
+                video_id = item.get("id")
+                published_at_raw = snippet.get("publishedAt")
+                if not video_id or not published_at_raw:
+                    continue
+                videos.append(
+                    VideoMeta(
+                        video_id=video_id,
+                        channel_id=snippet.get("channelId", ""),
+                        channel_name=snippet.get("channelTitle", ""),
+                        channel_slug="",
+                        title=snippet.get("title", ""),
+                        published_at_utc=parse_iso8601_published(published_at_raw),
+                        url=f"https://youtu.be/{video_id}",
+                        duration_sec=_parse_iso_duration_sec(
+                            item.get("contentDetails", {}).get("duration", "")
+                        ),
+                    )
+                )
+        by_id = {v.video_id: v for v in videos}
+        return [by_id[v] for v in unique_ids if v in by_id]
+
+
+def extract_video_id(value: str) -> str | None:
+    """Extract a YouTube video ID from common URL forms or return the raw ID."""
+    value = value.strip()
+    if not value:
+        return None
+    if re.fullmatch(r"[A-Za-z0-9_-]{11}", value):
+        return value
+
+    parsed = urlparse(value)
+    host = parsed.netloc.lower()
+    path = parsed.path.strip("/")
+    if host.endswith("youtu.be") and path:
+        candidate = path.split("/")[0]
+        return candidate if re.fullmatch(r"[A-Za-z0-9_-]{11}", candidate) else None
+    if "youtube.com" in host:
+        query_id = parse_qs(parsed.query).get("v", [None])[0]
+        if query_id and re.fullmatch(r"[A-Za-z0-9_-]{11}", query_id):
+            return query_id
+        parts = path.split("/")
+        if len(parts) >= 2 and parts[0] in {"live", "shorts", "embed"}:
+            candidate = parts[1]
+            return candidate if re.fullmatch(r"[A-Za-z0-9_-]{11}", candidate) else None
+    return None
+
 
 def parse_iso8601_published(s: str) -> datetime:
     """Parse YouTube ISO8601 timestamps (`2026-05-07T00:14:32Z`) as UTC tz-aware."""
@@ -205,3 +271,7 @@ def _parse_iso_duration_sec(s: str) -> int | None:
     minutes = int(match.group("minutes") or 0)
     seconds = int(match.group("seconds") or 0)
     return hours * 3600 + minutes * 60 + seconds
+
+
+def _chunks(values: list[str], size: int) -> list[list[str]]:
+    return [values[i : i + size] for i in range(0, len(values), size)]

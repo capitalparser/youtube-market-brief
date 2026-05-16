@@ -32,8 +32,12 @@ jobs:
       RCLONE_DRIVE_FOLDER_ID: ${{ secrets.GDRIVE_OUTPUT_FOLDER_ID }}
       WEBSHARE_PROXY_USERNAME: ${{ secrets.WEBSHARE_PROXY_USERNAME }}
       WEBSHARE_PROXY_PASSWORD: ${{ secrets.WEBSHARE_PROXY_PASSWORD }}
-      TRANSCRIPT_BACKEND: ${{ vars.TRANSCRIPT_BACKEND || 'yt_dlp' }}
+      YOUTUBE_PROXY_URL: ${{ secrets.YOUTUBE_PROXY_URL }}
+      TRANSCRIPT_BACKEND: ${{ vars.TRANSCRIPT_BACKEND || 'auto' }}
       YOUTUBE_COOKIE_FILE: /tmp/yt_cookies.txt
+      ENABLE_STT_FALLBACK: ${{ vars.ENABLE_STT_FALLBACK || 'false' }}
+      STT_MODEL: ${{ vars.STT_MODEL || 'gpt-4o-mini-transcribe' }}
+      STT_AUDIO_MAX_MB: ${{ vars.STT_AUDIO_MAX_MB || '24' }}
 
     steps:
       - uses: actions/checkout@v4
@@ -101,6 +105,8 @@ jobs:
           mkdir -p "$VAULT_ROOT_PATH/00_Wiki/youtube"
           rclone copy "drive:00_Wiki/youtube/" "$VAULT_ROOT_PATH/00_Wiki/youtube/" \
             --include "${TARGET}__*.md" --quiet || echo "no prior MDs for $TARGET on Drive"
+          rclone copy "drive:00_Wiki/youtube/" "$VAULT_ROOT_PATH/00_Wiki/youtube/" \
+            --include "${TARGET}__*.analysis.json" --quiet || echo "no prior sidecars for $TARGET on Drive"
 
       - name: Run daily digest
         # 07:00 KST (cron "0 22 * * *") → catch up yesterday's videos AND
@@ -112,7 +118,7 @@ jobs:
           if [ "$SCHEDULE" = "0 22 * * *" ]; then
             TARGET=$(TZ=Asia/Seoul date -d "yesterday" +%Y-%m-%d)
             echo "07:00 KST run — yesterday catch-up + brief: $TARGET"
-            uv run ymb run --date "$TARGET" --no-brief || true
+            uv run ymb run --date "$TARGET" --no-brief
             uv run ymb aggregate-only --date "$TARGET"
           elif [ -n "$SCHEDULE" ]; then
             echo "intraday run ($SCHEDULE) — videos only, no brief"
@@ -126,5 +132,8 @@ jobs:
         if: always()
         run: |
           rclone copy "$VAULT_ROOT_PATH/00_Wiki/youtube/" "drive:00_Wiki/youtube/" --quiet || true
+          if [ -d "$VAULT_ROOT_PATH/02_Areas/Market_Insights" ]; then
+            rclone copy "$VAULT_ROOT_PATH/02_Areas/Market_Insights/" "drive:02_Areas/Market_Insights/" --quiet || true
+          fi
           rclone copy "$VAULT_ROOT_PATH/Harness/sink/youtube_market_brief/state.json" \
             "drive:Harness/sink/youtube_market_brief/" --quiet || true

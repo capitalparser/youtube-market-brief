@@ -1,5 +1,12 @@
 # Secrets / config
 .env
+.env.local
+.env.*.local
+.secrets/
+*.cookies.txt
+*service-account*.json
+*service_account*.json
+*credentials*.json
 config/watchlist.yaml
 
 # Python
