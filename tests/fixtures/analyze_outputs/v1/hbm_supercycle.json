@@ -1,0 +1,183 @@
+{
+  "video_id": "synthetic_hbm_001",
+  "tier": "deep",
+  "headline_3line": [
+    "SK하이닉스는 HBM3E 점유율 60% 이상·영업이익 6.7조 원으로 2026년 1분기 압도적 수혜를 확인했다.",
+    "삼성전자는 HBM3E 퀄리피케이션 지연이 지속되며 DS 실적 반등에도 주가는 연초 대비 12% 하락했다.",
+    "마이크론 추격과 하반기 HBM 가격 하락 시나리오가 중장기 수급 구도의 핵심 변수로 부상했다."
+  ],
+  "key_insights": [
+    {
+      "text": "SK하이닉스 1Q26 매출 19조 원, 영업이익 6.7조 원. HBM3E 12단 공급 확대와 NVIDIA 안정적 공급 계약이 실적 견인. HBM 시장 점유율 60% 이상 유지.",
+      "sector_tags": [
+        "semiconductors"
+      ],
+      "theme_tags": [
+        "memory_supercycle",
+        "hyperscaler_capex"
+      ]
+    },
+    {
+      "text": "NVIDIA Blackwell Ultra 아키텍처 발표로 HBM4 수요 가속 전망. 젠슨 황은 컨퍼런스에서 '2026년 내내 HBM 공급 부족'을 공언해 단기 공급 우위 구도 지속 시사.",
+      "sector_tags": [
+        "semiconductors",
+        "tech_hardware"
+      ],
+      "theme_tags": [
+        "hyperscaler_capex",
+        "memory_supercycle"
+      ]
+    },
+    {
+      "text": "마이크론이 HBM3E 점유율을 15%대로 끌어올리며 의미 있는 3위 경쟁자로 부상. 원가 경쟁력이 하이닉스·삼성 양사 마진에 잠재적 압박 요인.",
+      "sector_tags": [
+        "semiconductors"
+      ],
+      "theme_tags": [
+        "memory_supercycle"
+      ]
+    },
+    {
+      "text": "2H26 HBM 가격 소폭 하락 가능성 제기. 근거: TSMC CoWoS 패키징 병목 일부 해소, 중국 HBM 대체 수요 감소, 인텔 AI 가속기 진입으로 NVIDIA 독점 구도 균열 가능성.",
+      "sector_tags": [
+        "semiconductors"
+      ],
+      "theme_tags": [
+        "memory_supercycle",
+        "ai_meltup_bubble"
+      ]
+    },
+    {
+      "text": "삼성전자 DS 부문 영업이익 4조 원대 회복에도 HBM3E 퀄리피케이션 지연 지속. 주가 연초 대비 12% 하락. 퀄리피케이션 조기 통과 여부가 유일한 재평가 촉매.",
+      "sector_tags": [
+        "semiconductors"
+      ],
+      "theme_tags": [
+        "memory_supercycle",
+        "korea_discount"
+      ]
+    }
+  ],
+  "red_team": [
+    {
+      "text": "재무 정보 전문가 시각: 하이닉스 영업이익 6.7조 원의 earnings quality 미검증. HBM vs 일반 DRAM 매출 믹스 변화에 따른 마진 구조 불투명—HBM 비중이 낮아지면 마진 급락 가능.",
+      "sector_tags": [
+        "semiconductors"
+      ],
+      "theme_tags": [
+        "memory_supercycle"
+      ]
+    },
+    {
+      "text": "회계감사인 시각: 삼성전자 DS 부문 4조 원 회복이 일회성 재고평가손 환입 등 non-recurring 항목 영향인지 분리 검증 없음. 'HBM 퀄리피케이션 통과'라는 촉매의 타임라인도 불확실.",
+      "sector_tags": [
+        "semiconductors"
+      ],
+      "theme_tags": []
+    },
+    {
+      "text": "시장 분석가 시각: 젠슨 황의 '공급 부족 지속' 발언은 CEO의 공급망 협상·수요 관리 목적 forward guidance일 수 있다. 실제 Blackwell Ultra 출하 스케줄과 HBM4 전환 타이밍 불일치 가능성 유의.",
+      "sector_tags": [
+        "semiconductors",
+        "tech_hardware"
+      ],
+      "theme_tags": [
+        "hyperscaler_capex"
+      ]
+    },
+    {
+      "text": "투자자 시각: 마이크론 점유율 15% 상승이 가격 덤핑 수반 여부 불명. ASP 하락 동반 점유율 확대라면 하이닉스·삼성 모두 단가 방어 압박 직면. 경쟁 구도 변화 속도가 화자 예상보다 빠를 수 있음.",
+      "sector_tags": [
+        "semiconductors"
+      ],
+      "theme_tags": [
+        "memory_supercycle"
+      ]
+    }
+  ],
+  "watchlist_hits": [
+    "000660",
+    "005930",
+    "NVDA"
+  ],
+  "tickers": [
+    {
+      "symbol": "000660",
+      "display": "SK하이닉스",
+      "in_watchlist": true,
+      "sector_tag": "semiconductors",
+      "direction": "긍정적",
+      "confidence": "high",
+      "reasoning": "HBM3E 12단 공급 확대와 NVIDIA 안정적 공급 계약으로 1Q26 영업이익 6.7조 원 달성. HBM 시장 점유율 60% 이상 유지 및 HBM4 개발 순조.",
+      "quotes": [
+        "하이닉스는 HBM 시장에서 압도적인 점유율 60% 이상을 유지하고 있습니다"
+      ]
+    },
+    {
+      "symbol": "005930",
+      "display": "삼성전자",
+      "in_watchlist": true,
+      "sector_tag": "semiconductors",
+      "direction": "부정적",
+      "confidence": "high",
+      "reasoning": "HBM3E 퀄리피케이션 문제 지속으로 점유율 회복 더디고 주가 연초 대비 12% 하락. DS 부문 이익 반등에도 HBM 시장 재진입 시점 불투명.",
+      "quotes": [
+        "삼전의 주가는 연초 대비 약 12% 하락하며 시장의 실망감을 반영하고 있습니다"
+      ]
+    },
+    {
+      "symbol": "NVDA",
+      "display": "NVIDIA",
+      "in_watchlist": true,
+      "sector_tag": "semiconductors",
+      "direction": "긍정적",
+      "confidence": "high",
+      "reasoning": "Blackwell Ultra 아키텍처 발표로 HBM4 수요 가속 전망. 젠슨 황의 공급 부족 발언은 지속적 가격 결정력 시사.",
+      "quotes": [
+        "우리는 HBM 공급 부족 상황을 2026년 내내 경험할 것"
+      ]
+    },
+    {
+      "symbol": "MU",
+      "display": "Micron",
+      "in_watchlist": false,
+      "sector_tag": "semiconductors",
+      "direction": "중립",
+      "confidence": "medium",
+      "reasoning": "HBM3E 점유율 15%대로 의미 있는 경쟁자로 부상. 원가 경쟁력이 하이닉스·삼성에 잠재 위협이나 ASP 훼손 수반 여부 불명.",
+      "quotes": [
+        "마이크론은 HBM3E에서의 점유율을 15%대로 끌어올리며 의미 있는 경쟁자로 부상하고 있습니다"
+      ]
+    },
+    {
+      "symbol": "INTC",
+      "display": "Intel",
+      "in_watchlist": false,
+      "sector_tag": "semiconductors",
+      "direction": "언급만",
+      "confidence": "low",
+      "reasoning": "AI 가속기 시장 진입으로 NVIDIA 독점 구도 균열 가능성 언급. 구체적 분석은 부재.",
+      "quotes": []
+    },
+    {
+      "symbol": "TSM",
+      "display": "TSMC",
+      "in_watchlist": false,
+      "sector_tag": "semiconductors",
+      "direction": "언급만",
+      "confidence": "low",
+      "reasoning": "CoWoS 패키징 병목 해소 맥락에서 언급. HBM 가격 하락 시나리오의 근거로만 등장.",
+      "quotes": []
+    }
+  ],
+  "tags": [
+    "youtube",
+    "test_market_analysis",
+    "000660",
+    "005930",
+    "NVDA",
+    "Micron",
+    "Intel",
+    "TSMC"
+  ]
+}

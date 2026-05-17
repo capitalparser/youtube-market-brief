@@ -2,7 +2,9 @@ from datetime import UTC, datetime
 
 from youtube_market_brief.domain.daily_brief import compute_rollup
 from youtube_market_brief.domain.types import (
+    KeyInsight,
     LLMMeta,
+    RedTeamItem,
     TickerMention,
     TranscriptSummary,
     VideoAnalysis,
@@ -27,8 +29,12 @@ def _analysis(video_id: str, mentions: tuple[TickerMention, ...]) -> VideoAnalys
         video=_video(video_id),
         transcript_summary=TranscriptSummary(
             headline_3line=("a", "b", "c"),
-            key_insights=("k1", "k2", "k3"),
-            red_team=("r1",),
+            key_insights=(
+                KeyInsight(text="k1", sector_tags=(), theme_tags=()),
+                KeyInsight(text="k2", sector_tags=(), theme_tags=()),
+                KeyInsight(text="k3", sector_tags=(), theme_tags=()),
+            ),
+            red_team=(RedTeamItem(text="r1", sector_tags=(), theme_tags=()),),
             chars_used=100,
             was_truncated=False,
         ),
@@ -46,6 +52,7 @@ def _m(symbol, display, in_watchlist, direction, reasoning="r"):
         symbol=symbol,
         display=display,
         in_watchlist=in_watchlist,
+        sector_tag=None,
         direction=direction,
         reasoning=reasoning,
         quotes=("q",),

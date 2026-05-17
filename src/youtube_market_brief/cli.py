@@ -189,6 +189,20 @@ def cmd_config(args) -> int:
             print(f"\nMISSING: {', '.join(missing)}", file=sys.stderr)
             return 2
         print("\nOK: required env + config present.")
+
+        # P1: taxonomy drift detection
+        from youtube_market_brief.config import _validate_taxonomy_alignment
+        drift = _validate_taxonomy_alignment(vault_root=cfg.vault_root)
+        if drift:
+            print("[taxonomy drift detected]", file=sys.stderr)
+            for line in drift:
+                print(f"  - {line}", file=sys.stderr)
+            print(
+                "  → src/youtube_market_brief/domain/taxonomy.py 또는 vault MD 슬러그를 정합시키시오.",
+                file=sys.stderr,
+            )
+            return 1
+        print("✓ taxonomy aligned (sectors + themes)")
     return 0
 
 
@@ -309,14 +323,29 @@ def cmd_analyze(args) -> int:
         "video_id": result.video.video_id,
         "tier": result.tier,
         "headline_3line": list(result.transcript_summary.headline_3line),
-        "key_insights": list(result.transcript_summary.key_insights),
-        "red_team": list(result.transcript_summary.red_team),
+        "key_insights": [
+            {
+                "text": ki.text,
+                "sector_tags": list(ki.sector_tags),
+                "theme_tags": list(ki.theme_tags),
+            }
+            for ki in result.transcript_summary.key_insights
+        ],
+        "red_team": [
+            {
+                "text": rt.text,
+                "sector_tags": list(rt.sector_tags),
+                "theme_tags": list(rt.theme_tags),
+            }
+            for rt in result.transcript_summary.red_team
+        ],
         "watchlist_hits": list(result.watchlist_hits),
         "tickers": [
             {
                 "symbol": t.symbol,
                 "display": t.display,
                 "in_watchlist": t.in_watchlist,
+                "sector_tag": t.sector_tag,
                 "direction": t.direction,
                 "confidence": t.confidence,
                 "reasoning": t.reasoning,
@@ -349,11 +378,16 @@ def cmd_aggregate_only(args) -> int:
     from youtube_market_brief.domain.types import (
         DailyBrief,
         LLMMeta,
+        RedTeamItem,
         TickerRollup,
         TickerRollupVideoEntry,
         VideoMeta,
     )
-    from youtube_market_brief.pipeline.aggregate import write_daily_brief_md
+    from youtube_market_brief.pipeline.aggregate import (
+        _coerce_insight,
+        _coerce_redteam,
+        write_daily_brief_md,
+    )
     from youtube_market_brief.pipeline.notify import notify_daily
     from youtube_market_brief.state.store import IdempotencyStore
 
@@ -362,8 +396,11 @@ def cmd_aggregate_only(args) -> int:
     md_paths = sorted(cfg.vault_youtube_root.glob(f"*/{pattern}"))
     md_paths = [p for p in md_paths if not p.parent.name.startswith("_")]
     if not md_paths:
-        print(f"No vault MDs found for {target_date.isoformat()}", file=sys.stderr)
-        return 1
+        # No MDs locally — either nothing was processed that day or MDs weren't pulled
+        # from Drive. This is not an error; the 07:00 KST run may legitimately have
+        # nothing to aggregate if the previous day had no new videos.
+        log.info("aggregate-only %s: no vault MDs found, skipping", target_date.isoformat())
+        return 0
 
     log.info("aggregate-only %s: found %d vault MD(s)", target_date.isoformat(), len(md_paths))
 
@@ -433,10 +470,18 @@ def cmd_aggregate_only(args) -> int:
         return 2
 
     market_read = (payload.get("market_read") or "").strip()
-    key_insights = tuple(payload.get("key_insights") or [])
-    red_team = tuple(payload.get("red_team") or []) or (
-        "(영상 간 합의가 약하거나 thesis가 분산되어 통합 반론 도출이 어려움)",
-    )
+    key_insights = tuple(_coerce_insight(i) for i in (payload.get("key_insights") or []))
+    red_team_raw = payload.get("red_team") or []
+    if red_team_raw:
+        red_team = tuple(_coerce_redteam(i) for i in red_team_raw)
+    else:
+        red_team = (
+            RedTeamItem(
+                text="(영상 간 합의가 약하거나 thesis가 분산되어 통합 반론 도출이 어려움)",
+                sector_tags=(),
+                theme_tags=(),
+            ),
+        )
 
     rollups: list[TickerRollup] = []
     for r in payload.get("ticker_rollup") or []:

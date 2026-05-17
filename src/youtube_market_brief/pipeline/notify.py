@@ -6,6 +6,7 @@ import logging
 
 from youtube_market_brief._clients.telegram import TelegramClient
 from youtube_market_brief.domain.telegram_format import (
+    decorate_chunks,
     format_daily_brief,
     format_per_video,
     split_message,
@@ -39,7 +40,7 @@ def notify_daily(
 
 
 def _send_chunks(text: str, *, telegram: TelegramClient, target) -> NotifyResult:
-    chunks = split_message(text)
+    chunks = decorate_chunks(split_message(text))
     ids: list[int] = []
     reply_to: int | None = None
     try:

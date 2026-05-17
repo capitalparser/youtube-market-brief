@@ -1,0 +1,35 @@
+{
+  "headline_3line": ["문장1", "문장2", "문장3"],
+  "key_insights": [
+    {"text": "AI capex 가속", "sector_tags": ["semiconductors"], "theme_tags": ["hyperscaler_capex"]},
+    {"text": "메모리 melt-up", "sector_tags": ["semiconductors"], "theme_tags": ["memory_supercycle"]},
+    {"text": "원화 약세 영향", "sector_tags": [], "theme_tags": ["korea_discount"]}
+  ],
+  "red_team": [
+    {"text": "capex ROI 의심", "sector_tags": ["semiconductors"], "theme_tags": ["ai_meltup_bubble"]},
+    {"text": "공급 과잉 리스크", "sector_tags": ["semiconductors"], "theme_tags": ["memory_supercycle"]}
+  ],
+  "tickers": [
+    {
+      "symbol": "005930",
+      "display": "삼성전자",
+      "in_watchlist": true,
+      "sector_tag": "semiconductors",
+      "direction": "긍정적",
+      "reasoning": "HBM 진척",
+      "quotes": ["삼성전자가 HBM3E 양산을..."],
+      "confidence": "high"
+    },
+    {
+      "symbol": "NVDA",
+      "display": "NVDA",
+      "in_watchlist": false,
+      "sector_tag": "semiconductors",
+      "direction": "긍정적",
+      "reasoning": "AI 수요 견조",
+      "quotes": ["엔비디아 데이터센터 매출..."],
+      "confidence": "medium"
+    }
+  ],
+  "watchlist_hits": ["005930"]
+}

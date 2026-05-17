@@ -2,10 +2,15 @@
 
 Telegram Bot API limit: 4096 chars per message. We use a soft cap of 4000 for
 safety (emoji are multibyte and we want room for the (n/m) suffix).
+
+Messages are emitted in HTML parse_mode. All dynamic content is HTML-escaped
+here; structural strings and tags injected by `decorate_chunks` are the only
+literal HTML in the output.
 """
 
 from __future__ import annotations
 
+import html
 from collections.abc import Iterable
 
 from youtube_market_brief.domain.types import (
@@ -16,6 +21,20 @@ from youtube_market_brief.domain.types import (
 )
 
 SOFT_CAP = 4000
+
+
+def _esc(s: str) -> str:
+    return html.escape(s, quote=False)
+
+
+def _text_of(item) -> str:
+    """Extract text from KeyInsight/RedTeamItem object, with string fallback.
+
+    The string fallback is defensive — preserved in case legacy .analysis.json
+    sidecars are read back in via future re-processing.
+    """
+    return getattr(item, "text", None) or str(item)
+
 
 _DIRECTION_EMOJI = {
     "긍정적": "🟢",
@@ -31,17 +50,17 @@ def format_per_video(analysis: VideoAnalysis, *, vault_md_path_relative: str) ->
     s = analysis.transcript_summary
 
     parts: list[str] = []
-    parts.append(f"📺 {v.channel_name} — {v.title}")
-    parts.append(f"🔗 {v.url}")
-    parts.append(f"🕐 {v.published_at_utc.isoformat()}")
+    parts.append(f"📺 {_esc(v.channel_name)} — {_esc(v.title)}")
+    parts.append(f"🔗 {_esc(v.url)}")
+    parts.append(f"🕐 {_esc(v.published_at_utc.isoformat())}")
     parts.append("")
     parts.append("🎯 핵심 인사이트")
     for ins in s.key_insights:
-        parts.append(f"• {ins}")
+        parts.append(f"• {_esc(ins.text)}")
     parts.append("")
     parts.append("🚨 레드팀 시각")
     for rt in s.red_team:
-        parts.append(f"• {rt}")
+        parts.append(f"• {_esc(rt.text)}")
     parts.append("")
 
     label_suffix = (
@@ -49,28 +68,28 @@ def format_per_video(analysis: VideoAnalysis, *, vault_md_path_relative: str) ->
         if analysis.watchlist_hits
         else f"자동 발견 {sum(1 for t in analysis.tickers if not t.in_watchlist)}개"
     )
-    parts.append(f"📊 종목 영향 ({label_suffix})")
+    parts.append(f"📊 종목 영향 ({_esc(label_suffix)})")
     for t in analysis.tickers:
         parts.append(_format_ticker_line(t))
     parts.append("")
-    parts.append(f"📝 vault: {vault_md_path_relative}")
+    parts.append(f"📝 vault: {_esc(vault_md_path_relative)}")
     return "\n".join(parts)
 
 
 def format_daily_brief(brief: DailyBrief) -> str:
     parts: list[str] = []
-    parts.append(f"📅 {brief.date.isoformat()} 일일 시장 브리핑")
+    parts.append(f"📅 {_esc(brief.date.isoformat())} 일일 시장 브리핑")
     parts.append("")
     parts.append("🎯 오늘의 시장 read")
-    parts.append(brief.market_read.strip())
+    parts.append(_esc(brief.market_read.strip()))
     parts.append("")
     parts.append("🔑 핵심 인사이트")
     for ins in brief.key_insights:
-        parts.append(f"• {ins}")
+        parts.append(f"• {_esc(_text_of(ins))}")
     parts.append("")
     parts.append("🚨 레드팀 시각")
     for rt in brief.red_team:
-        parts.append(f"• {rt}")
+        parts.append(f"• {_esc(_text_of(rt))}")
     parts.append("")
 
     wl = [r for r in brief.ticker_rollup if r.in_watchlist]
@@ -89,26 +108,26 @@ def format_daily_brief(brief: DailyBrief) -> str:
 
     parts.append(f"📺 오늘 처리 영상 {len(brief.videos)}건")
     for v in brief.videos:
-        parts.append(f"• {v.title} — {v.url}")
+        parts.append(f"• {_esc(v.title)} — {_esc(v.url)}")
 
     return "\n".join(parts)
 
 
 def _format_ticker_line(t: TickerMention) -> str:
     emoji = _DIRECTION_EMOJI.get(t.direction, "")
-    label = t.display
+    label = _esc(t.display)
     if t.symbol:
-        label += f" ({t.symbol})"
-    reason = _one_line(t.reasoning, 80)
-    return f"• {label} {emoji} {t.direction} — {reason}"
+        label += f" ({_esc(t.symbol)})"
+    reason = _one_line(_esc(t.reasoning), 80)
+    return f"• {label} {emoji} {_esc(t.direction)} — {reason}"
 
 
 def _format_rollup_line(r: TickerRollup) -> str:
     emoji = _DIRECTION_EMOJI.get(r.net_direction, "")
-    label = r.display
+    label = _esc(r.display)
     if r.symbol:
-        label += f" ({r.symbol})"
-    return f"• {label} {emoji} {r.net_direction} — {r.mention_count}개 영상 언급"
+        label += f" ({_esc(r.symbol)})"
+    return f"• {label} {emoji} {_esc(r.net_direction)} — {r.mention_count}개 영상 언급"
 
 
 def _one_line(s: str, max_len: int) -> str:
@@ -184,16 +203,37 @@ def _split_long_paragraph(p: str, soft_cap: int) -> list[str]:
     return out
 
 
+def decorate_chunks(chunks: Iterable[str]) -> list[str]:
+    """Wrap the first non-empty line of every chunk in <blockquote><b>...</b></blockquote>.
+
+    Gives each Telegram message a bold, indented header so consecutive messages
+    are visually separable in the client. Operates on already-split chunks so
+    the (i/n) pagination suffix sits outside the decoration.
+    """
+    return [_wrap_first_line(c) for c in chunks]
+
+
+def _wrap_first_line(text: str) -> str:
+    lines = text.split("\n")
+    for i, line in enumerate(lines):
+        if line.strip():
+            lines[i] = f"<blockquote><b>{line}</b></blockquote>"
+            return "\n".join(lines)
+    return text
+
+
 def format_messages(
     *, per_video: VideoAnalysis | None = None, daily: DailyBrief | None = None,
     vault_md_path_relative: str | None = None,
 ) -> Iterable[str]:
-    """Convenience: format and split for a single send target."""
+    """Convenience: format, split, and decorate for a single send target."""
     if per_video is not None:
         if vault_md_path_relative is None:
             raise ValueError("vault_md_path_relative required for per_video format")
-        yield from split_message(format_per_video(per_video, vault_md_path_relative=vault_md_path_relative))
+        yield from decorate_chunks(
+            split_message(format_per_video(per_video, vault_md_path_relative=vault_md_path_relative))
+        )
     elif daily is not None:
-        yield from split_message(format_daily_brief(daily))
+        yield from decorate_chunks(split_message(format_daily_brief(daily)))
     else:
         raise ValueError("either per_video or daily must be provided")

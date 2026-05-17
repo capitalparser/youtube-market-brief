@@ -7,6 +7,7 @@ display names with canonical symbols.
 
 from __future__ import annotations
 
+import logging
 from collections.abc import Iterable
 
 from youtube_market_brief.domain.types import (
@@ -14,6 +15,8 @@ from youtube_market_brief.domain.types import (
     Watchlist,
     WatchlistEntry,
 )
+
+log = logging.getLogger(__name__)
 
 
 def resolve_symbol(mention: TickerMention, watchlist: Watchlist) -> WatchlistEntry | None:
@@ -65,21 +68,29 @@ def filter_watchlist_hits(
 def annotate_in_watchlist(
     mentions: Iterable[TickerMention], watchlist: Watchlist
 ) -> tuple[TickerMention, ...]:
-    """Re-stamp `in_watchlist` flag and canonical `symbol` on LLM mentions.
+    """Re-stamp `in_watchlist`, canonical `symbol`, `sector_tag` on LLM mentions.
 
-    LLM may have set in_watchlist incorrectly; we reconcile against the
-    actual config. `symbol` becomes the watchlist canonical when a match
-    is found.
+    sector_tag 결정:
+    - watchlist 매칭되면 WatchlistEntry.sector로 *덮어쓰기* (watchlist 우선).
+      단 WatchlistEntry.sector가 빈 문자열이면 LLM 값 보존.
+    - watchlist 매칭 안 되면 LLM 출력 sector_tag 그대로 사용.
     """
     out: list[TickerMention] = []
     for m in mentions:
         entry = resolve_symbol(m, watchlist)
         if entry is not None:
+            sector_tag = entry.sector if entry.sector else m.sector_tag
+            if entry.sector and m.sector_tag and entry.sector != m.sector_tag:
+                log.warning(
+                    "ticker %s sector conflict: llm=%s watchlist=%s — using watchlist",
+                    entry.symbol, m.sector_tag, entry.sector,
+                )
             out.append(
                 TickerMention(
                     symbol=entry.symbol,
                     display=m.display,
                     in_watchlist=True,
+                    sector_tag=sector_tag,
                     direction=m.direction,
                     reasoning=m.reasoning,
                     quotes=m.quotes,
@@ -92,6 +103,7 @@ def annotate_in_watchlist(
                     symbol=m.symbol,
                     display=m.display,
                     in_watchlist=False,
+                    sector_tag=m.sector_tag,
                     direction=m.direction,
                     reasoning=m.reasoning,
                     quotes=m.quotes,

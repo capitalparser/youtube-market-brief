@@ -15,13 +15,37 @@ from youtube_market_brief.domain.daily_brief import (
 )
 from youtube_market_brief.domain.types import (
     DailyBrief,
+    KeyInsight,
     LLMMeta,
+    RedTeamItem,
     TickerRollup,
     TickerRollupVideoEntry,
     VideoAnalysis,
 )
 
 log = logging.getLogger(__name__)
+
+
+def _coerce_insight(item) -> KeyInsight:
+    """Accept v1 dict or transitional string, normalize to KeyInsight."""
+    if isinstance(item, dict):
+        return KeyInsight(
+            text=str(item.get("text", "")).strip(),
+            sector_tags=tuple(item.get("sector_tags") or []),
+            theme_tags=tuple(item.get("theme_tags") or []),
+        )
+    return KeyInsight(text=str(item).strip(), sector_tags=(), theme_tags=())
+
+
+def _coerce_redteam(item) -> RedTeamItem:
+    """Accept v1 dict or transitional string, normalize to RedTeamItem."""
+    if isinstance(item, dict):
+        return RedTeamItem(
+            text=str(item.get("text", "")).strip(),
+            sector_tags=tuple(item.get("sector_tags") or []),
+            theme_tags=tuple(item.get("theme_tags") or []),
+        )
+    return RedTeamItem(text=str(item).strip(), sector_tags=(), theme_tags=())
 
 
 def aggregate_daily(
@@ -53,10 +77,15 @@ def aggregate_daily(
     if not isinstance(payload, dict):
         raise ValueError("daily brief payload not a dict")
     market_read = payload.get("market_read", "").strip()
-    key_insights = tuple(payload.get("key_insights", []))
-    red_team = tuple(payload.get("red_team", [])) or (
-        "(영상 간 합의가 약하거나 thesis가 분산되어 통합 반론 도출이 어려움)",
-    )
+
+    key_insights = tuple(_coerce_insight(i) for i in payload.get("key_insights", []))
+    red_team_raw = payload.get("red_team", [])
+    if red_team_raw:
+        red_team = tuple(_coerce_redteam(i) for i in red_team_raw)
+    else:
+        red_team = (
+            RedTeamItem(text="(영상 간 합의가 약하거나 thesis가 분산되어 통합 반론 도출이 어려움)", sector_tags=(), theme_tags=()),
+        )
 
     # Use deterministic rollup, but enrich one_line_reason from LLM's per_video
     # answers if available (otherwise our reasoning summaries stand).
@@ -84,12 +113,56 @@ def write_daily_brief_md(
     vault_daily_root: Path,
     captured_at: datetime,
 ) -> Path:
-    """Write the daily brief MD. Returns the absolute path written."""
+    """Write the daily brief MD + JSON sidecar. Returns the absolute path of the MD."""
     vault_daily_root.mkdir(parents=True, exist_ok=True)
     out = vault_daily_root / f"{brief.date.isoformat()}_brief.md"
     body = render_daily_brief_markdown(brief, captured_at=captured_at)
     out.write_text(body, encoding="utf-8")
     log.info("wrote daily brief MD: %s", out)
+
+    sidecar = out.with_suffix(".analysis.json")
+    sidecar_data = {
+        "date": brief.date.isoformat(),
+        "captured_at": captured_at.isoformat(),
+        "market_read": brief.market_read,
+        "key_insights": [
+            {"text": ki.text, "sector_tags": list(ki.sector_tags), "theme_tags": list(ki.theme_tags)}
+            for ki in brief.key_insights
+        ],
+        "red_team": [
+            {"text": rt.text, "sector_tags": list(rt.sector_tags), "theme_tags": list(rt.theme_tags)}
+            for rt in brief.red_team
+        ],
+        "ticker_rollup": [
+            {
+                "symbol": r.symbol,
+                "display": r.display,
+                "in_watchlist": r.in_watchlist,
+                "net_direction": r.net_direction,
+                "mention_count": r.mention_count,
+                "per_video": [
+                    {"video_id": e.video_id, "direction": e.direction, "one_line_reason": e.one_line_reason}
+                    for e in r.per_video
+                ],
+            }
+            for r in brief.ticker_rollup
+        ],
+        "videos": [
+            {"video_id": v.video_id, "channel_slug": v.channel_slug, "title": v.title, "url": v.url}
+            for v in brief.videos
+        ],
+        "llm_meta": {
+            "model": brief.llm_meta.model,
+            "duration_ms": brief.llm_meta.duration_ms,
+            "claude_session_id": brief.llm_meta.claude_session_id,
+        },
+    }
+    sidecar.write_text(
+        json.dumps(sidecar_data, ensure_ascii=False, indent=2),
+        encoding="utf-8",
+    )
+    log.info("wrote daily brief sidecar: %s", sidecar)
+
     return out
 
 
@@ -102,13 +175,20 @@ def _serialize_analysis(a: VideoAnalysis) -> dict:
             "url": a.video.url,
         },
         "headline_3line": list(a.transcript_summary.headline_3line),
-        "key_insights": list(a.transcript_summary.key_insights),
-        "red_team": list(a.transcript_summary.red_team),
+        "key_insights": [
+            {"text": ki.text, "sector_tags": list(ki.sector_tags), "theme_tags": list(ki.theme_tags)}
+            for ki in a.transcript_summary.key_insights
+        ],
+        "red_team": [
+            {"text": rt.text, "sector_tags": list(rt.sector_tags), "theme_tags": list(rt.theme_tags)}
+            for rt in a.transcript_summary.red_team
+        ],
         "tickers": [
             {
                 "symbol": t.symbol,
                 "display": t.display,
                 "in_watchlist": t.in_watchlist,
+                "sector_tag": t.sector_tag,
                 "direction": t.direction,
                 "reasoning": t.reasoning,
                 "quotes": list(t.quotes),

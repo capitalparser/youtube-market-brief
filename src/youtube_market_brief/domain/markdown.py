@@ -28,15 +28,25 @@ def render_video_markdown(analysis: VideoAnalysis, *, captured_at: datetime) -> 
 
 
 def _frontmatter(analysis: VideoAnalysis, *, captured_at: datetime) -> str:
+    s = analysis.transcript_summary
+    ki_sectors = sorted({tag for ki in s.key_insights for tag in ki.sector_tags})
+    ki_themes = sorted({tag for ki in s.key_insights for tag in ki.theme_tags})
+    rt_sectors = sorted({tag for rt in s.red_team for tag in rt.sector_tags})
+    rt_themes = sorted({tag for rt in s.red_team for tag in rt.theme_tags})
+
     data = {
         "captured_at": captured_at.isoformat(),
         "channel": analysis.video.channel_slug,
+        "insight_sector_tags": ki_sectors,
+        "insight_theme_tags": ki_themes,
+        "red_team_sector_tags": rt_sectors,
+        "red_team_theme_tags": rt_themes,
         "source_type": "youtube",
         "source_url": analysis.video.url,
         "tags": list(analysis.tags),
         "tier": analysis.tier,
         "video_id": analysis.video.video_id,
-        "was_truncated": analysis.transcript_summary.was_truncated,
+        "was_truncated": s.was_truncated,
         "watchlist_hits": list(analysis.watchlist_hits),
     }
     buf = StringIO()
@@ -64,12 +74,12 @@ def _body(analysis: VideoAnalysis) -> str:
 
     parts.append("## 🎯 핵심 인사이트\n")
     for ins in s.key_insights:
-        parts.append(f"- {ins}")
+        parts.append(f"- {ins.text}")
     parts.append("")
 
     parts.append("## 🚨 레드팀 시각 (반대 관점·리스크·의문점)\n")
     for rt in s.red_team:
-        parts.append(f"- {rt}")
+        parts.append(f"- {rt.text}")
     parts.append("")
 
     parts.append("## 📊 종목 영향\n")
