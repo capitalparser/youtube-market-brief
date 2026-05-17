@@ -29,8 +29,11 @@ def test_theme_slugs_match_vault_2026_05_11():
         "bigtech_ipo_supply",
         "geopolitics_middle_east",
         "hyperscaler_capex",
+        "confidential_ai_compute",
         "korea_discount",
         "memory_supercycle",
+        "quantum_computing",
+        "stablecoin_payment_rails",
         "tokenization_rwa",
         "us_fiscal_debt",
     }

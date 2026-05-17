@@ -34,3 +34,8 @@ channels:
   slug: demodaysv
   enabled: true
   channel_id: UC1yWMxMin6g7wW2r_vMI38w
+- handle: '@daiken_tech'
+  name_ko: 다이켄 테크인사이트
+  slug: daiken_tech
+  enabled: true
+  channel_id: UCQrjSpao4hDbEI8Y0Z9sLLw

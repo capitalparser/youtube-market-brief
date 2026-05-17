@@ -69,7 +69,7 @@ ADR-0003 §"Codex 잔여 범위"에 정의됨. 요약:
 - Git 2.54
 - 작업 디렉토리: `~/vault/01_Projects/01_youtube_market_brief/`
 - 외부 도구 호출 시 `~/vault/Harness/runners/{이름}.yaml`에 정의된 명령만 사용
-- LLM은 `claude` CLI subprocess 호출 (Anthropic API 키 미사용)
+- LLM은 기본 `OpenAIAPIClient` (`LLM_PROVIDER=api`, cloud runnable)를 사용한다. 로컬 수동 실행은 `ClaudeCLIClient` (`LLM_PROVIDER=cli`)로 유지한다.
 - 외부 라이브러리: `google-api-python-client`, `youtube-transcript-api` (이미 의존성 설치됨)
 
 ---
@@ -90,7 +90,15 @@ _이 템플릿은 신규 프로젝트 스캐폴드 시 `promote_idea` runner가 
 - migration: non-retroactive (기존 vault MD는 그대로)
 - 자세한 결정 근거: `docs/adr/0006-prompt-persona-schema-realignment.md`
 
-### P2 (propagation 자동화)는 다음 작업
-- `.analysis.json` sidecar를 parsing
-- 각 insight의 `sector_tags` / `theme_tags`를 `02_Areas/Market_Insights/{sectors,themes}/*.md` 카드의 "최근 바뀐 점" 표에 row append
-- stance / confidence / time_horizon은 카드 owner(사용자) 판단 영역 — LLM 위임 거절. 변화 이벤트 기록까지만 자동
+## P2 보강 (2026-05-16)
+
+- daily brief sidecar 작성 직후 `entity_propagation_lite.py --source <daily_brief.analysis.json>`를 자동 호출한다.
+- 자동 호출은 proposal-only다. `02_Areas/Market_Insights/{sectors,themes}/*.md` 카드는 직접 수정하지 않는다.
+- `key_insights` / `red_team` schema가 Reasoning Distillation 필드를 보존한다:
+  - `why_important`
+  - `structural_shift`
+  - `pattern_connection`
+  - `counter_signal`
+  - `workflow_implication`
+  - `signal_density`
+- stance / confidence / time_horizon은 카드 owner(사용자) 판단 영역 — LLM 위임 거절. proposal 검토 후 수동 반영한다.

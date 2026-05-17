@@ -38,6 +38,31 @@ def test_daily_brief_state(tmp_path: Path):
     assert s2.daily_brief_sent(d) is True
 
 
+def test_terminal_skip_is_done_but_retryable_skip_is_not(tmp_path: Path):
+    p = tmp_path / "state.json"
+    s = IdempotencyStore(p)
+
+    s.mark_video(
+        "terminal",
+        channel_id="UCabc",
+        outcome="skipped_no_caption",
+        md_path=None,
+        processed_at=datetime(2026, 5, 7, 9, 0, tzinfo=UTC),
+        skip_reason="no_captions",
+    )
+    s.mark_video(
+        "retryable",
+        channel_id="UCabc",
+        outcome="skipped_no_caption",
+        md_path=None,
+        processed_at=datetime(2026, 5, 7, 9, 0, tzinfo=UTC),
+        skip_reason="ip_blocked",
+    )
+
+    assert s.is_done("terminal")
+    assert not s.is_done("retryable")
+
+
 def test_atomic_write_no_partial_on_error(tmp_path: Path, monkeypatch):
     """Force os.replace to fail mid-flush — original file should remain untouched."""
 

@@ -40,6 +40,12 @@
   "key_insights": [
     {
       "text": "인사이트 본문 (≤200자)",
+      "why_important": "왜 이 신호가 중요한가 (≤120자)",
+      "structural_shift": "underlying structural shift (≤80자)",
+      "pattern_connection": "기존 반복 패턴/테마와의 연결 (≤120자)",
+      "counter_signal": "이 인사이트를 깨는 반례/조건 (≤120자)",
+      "workflow_implication": "감사·리서치·agent workflow 적용점 (≤120자)",
+      "signal_density": "high",
       "sector_tags": ["semiconductors"],
       "theme_tags": ["hyperscaler_capex"]
     }
@@ -47,6 +53,12 @@
   "red_team": [
     {
       "text": "반대 시각 본문 (≤200자)",
+      "why_important": "왜 이 반례가 중요한가 (≤120자)",
+      "structural_shift": "이 반례가 가리키는 구조 변화 또는 없음",
+      "pattern_connection": "어떤 기존 thesis/pattern을 흔드는가",
+      "counter_signal": "thesis를 깨는 구체 조건",
+      "workflow_implication": "검토·모니터링 workflow 적용점",
+      "signal_density": "medium",
       "sector_tags": ["semiconductors"],
       "theme_tags": ["ai_meltup_bubble"]
     }
@@ -74,11 +86,19 @@
 
 ## key_insights
 - 3-5건. 각 항목은 사실/숫자/맥락을 포함한 짧은 단락 (`text` ≤200자). 단순 요약이 아닌 "이 영상이 새로 더해주는 것".
+- `why_important`: "무슨 내용인가"가 아니라 "왜 중요한 변화 신호인가"를 쓴다.
+- `structural_shift`: incentive, interface, workflow, distribution, governance, cost structure 중 무엇이 바뀌는지 쓴다. 없으면 빈 문자열.
+- `pattern_connection`: 기존 반복 패턴 또는 Market_Insights theme와 어떻게 연결되는지 쓴다. 없으면 빈 문자열.
+- `counter_signal`: 이 insight가 틀렸다고 봐야 할 반례 또는 확인 조건. 없으면 빈 문자열.
+- `workflow_implication`: 감사·재무분석·리서치·agent workflow에 실제로 embedding 가능한 적용점. 없으면 빈 문자열.
+- `signal_density`: `high` / `medium` / `low`. 구조 변화·workflow ownership·distribution shift·governance/cost 변화 설명력이 있으면 high.
 - `sector_tags` / `theme_tags`: 본 섹션 §sector_tags 규칙 참조.
 
 ## red_team
 - 2-4건. **`key_insights`에 대한 반대 시각·리스크·약점·의문점**을 통합해 응축. 4 시각 중 *어느 하나라도* thesis를 약화시키면 명시.
 - 각 항목은 단순 부정이 아닌 구체적 반론 (예: "감사인 시각: 화자가 인용한 매출 50% 증가는 ASC 606 변경 효과를 분리 안 함").
+- `counter_signal`에는 thesis를 깨는 구체 조건을 반드시 쓴다.
+- `signal_density`는 반례가 thesis 전체를 흔들면 high, 부분 리스크면 medium, 단순 확인 필요면 low.
 - **빈 배열 금지**. 영상이 단순 사실 보도여서 반론할 게 없다면 `red_team[0].text`에 그 사실을 명시 (예: "영상이 단편 사실 보도 형식이라 별도 반론할 thesis가 부재").
 
 ## tickers
@@ -117,6 +137,7 @@
 - **균형성**: 영상 화자의 시각에 동조 vs 반박을 의식적으로 구분.
 - **출처 명시**: 화자 의견인지 vs 영상이 인용한 외부 자료인지 표시 (`reasoning`에서).
 - **추측 명시**: 데이터/근거가 약하면 `confidence`를 `low`로 낮춤.
+- **Reasoning Distillation**: 모든 key insight는 가능하면 `왜 중요한가 → 구조 변화 → 반복 패턴 → 반례 → workflow 적용` 순서로 압축한다. 단순 이벤트 요약으로 끝내지 않는다.
 - **음슴체 사용 금지**: 본 응답은 감사 의견이 아니므로 한국어 평이체로 작성.
 - **영상이 한국어가 아닌 경우**: 분석 출력은 한국어. `quotes`는 원어 + 한국어 번역 병기 가능.
 

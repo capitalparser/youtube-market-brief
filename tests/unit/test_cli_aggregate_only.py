@@ -109,21 +109,45 @@ V1_PAYLOAD = {
 
 def test_coerce_produces_key_insight_objects():
     """_coerce_insight turns v1 dicts into KeyInsight objects."""
-    item = {"text": "HBM 수요 견조", "sector_tags": ["semiconductors"], "theme_tags": ["memory_supercycle"]}
+    item = {
+        "text": "HBM 수요 견조",
+        "sector_tags": ["semiconductors"],
+        "theme_tags": ["memory_supercycle"],
+        "why_important": "메모리 수요 구조가 바뀌는 신호",
+        "structural_shift": "cost structure 변화",
+        "pattern_connection": "AI capex 반복 패턴",
+        "counter_signal": "고객 재고 조정",
+        "workflow_implication": "review comment trace를 지표화",
+        "signal_density": "high",
+    }
     result = _coerce_insight(item)
     assert isinstance(result, KeyInsight)
     assert result.text == "HBM 수요 견조"
     assert result.sector_tags == ("semiconductors",)
     assert result.theme_tags == ("memory_supercycle",)
+    assert result.why_important == "메모리 수요 구조가 바뀌는 신호"
+    assert result.structural_shift == "cost structure 변화"
+    assert result.pattern_connection == "AI capex 반복 패턴"
+    assert result.counter_signal == "고객 재고 조정"
+    assert result.workflow_implication == "review comment trace를 지표화"
+    assert result.signal_density == "high"
 
 
 def test_coerce_produces_red_team_objects():
     """_coerce_redteam turns v1 dicts into RedTeamItem objects."""
-    item = {"text": "capex ROI 불확실", "sector_tags": ["semiconductors"], "theme_tags": ["ai_meltup_bubble"]}
+    item = {
+        "text": "capex ROI 불확실",
+        "sector_tags": ["semiconductors"],
+        "theme_tags": ["ai_meltup_bubble"],
+        "counter_signal": "ROI evidence 부재",
+        "signal_density": "medium",
+    }
     result = _coerce_redteam(item)
     assert isinstance(result, RedTeamItem)
     assert result.text == "capex ROI 불확실"
     assert result.sector_tags == ("semiconductors",)
+    assert result.counter_signal == "ROI evidence 부재"
+    assert result.signal_density == "medium"
 
 
 def test_daily_brief_constructed_with_typed_objects():

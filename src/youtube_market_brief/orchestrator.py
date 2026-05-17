@@ -27,19 +27,13 @@ from youtube_market_brief.pipeline import (
     aggregate as agg,
 )
 from youtube_market_brief.pipeline import (
-    analyze as analyze_mod,
-)
-from youtube_market_brief.pipeline import (
     discover as discover_mod,
 )
 from youtube_market_brief.pipeline import (
-    notify as notify_mod,
+    propagation as propagation_mod,
 )
 from youtube_market_brief.pipeline import (
-    transcribe as transcribe_mod,
-)
-from youtube_market_brief.pipeline import (
-    write_video as write_mod,
+    video_processing as video_processing_mod,
 )
 from youtube_market_brief.state.store import IdempotencyStore
 
@@ -120,52 +114,28 @@ def run(
     # Per-video pipeline
     for v in videos:
         try:
-            tx = transcribe_mod.fetch_transcript(
-                v, client=clients.transcript, max_chars=config.transcript_max_chars
-            )
-            if isinstance(tx, TranscriptSkip):
-                log.info("skip %s: %s (%s)", v.video_id, tx.reason, tx.detail)
-                report.skipped_no_caption += 1
-                store.mark_video(
-                    v.video_id,
-                    channel_id=v.channel_id,
-                    outcome="skipped_no_caption",
-                    md_path=None,
-                    processed_at=captured_at,
-                )
-                continue
-
-            analysis = analyze_mod.analyze_video(
+            result = video_processing_mod.process_video(
                 video=v,
-                transcript=tx,
+                transcript_client=clients.transcript,
                 watchlist=watchlist,
                 llm=clients.llm,
-                system_prompt_path=system_prompt_path,
-                timeout_sec=config.claude_timeout_sec,
-            )
-            md_path = write_mod.write_video_md(
-                analysis,
+                telegram=clients.telegram,
+                store=store,
+                vault_root=config.vault_root,
                 vault_youtube_root=config.vault_youtube_root,
+                system_prompt_path=system_prompt_path,
                 captured_at=captured_at,
                 date_kst_iso=date_kst_iso,
+                transcript_max_chars=config.transcript_max_chars,
+                timeout_sec=config.claude_timeout_sec,
+                notify=True,
             )
-
-            md_relative = md_path.relative_to(config.vault_root).as_posix()
-            res = notify_mod.notify_per_video(
-                analysis, telegram=clients.telegram, vault_md_path_relative=md_relative
-            )
-            if not res.ok:
-                log.warning("per_video notify failed for %s: %s", v.video_id, res.error)
-
-            store.mark_video(
-                v.video_id,
-                channel_id=v.channel_id,
-                outcome="ok",
-                md_path=md_relative,
-                processed_at=captured_at,
-            )
-            store.flush()  # checkpoint after each video
-            analyses.append(analysis)
+            if isinstance(result.skip, TranscriptSkip):
+                log.info("skip %s: %s (%s)", v.video_id, result.skip.reason, result.skip.detail)
+                report.skipped_no_caption += 1
+                continue
+            if result.analysis is not None:
+                analyses.append(result.analysis)
             report.processed += 1
         except Exception as e:
             log.error("per-video pipeline failed for %s: %s", v.video_id, e, exc_info=True)
@@ -201,6 +171,21 @@ def run(
                     captured_at=captured_at,
                 )
                 report.daily_brief_generated = True
+                sidecar_path = brief_path.with_suffix(".analysis.json")
+                propagation_result = propagation_mod.create_daily_propagation_proposal(
+                    sidecar_path=sidecar_path,
+                    vault_root=config.vault_root,
+                )
+                if propagation_result.ok:
+                    log.info(
+                        "daily propagation proposal generated: %s",
+                        propagation_result.proposal_path,
+                    )
+                elif not propagation_result.skipped:
+                    log.warning(
+                        "daily propagation proposal failed: %s",
+                        propagation_result.message,
+                    )
                 res = notify_mod.notify_daily(brief, telegram=clients.telegram)
                 report.daily_brief_sent = res.ok
                 store.mark_daily_brief(

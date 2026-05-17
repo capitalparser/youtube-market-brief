@@ -1,4 +1,4 @@
-"""Transcript clients: youtube-transcript-api (default) + yt-dlp (cloud fallback).
+"""Transcript clients: youtube-transcript-api + yt-dlp + chained fallback.
 
 YouTubeTranscriptApiClient  — scrapes YouTube caption endpoint directly.
                               Fast, but blocked on cloud-provider IPs (GitHub Actions etc.).
@@ -6,8 +6,8 @@ YtDlpTranscriptClient       — uses yt-dlp Python API; different request path a
                               headers that can bypass IP blocks. Optionally accepts
                               a Netscape-format cookies file for authenticated requests.
 
-Both implement TranscriptClient Protocol and return the same Transcript/TranscriptSkip types.
-Select via TRANSCRIPT_BACKEND env: "youtube_transcript_api" (default) | "yt_dlp".
+All implement TranscriptClient Protocol and return the same Transcript/TranscriptSkip types.
+Select via TRANSCRIPT_BACKEND env: "auto" (default) | "youtube_transcript_api" | "yt_dlp".
 """
 
 from __future__ import annotations
@@ -17,7 +17,7 @@ import re
 import tempfile
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import Protocol
+from typing import ClassVar, Protocol
 
 import requests
 
@@ -53,6 +53,46 @@ _PREFERRED_LANGS = ("ko", "ko-KR", "en", "en-US", "ja", "zh-Hans", "zh-Hant")
 class TranscriptClient(Protocol):
     def fetch(self, video_id: str) -> Transcript | TranscriptSkip:
         ...
+
+
+class ChainedTranscriptClient:
+    """Try multiple transcript clients before giving up.
+
+    Useful for cloud runs where one request path may be IP-blocked while another
+    still works. Terminal content-level skips such as disabled captions or geo
+    blocks are returned immediately.
+    """
+
+    _RETRYABLE_REASONS: ClassVar[set[str]] = {"api_changed", "ip_blocked", "timeout"}
+
+    def __init__(self, clients: list[tuple[str, TranscriptClient]]):
+        self._clients = clients
+
+    def fetch(self, video_id: str) -> Transcript | TranscriptSkip:
+        last_skip: TranscriptSkip | None = None
+        details: list[str] = []
+        for name, client in self._clients:
+            result = client.fetch(video_id)
+            if isinstance(result, Transcript):
+                if details:
+                    log.info("transcript fallback succeeded video_id=%s backend=%s", video_id, name)
+                return result
+            last_skip = result
+            details.append(f"{name}:{result.reason}")
+            if result.reason not in self._RETRYABLE_REASONS:
+                return result
+
+        if last_skip is None:
+            return TranscriptSkip(
+                video_id=video_id,
+                reason="api_changed",
+                detail="no transcript backends configured",
+            )
+        return TranscriptSkip(
+            video_id=video_id,
+            reason=last_skip.reason,
+            detail=f"{last_skip.detail} | attempts={', '.join(details)}",
+        )
 
 
 class YouTubeTranscriptApiClient:
@@ -205,8 +245,9 @@ class YtDlpTranscriptClient:
     authenticate as a logged-in user — further reduces chance of being blocked.
     """
 
-    def __init__(self, cookie_file: str | None = None):
+    def __init__(self, cookie_file: str | None = None, proxy_url: str | None = None):
         self._cookie_file = cookie_file
+        self._proxy_url = proxy_url
 
     def fetch(self, video_id: str) -> Transcript | TranscriptSkip:
         try:
@@ -282,6 +323,8 @@ class YtDlpTranscriptClient:
         cookie_path = Path(self._cookie_file) if self._cookie_file else None
         if cookie_path and cookie_path.exists() and cookie_path.stat().st_size > 0:
             ydl_opts["cookiefile"] = str(cookie_path)
+        if self._proxy_url:
+            ydl_opts["proxy"] = self._proxy_url
         log.info("yt-dlp extract_info video_id=%s cookiefile=%s", video_id, ydl_opts.get("cookiefile", "none"))
 
         url = _YT_WATCH.format(video_id=video_id)
@@ -308,11 +351,127 @@ class YtDlpTranscriptClient:
                     sub_url = fmt.get("url")
                     if not sub_url:
                         continue
-                    resp = requests.get(sub_url, timeout=30)
+                    resp = requests.get(
+                        sub_url,
+                        proxies=_requests_proxies(self._proxy_url),
+                        timeout=30,
+                    )
                     resp.raise_for_status()
                     dest = Path(tmpdir) / f"{video_id}.{lang}.{fmt['ext']}"
                     dest.write_text(resp.text, encoding="utf-8")
                     return  # one subtitle file is enough
+
+
+class OpenAISTTTranscriptClient:
+    """Last-resort transcript client: download low-bitrate audio and transcribe it.
+
+    This avoids YouTube's timedtext endpoint entirely. It is intentionally opt-in
+    because it can incur OpenAI transcription cost and is slower than captions.
+    """
+
+    def __init__(
+        self,
+        *,
+        api_key: str | None,
+        model: str = "gpt-4o-mini-transcribe",
+        cookie_file: str | None = None,
+        proxy_url: str | None = None,
+        audio_max_mb: int = 24,
+    ):
+        self._api_key = api_key
+        self._model = model
+        self._cookie_file = cookie_file
+        self._proxy_url = proxy_url
+        self._audio_max_mb = audio_max_mb
+
+    def fetch(self, video_id: str) -> Transcript | TranscriptSkip:
+        if not self._api_key:
+            return TranscriptSkip(
+                video_id=video_id,
+                reason="api_changed",
+                detail="STT fallback requires OPENAI_API_KEY",
+            )
+        try:
+            return self._fetch(video_id)
+        except Exception as exc:
+            return TranscriptSkip(
+                video_id=video_id,
+                reason="api_changed",
+                detail=f"stt {type(exc).__name__}: {str(exc)[:300]}",
+            )
+
+    def _fetch(self, video_id: str) -> Transcript | TranscriptSkip:
+        import openai
+        import yt_dlp
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            audio_path = self._download_audio(yt_dlp, video_id, tmpdir)
+            if audio_path is None:
+                return TranscriptSkip(
+                    video_id=video_id,
+                    reason="api_changed",
+                    detail="stt: audio download produced no file",
+                )
+            size_mb = audio_path.stat().st_size / (1024 * 1024)
+            if size_mb > self._audio_max_mb:
+                return TranscriptSkip(
+                    video_id=video_id,
+                    reason="api_changed",
+                    detail=f"stt: audio file too large ({size_mb:.1f} MB > {self._audio_max_mb} MB)",
+                )
+
+            client = openai.OpenAI(api_key=self._api_key)
+            with audio_path.open("rb") as audio_file:
+                response = client.audio.transcriptions.create(
+                    model=self._model,
+                    file=audio_file,
+                    response_format="text",
+                )
+
+        text = str(response).strip()
+        if not text:
+            return TranscriptSkip(
+                video_id=video_id,
+                reason="no_captions",
+                detail="stt: empty transcription",
+            )
+        return Transcript(
+            video_id=video_id,
+            language="",
+            is_auto_generated=True,
+            segments=(Segment(start=0.0, duration=0.0, text=text),),
+            full_text=text,
+            char_count=len(text),
+            fetched_at=_now_utc(),
+        )
+
+    def _download_audio(self, yt_dlp, video_id: str, tmpdir: str) -> Path | None:
+        outtmpl = str(Path(tmpdir) / f"{video_id}.%(ext)s")
+        ydl_opts: dict = {
+            "quiet": True,
+            "no_warnings": True,
+            "noplaylist": True,
+            "format": "worstaudio[ext=m4a]/worstaudio/worst",
+            "outtmpl": outtmpl,
+            "max_filesize": self._audio_max_mb * 1024 * 1024,
+        }
+        cookie_path = Path(self._cookie_file) if self._cookie_file else None
+        if cookie_path and cookie_path.exists() and cookie_path.stat().st_size > 0:
+            ydl_opts["cookiefile"] = str(cookie_path)
+        if self._proxy_url:
+            ydl_opts["proxy"] = self._proxy_url
+
+        log.info("stt fallback audio download video_id=%s", video_id)
+        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+            ydl.download([_YT_WATCH.format(video_id=video_id)])
+        files = [p for p in Path(tmpdir).iterdir() if p.is_file()]
+        return max(files, key=lambda p: p.stat().st_size) if files else None
+
+
+def _requests_proxies(proxy_url: str | None) -> dict[str, str] | None:
+    if not proxy_url:
+        return None
+    return {"http": proxy_url, "https": proxy_url}
 
 
 def _ytdlp_parse_subtitle(content: str, ext: str) -> tuple[Segment, ...]:

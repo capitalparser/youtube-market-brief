@@ -7,6 +7,7 @@ import json
 import logging
 import sys
 from datetime import UTC, date
+from pathlib import Path
 
 from youtube_market_brief import __version__
 from youtube_market_brief.config import load_app_config
@@ -37,6 +38,14 @@ def main(argv: list[str] | None = None) -> int:
     p_run.add_argument("--no-brief", action="store_true", help="Process videos but skip daily brief generation/send")
     p_run.set_defaults(func=cmd_run)
 
+    p_collect = sub.add_parser("collect-urls", help="Analyze explicit YouTube URLs/video IDs")
+    p_collect.add_argument("urls", nargs="+", help="YouTube URLs or 11-char video IDs")
+    p_collect.add_argument("--date", type=_parse_date, default=None, help="Output date YYYY-MM-DD (KST). Default: today")
+    p_collect.add_argument("--dry-run", action="store_true", help="Use Telegram dry-run if notification is enabled")
+    p_collect.add_argument("--force", action="store_true", help="Re-process videos even if state marks them done")
+    p_collect.add_argument("--telegram", action="store_true", help="Send per-video Telegram notifications")
+    p_collect.set_defaults(func=cmd_collect_urls)
+
     p_discover = sub.add_parser("discover", help="(Phase 1) discovery smoke test")
     p_discover.add_argument("--channel-id", type=str, default=None)
     p_discover.add_argument("--handle", type=str, default=None)
@@ -59,6 +68,16 @@ def main(argv: list[str] | None = None) -> int:
         help="Send full MD bodies to LLM (default: extract key sections only)",
     )
     p_agg.set_defaults(func=cmd_aggregate_only)
+
+    p_weekly = sub.add_parser("weekly-brief", help="Compose weekly rollup brief")
+    p_weekly.add_argument(
+        "--week-start",
+        type=str,
+        help="Monday of target week (YYYY-MM-DD). Default: most recent Monday.",
+    )
+    p_weekly.add_argument("--dry-run", action="store_true", help="Skip Telegram send")
+    p_weekly.add_argument("--no-telegram", action="store_true", help="Skip Telegram (alias for --dry-run)")
+    p_weekly.set_defaults(func=cmd_weekly_brief)
 
     args = parser.parse_args(argv)
     if not getattr(args, "cmd", None):
@@ -85,25 +104,59 @@ def _make_proxy_config(cfg):
 def _make_transcript_client(cfg):
     """Select transcript backend based on TRANSCRIPT_BACKEND env.
 
-    yt_dlp  — uses yt-dlp; different request path that can bypass cloud-IP
-               blocks. Slower than youtube_transcript_api but more robust.
-    default — youtube_transcript_api (fast, fails on cloud IPs without proxy).
+    auto   — tries yt-dlp first, then youtube_transcript_api for retryable failures.
+    yt_dlp — uses yt-dlp; different request path that can bypass cloud-IP blocks.
+    youtube_transcript_api — fast, but often blocked on cloud IPs without proxy.
     """
     from youtube_market_brief._clients.transcript import (
+        ChainedTranscriptClient,
+        OpenAISTTTranscriptClient,
         YouTubeTranscriptApiClient,
         YtDlpTranscriptClient,
     )
 
+    cookie = cfg.youtube_cookie_file or None
+    proxy_url = cfg.youtube_proxy_url or None
+    youtube_transcript = YouTubeTranscriptApiClient(
+        proxy_config=_make_proxy_config(cfg),
+        cookie_file=cookie,
+    )
+    yt_dlp = YtDlpTranscriptClient(cookie_file=cookie, proxy_url=proxy_url)
+
+    def _auto_clients():
+        clients = [
+            ("yt_dlp", yt_dlp),
+            ("youtube_transcript_api", youtube_transcript),
+        ]
+        if cfg.enable_stt_fallback:
+            clients.append(
+                (
+                    "openai_stt",
+                    OpenAISTTTranscriptClient(
+                        api_key=cfg.openai_api_key or None,
+                        model=cfg.stt_model,
+                        cookie_file=cookie,
+                        proxy_url=proxy_url,
+                        audio_max_mb=cfg.stt_audio_max_mb,
+                    ),
+                )
+            )
+        return clients
+
+    if cfg.transcript_backend == "auto":
+        suffix = " -> openai_stt" if cfg.enable_stt_fallback else ""
+        log.info("transcript backend: auto (yt_dlp -> youtube_transcript_api%s)", suffix)
+        return ChainedTranscriptClient(_auto_clients())
+
     if cfg.transcript_backend == "yt_dlp":
-        cookie = cfg.youtube_cookie_file or None
-        log.info("transcript backend: yt_dlp (cookie_file=%s)", cookie or "none")
-        return YtDlpTranscriptClient(cookie_file=cookie)
+        log.info("transcript backend: yt_dlp")
+        return yt_dlp
 
     if cfg.transcript_backend != "youtube_transcript_api":
-        log.warning("unknown TRANSCRIPT_BACKEND=%s — using youtube_transcript_api", cfg.transcript_backend)
-    cookie = cfg.youtube_cookie_file or None
-    log.info("transcript backend: youtube_transcript_api (cookie_file=%s)", cookie or "none")
-    return YouTubeTranscriptApiClient(proxy_config=_make_proxy_config(cfg), cookie_file=cookie)
+        log.warning("unknown TRANSCRIPT_BACKEND=%s — using auto", cfg.transcript_backend)
+        return ChainedTranscriptClient(_auto_clients())
+    log.info("transcript backend: youtube_transcript_api")
+    return youtube_transcript
 
 
 def _make_llm_client(cfg):
@@ -167,6 +220,20 @@ def cmd_config(args) -> int:
         "timezone": cfg.timezone,
         "max_videos_per_run": cfg.max_videos_per_run,
         "transcript_max_chars": cfg.transcript_max_chars,
+        "transcript_backend": cfg.transcript_backend,
+        "youtube_cookie_file_set": bool(cfg.youtube_cookie_file),
+        "youtube_cookie_file_exists": bool(
+            cfg.youtube_cookie_file and Path(cfg.youtube_cookie_file).exists()
+        ),
+        "youtube_cookie_file_nonempty": bool(
+            cfg.youtube_cookie_file
+            and Path(cfg.youtube_cookie_file).exists()
+            and Path(cfg.youtube_cookie_file).stat().st_size > 0
+        ),
+        "youtube_proxy_url_set": bool(cfg.youtube_proxy_url),
+        "enable_stt_fallback": cfg.enable_stt_fallback,
+        "stt_model": cfg.stt_model,
+        "stt_audio_max_mb": cfg.stt_audio_max_mb,
         "skip_shorts": cfg.skip_shorts,
         "dry_run": cfg.dry_run,
         "channels_path_exists": cfg.channels_path.exists(),
@@ -187,6 +254,31 @@ def cmd_config(args) -> int:
             missing.append("config/channels.yaml")
         if missing:
             print(f"\nMISSING: {', '.join(missing)}", file=sys.stderr)
+            return 2
+        if cfg.transcript_backend in {"auto", "yt_dlp"}:
+            if not cfg.youtube_cookie_file:
+                print(
+                    "WARN: YOUTUBE_COOKIE_FILE not set. Transcript collection may be blocked on cloud IPs.",
+                    file=sys.stderr,
+                )
+            elif not Path(cfg.youtube_cookie_file).exists():
+                print(
+                    "MISSING: YOUTUBE_COOKIE_FILE points to a missing file",
+                    file=sys.stderr,
+                )
+                return 2
+            elif Path(cfg.youtube_cookie_file).stat().st_size == 0:
+                print(
+                    "WARN: YOUTUBE_COOKIE_FILE is empty. yt-dlp will run unauthenticated.",
+                    file=sys.stderr,
+                )
+            if not cfg.youtube_proxy_url:
+                print(
+                    "WARN: YOUTUBE_PROXY_URL not set. If YouTube blocks this IP, only STT fallback can recover.",
+                    file=sys.stderr,
+                )
+        if cfg.enable_stt_fallback and not cfg.openai_api_key:
+            print("MISSING: ENABLE_STT_FALLBACK=true requires OPENAI_API_KEY", file=sys.stderr)
             return 2
         print("\nOK: required env + config present.")
 
@@ -299,6 +391,133 @@ def cmd_discover(args) -> int:
     return 0
 
 
+def cmd_collect_urls(args) -> int:
+    """Run the per-video pipeline for an explicit list of YouTube URLs."""
+    from dataclasses import replace
+    from datetime import datetime
+
+    cfg = load_app_config()
+    setup_logging(level=cfg.log_level, logs_dir=cfg.logs_dir, tz=cfg.tz)
+
+    if args.dry_run:
+        import os
+        os.environ["DRY_RUN"] = "true"
+        cfg.dry_run = True
+
+    from youtube_market_brief._clients.telegram import (
+        DryRunTelegramClient,
+        HttpxTelegramClient,
+    )
+    from youtube_market_brief._clients.youtube_data import (
+        GoogleAPIYouTubeDataClient,
+        extract_video_id,
+    )
+    from youtube_market_brief.config import load_watchlist
+    from youtube_market_brief.domain.slugify import channel_slug
+    from youtube_market_brief.domain.types import TranscriptSkip
+    from youtube_market_brief.pipeline.video_processing import process_video
+    from youtube_market_brief.state.store import IdempotencyStore
+
+    video_ids = []
+    invalid = []
+    for raw in args.urls:
+        video_id = extract_video_id(raw)
+        if video_id:
+            video_ids.append(video_id)
+        else:
+            invalid.append(raw)
+    video_ids = list(dict.fromkeys(video_ids))
+    if invalid:
+        print(f"INVALID_URLS: {', '.join(invalid)}", file=sys.stderr)
+        return 2
+    if not video_ids:
+        print("provide at least one YouTube URL or video ID", file=sys.stderr)
+        return 2
+
+    yt_client = GoogleAPIYouTubeDataClient(api_key=cfg.youtube_api_key)
+    videos = yt_client.get_videos(video_ids)
+    found = {v.video_id for v in videos}
+    missing = [v for v in video_ids if v not in found]
+    if missing:
+        print(f"MISSING_VIDEO_METADATA: {', '.join(missing)}", file=sys.stderr)
+
+    store = IdempotencyStore(cfg.state_path)
+    watchlist = load_watchlist(cfg.watchlist_path)
+    transcript_client = _make_transcript_client(cfg)
+    llm_client = _make_llm_client(cfg)
+    if args.telegram and not cfg.dry_run and cfg.telegram_bot_token and cfg.telegram_chat_id:
+        telegram_client = HttpxTelegramClient(
+            bot_token=cfg.telegram_bot_token, chat_id=cfg.telegram_chat_id
+        )
+    else:
+        telegram_client = DryRunTelegramClient(cfg.telegram_dryrun_dir)
+
+    target_date = args.date or datetime.now(tz=cfg.tz).date()
+    captured_at = datetime.now(tz=cfg.tz)
+    processed = []
+    skipped = []
+    failed = []
+
+    for video in videos:
+        state = store.get_video(video.video_id)
+        if state and state.outcome == "ok" and not args.force:
+            skipped.append({"video_id": video.video_id, "reason": "idempotent"})
+            continue
+
+        slug = channel_slug(video.channel_name or "manual")
+        video = replace(video, channel_slug=slug)
+        try:
+            result = process_video(
+                video=video,
+                transcript_client=transcript_client,
+                watchlist=watchlist,
+                llm=llm_client,
+                telegram=telegram_client,
+                store=store,
+                vault_root=cfg.vault_root,
+                vault_youtube_root=cfg.vault_youtube_root,
+                system_prompt_path=cfg.prompts_dir / "system_video_analysis.ko.md",
+                captured_at=captured_at,
+                date_kst_iso=target_date.isoformat(),
+                transcript_max_chars=cfg.transcript_max_chars,
+                timeout_sec=cfg.claude_timeout_sec,
+                notify=args.telegram,
+            )
+            if isinstance(result.skip, TranscriptSkip):
+                skipped.append(
+                    {
+                        "video_id": video.video_id,
+                        "reason": result.skip.reason,
+                        "detail": result.skip.detail,
+                    }
+                )
+                continue
+
+            processed.append({"video_id": video.video_id, "md_path": result.md_relative})
+        except Exception as e:
+            failed.append(
+                {"video_id": video.video_id, "error_class": type(e).__name__, "message": str(e)}
+            )
+            store.mark_video(
+                video.video_id,
+                channel_id=video.channel_id,
+                outcome="failed",
+                md_path=None,
+                processed_at=captured_at,
+            )
+            store.flush()
+
+    payload = {
+        "requested": len(video_ids),
+        "metadata_found": len(videos),
+        "processed": processed,
+        "skipped": skipped,
+        "failed": failed,
+    }
+    print(json.dumps(payload, ensure_ascii=False, indent=2))
+    return 0 if not failed and not missing else 1
+
+
 def cmd_analyze(args) -> int:
     """(Phase 2) Analyze a fixture transcript JSON file (no YouTube/Telegram)."""
     cfg = load_app_config()
@@ -393,8 +612,10 @@ def cmd_aggregate_only(args) -> int:
     from youtube_market_brief.pipeline.aggregate import (
         _coerce_insight,
         _coerce_redteam,
+        aggregate_daily,
         write_daily_brief_md,
     )
+    from youtube_market_brief.pipeline.daily_inputs import load_video_analyses_for_date
     from youtube_market_brief.pipeline.notify import notify_daily
     from youtube_market_brief.state.store import IdempotencyStore
 
@@ -402,6 +623,40 @@ def cmd_aggregate_only(args) -> int:
     pattern = f"{target_date.isoformat()}__*.md"
     md_paths = sorted(cfg.vault_youtube_root.glob(f"*/{pattern}"))
     md_paths = [p for p in md_paths if not p.parent.name.startswith("_")]
+    sidecar_analyses = load_video_analyses_for_date(
+        vault_youtube_root=cfg.vault_youtube_root,
+        target_date=target_date,
+    )
+    if sidecar_analyses:
+        log.info(
+            "aggregate-only %s: found %d analysis sidecar(s)",
+            target_date.isoformat(),
+            len(sidecar_analyses),
+        )
+        llm = _make_llm_client(cfg)
+        brief = aggregate_daily(
+            analyses=sidecar_analyses,
+            target_date=target_date,
+            llm=llm,
+            system_prompt_path=cfg.prompts_dir / "system_daily_brief.ko.md",
+            timeout_sec=cfg.claude_timeout_sec,
+        )
+        if brief is None:
+            return 0
+        captured_at = _dt.now(tz=cfg.tz)
+        brief_path = write_daily_brief_md(
+            brief, vault_daily_root=cfg.vault_daily_root, captured_at=captured_at
+        )
+        print(f"daily brief written: {brief_path}")
+        return _finish_daily_brief(
+            args=args,
+            cfg=cfg,
+            target_date=target_date,
+            brief=brief,
+            brief_path=Path(brief_path),
+            dryrun_dir=cfg.telegram_dryrun_dir,
+        )
+
     if not md_paths:
         # No MDs locally — either nothing was processed that day or MDs weren't pulled
         # from Drive. This is not an error; the 07:00 KST run may legitimately have
@@ -509,6 +764,7 @@ def cmd_aggregate_only(args) -> int:
                 symbol=r.get("symbol"),
                 display=str(r.get("display", "")),
                 in_watchlist=bool(r.get("in_watchlist", False)),
+                sector_tag=r.get("sector_tag"),
                 net_direction=r.get("net_direction", "혼조"),
                 mention_count=int(r.get("mention_count", len(per_video))),
                 per_video=per_video,
@@ -523,7 +779,7 @@ def cmd_aggregate_only(args) -> int:
         ticker_rollup=tuple(rollups),
         videos=tuple(video_metas),
         llm_meta=LLMMeta(
-            model="sonnet",
+            model=str(resp.raw_envelope.get("model") or "llm"),
             duration_ms=resp.duration_ms,
             was_retry=False,
             claude_session_id=resp.session_id,
@@ -535,12 +791,39 @@ def cmd_aggregate_only(args) -> int:
         brief, vault_daily_root=cfg.vault_daily_root, captured_at=captured_at
     )
     print(f"daily brief written: {brief_path}")
+    return _finish_daily_brief(
+        args=args,
+        cfg=cfg,
+        target_date=target_date,
+        brief=brief,
+        brief_path=Path(brief_path),
+        dryrun_dir=cfg.telegram_dryrun_dir,
+    )
+
+
+def _finish_daily_brief(*, args, cfg, target_date, brief, brief_path: Path, dryrun_dir: Path) -> int:
+    from youtube_market_brief._clients.telegram import (
+        DryRunTelegramClient,
+        HttpxTelegramClient,
+    )
+    from youtube_market_brief.pipeline.notify import notify_daily
+    from youtube_market_brief.pipeline.propagation import create_daily_propagation_proposal
+    from youtube_market_brief.state.store import IdempotencyStore
+
+    propagation_result = create_daily_propagation_proposal(
+        sidecar_path=brief_path.with_suffix(".analysis.json"),
+        vault_root=cfg.vault_root,
+    )
+    if propagation_result.ok:
+        print(f"propagation proposal written: {propagation_result.proposal_path}")
+    elif not propagation_result.skipped:
+        log.warning("propagation proposal failed: %s", propagation_result.message)
 
     if args.no_telegram:
         return 0
 
     if cfg.dry_run or not (cfg.telegram_bot_token and cfg.telegram_chat_id):
-        telegram_client = DryRunTelegramClient(cfg.telegram_dryrun_dir)
+        telegram_client = DryRunTelegramClient(dryrun_dir)
     else:
         telegram_client = HttpxTelegramClient(
             bot_token=cfg.telegram_bot_token, chat_id=cfg.telegram_chat_id
@@ -557,10 +840,85 @@ def cmd_aggregate_only(args) -> int:
     store.mark_daily_brief(
         target_date,
         brief_sent=result.ok,
-        brief_path=str(Path(brief_path).relative_to(cfg.vault_root).as_posix()),
+        brief_path=str(brief_path.relative_to(cfg.vault_root).as_posix()),
     )
     store.flush()
     return 0 if result.ok else 1
+
+
+def cmd_weekly_brief(args, cfg=None) -> int:
+    """Compose weekly rollup brief from existing daily .analysis.json sidecars."""
+    from datetime import date as _date
+    from datetime import datetime as _dt
+
+    if cfg is None:
+        cfg = load_app_config()
+    setup_logging(level=cfg.log_level, logs_dir=cfg.logs_dir, tz=cfg.tz)
+
+    from youtube_market_brief.pipeline.weekly import (
+        aggregate_weekly,
+        last_monday,
+        write_weekly_md,
+    )
+
+    today = _dt.now(tz=cfg.tz).date()
+    if args.week_start:
+        try:
+            week_start = _date.fromisoformat(args.week_start)
+        except ValueError:
+            print(
+                f"invalid --week-start: {args.week_start} (expected YYYY-MM-DD)",
+                file=sys.stderr,
+            )
+            return 2
+    else:
+        week_start = last_monday(today)
+
+    rollup = aggregate_weekly(
+        week_start=week_start,
+        vault_daily_root=cfg.vault_daily_root,
+    )
+    if rollup is None:
+        print(
+            f"no daily briefs found for week starting {week_start.isoformat()}",
+            file=sys.stderr,
+        )
+        return 1
+
+    captured_at = _dt.now(tz=cfg.tz)
+    md_path = write_weekly_md(
+        rollup,
+        vault_weekly_root=cfg.vault_weekly_root,
+        captured_at=captured_at,
+    )
+    print(f"wrote: {md_path}")
+
+    if (
+        args.dry_run
+        or args.no_telegram
+        or cfg.dry_run
+        or not (cfg.telegram_bot_token and cfg.telegram_chat_id)
+    ):
+        print("(Telegram skipped — dry-run, --no-telegram, or missing credentials)")
+        return 0
+
+    from youtube_market_brief._clients.telegram import HttpxTelegramClient
+    from youtube_market_brief.pipeline.notify import notify_weekly
+
+    telegram = HttpxTelegramClient(
+        bot_token=cfg.telegram_bot_token,
+        chat_id=cfg.telegram_chat_id,
+    )
+    try:
+        md_path_rel = str(md_path.relative_to(cfg.vault_root))
+    except ValueError:
+        md_path_rel = str(md_path)
+    result = notify_weekly(rollup, telegram=telegram, vault_md_path_relative=md_path_rel)
+    if result.ok:
+        print(f"Telegram sent: {len(result.message_ids)} chunk(s)")
+        return 0
+    print(f"Telegram failed: {result.error}", file=sys.stderr)
+    return 1
 
 
 def _extract_key_sections(body: str) -> str:

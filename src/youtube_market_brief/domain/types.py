@@ -11,9 +11,16 @@ Direction = Literal["긍정적", "중립", "부정적", "언급만"]
 NetDirection = Literal["긍정적", "중립", "부정적", "혼조", "언급만"]
 Confidence = Literal["high", "medium", "low"]
 Tier = Literal["light", "deep"]
-SkipReason = Literal["no_captions", "disabled", "geo_blocked", "api_changed", "timeout"]
+SkipReason = Literal[
+    "no_captions",
+    "disabled",
+    "geo_blocked",
+    "api_changed",
+    "ip_blocked",
+    "timeout",
+]
 Outcome = Literal["ok", "skipped_no_caption", "failed"]
-NotifyTarget = Literal["per_video", "daily"]
+NotifyTarget = Literal["per_video", "daily", "weekly"]
 
 
 @dataclass(frozen=True)
@@ -80,6 +87,12 @@ class KeyInsight:
     text: str
     sector_tags: tuple[str, ...] = ()
     theme_tags: tuple[str, ...] = ()
+    why_important: str = ""
+    structural_shift: str = ""
+    pattern_connection: str = ""
+    counter_signal: str = ""
+    workflow_implication: str = ""
+    signal_density: str = ""
 
 
 @dataclass(frozen=True)
@@ -87,6 +100,12 @@ class RedTeamItem:
     text: str
     sector_tags: tuple[str, ...] = ()
     theme_tags: tuple[str, ...] = ()
+    why_important: str = ""
+    structural_shift: str = ""
+    pattern_connection: str = ""
+    counter_signal: str = ""
+    workflow_implication: str = ""
+    signal_density: str = ""
 
 
 @dataclass(frozen=True)
@@ -145,6 +164,7 @@ class TickerRollup:
     net_direction: NetDirection
     mention_count: int
     per_video: tuple[TickerRollupVideoEntry, ...]
+    sector_tag: str | None = None
 
 
 @dataclass(frozen=True)
@@ -194,3 +214,51 @@ class ChannelConfig:
     channel_id: str | None = None
     handle: str | None = None
     notes: str | None = None
+
+
+@dataclass(frozen=True)
+class WeeklyTickerDayEntry:
+    date: date
+    direction: NetDirection
+    mention_count: int
+
+
+@dataclass(frozen=True)
+class WeeklyTickerEntry:
+    symbol: str | None
+    display: str
+    in_watchlist: bool
+    sector_tag: str | None
+    days_mentioned: int
+    total_mentions: int
+    directions: tuple[NetDirection, ...]
+    net_weekly_direction: NetDirection
+    per_day: tuple[WeeklyTickerDayEntry, ...]
+
+
+@dataclass(frozen=True)
+class WeeklySectorEntry:
+    sector_slug: str
+    insight_days: int
+    total_insight_mentions: int
+    related_tickers: tuple[str, ...]
+
+
+@dataclass(frozen=True)
+class WeeklyThemeEntry:
+    theme_slug: str
+    insight_days: int
+    total_insight_mentions: int
+    related_tickers: tuple[str, ...]
+
+
+@dataclass(frozen=True)
+class WeeklyRollup:
+    week_start: date
+    week_end: date
+    daily_briefs_present: tuple[date, ...]
+    daily_briefs_missing: tuple[date, ...]
+    tickers: tuple[WeeklyTickerEntry, ...]
+    sectors: tuple[WeeklySectorEntry, ...]
+    themes: tuple[WeeklyThemeEntry, ...]
+    total_videos: int

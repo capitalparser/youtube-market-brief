@@ -10,6 +10,7 @@ from pathlib import Path
 from youtube_market_brief.domain.markdown import render_video_markdown
 from youtube_market_brief.domain.slugify import video_slug
 from youtube_market_brief.domain.types import VideoAnalysis
+from youtube_market_brief.pipeline.aggregate import serialize_reasoning_item
 
 log = logging.getLogger(__name__)
 
@@ -60,11 +61,11 @@ def _serialize_analysis_for_sidecar(a: VideoAnalysis, *, captured_at: datetime) 
         "generated_at": a.generated_at.isoformat(),
         "headline_3line": list(a.transcript_summary.headline_3line),
         "key_insights": [
-            {"text": ki.text, "sector_tags": list(ki.sector_tags), "theme_tags": list(ki.theme_tags)}
+            serialize_reasoning_item(ki)
             for ki in a.transcript_summary.key_insights
         ],
         "red_team": [
-            {"text": rt.text, "sector_tags": list(rt.sector_tags), "theme_tags": list(rt.theme_tags)}
+            serialize_reasoning_item(rt)
             for rt in a.transcript_summary.red_team
         ],
         "tickers": [

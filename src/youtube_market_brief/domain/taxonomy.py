@@ -24,10 +24,13 @@ THEME_SLUGS: tuple[str, ...] = (
     "ai_agent_adoption",
     "ai_meltup_bubble",
     "bigtech_ipo_supply",
+    "confidential_ai_compute",
     "geopolitics_middle_east",
     "hyperscaler_capex",
     "korea_discount",
     "memory_supercycle",
+    "quantum_computing",
+    "stablecoin_payment_rails",
     "tokenization_rwa",
     "us_fiscal_debt",
 )

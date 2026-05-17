@@ -39,6 +39,17 @@ def notify_daily(
     return _send_chunks(text, telegram=telegram, target="daily")
 
 
+def notify_weekly(
+    rollup,
+    *,
+    telegram: TelegramClient,
+    vault_md_path_relative: str,
+) -> NotifyResult:
+    from youtube_market_brief.domain.telegram_format import format_weekly_brief
+    text = format_weekly_brief(rollup, vault_md_path_relative=vault_md_path_relative)
+    return _send_chunks(text, telegram=telegram, target="weekly")
+
+
 def _send_chunks(text: str, *, telegram: TelegramClient, target) -> NotifyResult:
     chunks = decorate_chunks(split_message(text))
     ids: list[int] = []

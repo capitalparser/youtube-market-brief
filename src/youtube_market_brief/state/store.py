@@ -8,6 +8,7 @@ State file schema (version 1):
        "processed_at": ISO8601 with offset,
        "channel_id": str,
        "outcome": "ok" | "skipped_no_caption" | "failed",
+       "skip_reason": str | null,
        "md_path": str | null,
      }
   },
@@ -28,7 +29,7 @@ from datetime import date, datetime
 from pathlib import Path
 from typing import Any
 
-from youtube_market_brief.domain.types import Outcome
+from youtube_market_brief.domain.types import Outcome, SkipReason
 
 _STATE_VERSION = 1
 
@@ -39,6 +40,7 @@ class VideoState:
     channel_id: str
     outcome: Outcome
     md_path: str | None
+    skip_reason: SkipReason | None = None
 
 
 @dataclass
@@ -67,14 +69,19 @@ class IdempotencyStore:
         return video_id in self._data["videos"]
 
     def is_done(self, video_id: str) -> bool:
-        """True only when video was successfully processed (outcome=="ok").
+        """True when video does not need another normal discovery pass.
 
-        Transient failures (ip_blocked, api_changed, timeout) are recorded as
-        skipped_no_caption but should be retried on the next run — this method
-        returns False for those so discover re-queues them.
+        Transient transcript failures are retried. Terminal caption skips are
+        treated as complete so no-caption videos do not get re-queued forever.
         """
         state = self.get_video(video_id)
-        return state is not None and state.outcome == "ok"
+        if state is None:
+            return False
+        if state.outcome == "ok":
+            return True
+        if state.outcome == "skipped_no_caption":
+            return state.skip_reason in {"no_captions", "disabled", "geo_blocked"}
+        return False
 
     def get_video(self, video_id: str) -> VideoState | None:
         raw = self._data["videos"].get(video_id)
@@ -85,6 +92,7 @@ class IdempotencyStore:
             channel_id=raw["channel_id"],
             outcome=raw["outcome"],
             md_path=raw.get("md_path"),
+            skip_reason=raw.get("skip_reason"),
         )
 
     def mark_video(
@@ -95,12 +103,14 @@ class IdempotencyStore:
         outcome: Outcome,
         md_path: str | None,
         processed_at: datetime,
+        skip_reason: SkipReason | None = None,
     ) -> None:
         self._data["videos"][video_id] = {
             "processed_at": processed_at.isoformat(),
             "channel_id": channel_id,
             "outcome": outcome,
             "md_path": md_path,
+            "skip_reason": skip_reason,
         }
 
     def daily_brief_sent(self, d: date) -> bool:

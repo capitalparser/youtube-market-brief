@@ -1,0 +1,408 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex,nofollow">
+  <meta name="description" content="Sanitized public synthesis. No source transcripts, raw notes, or long quotations are reproduced.">
+  <meta name="theme-color" content="#172033">
+  <title>Market Insights Public Brief</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f6f7f4;
+      --surface: #ffffff;
+      --surface-alt: #eef2f0;
+      --ink: #172033;
+      --muted: #637066;
+      --line: #d9ded8;
+      --accent: #0f766e;
+      --accent-2: #a15c38;
+      --accent-3: #4f6f9f;
+      --warn: #a16207;
+      --radius: 8px;
+      --shadow: 0 8px 24px rgba(23, 32, 51, 0.08);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      line-height: 1.5;
+      letter-spacing: 0;
+    }
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 3;
+      background: rgba(246, 247, 244, 0.96);
+      backdrop-filter: blur(14px);
+      border-bottom: 1px solid var(--line);
+    }
+    .topbar {
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 14px 16px 10px;
+    }
+    h1 {
+      margin: 0;
+      font-size: 1.35rem;
+      line-height: 1.2;
+    }
+    .meta {
+      margin-top: 4px;
+      color: var(--muted);
+      font-size: 0.86rem;
+    }
+    .controls {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 10px;
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 0 16px 12px;
+    }
+    .search {
+      width: 100%;
+      min-height: 42px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 0 12px;
+      font-size: 1rem;
+      color: var(--ink);
+      background: var(--surface);
+    }
+    .segments, .chips {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      padding-bottom: 2px;
+    }
+    button {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--surface);
+      color: var(--ink);
+      min-height: 36px;
+      padding: 0 12px;
+      font-size: 0.92rem;
+      white-space: nowrap;
+    }
+    button[aria-pressed="true"] {
+      border-color: var(--accent);
+      background: #dff4ef;
+      color: #07534e;
+      font-weight: 650;
+    }
+    main {
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 16px;
+    }
+    .summary {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+    .metric {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 10px;
+      min-width: 0;
+    }
+    .metric strong {
+      display: block;
+      font-size: 1.1rem;
+    }
+    .metric span {
+      color: var(--muted);
+      font-size: 0.78rem;
+    }
+    .section-title {
+      margin: 20px 0 8px;
+      font-size: 0.95rem;
+      color: var(--muted);
+      text-transform: uppercase;
+    }
+    .cards {
+      display: grid;
+      gap: 10px;
+    }
+    article {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-left: 4px solid var(--accent-3);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+    article[data-kind="theme"] { border-left-color: var(--accent); }
+    article[data-confidence="낮음"] { border-left-color: var(--warn); }
+    article[open] .chevron { transform: rotate(180deg); }
+    summary {
+      list-style: none;
+      cursor: pointer;
+      padding: 14px;
+    }
+    summary::-webkit-details-marker { display: none; }
+    .card-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    h2 {
+      margin: 0;
+      font-size: 1.02rem;
+      line-height: 1.3;
+    }
+    .stance {
+      margin-top: 6px;
+      color: var(--muted);
+      font-size: 0.88rem;
+    }
+    .chevron {
+      border: solid var(--muted);
+      border-width: 0 2px 2px 0;
+      display: inline-block;
+      padding: 4px;
+      transform: rotate(45deg);
+      margin-top: 4px;
+    }
+    .body {
+      padding: 0 14px 14px;
+    }
+    .signal {
+      background: var(--surface-alt);
+      border-radius: var(--radius);
+      padding: 10px;
+      margin-bottom: 10px;
+    }
+    .signal p, .body p {
+      margin: 0 0 8px;
+    }
+    .label {
+      color: var(--muted);
+      display: block;
+      font-size: 0.76rem;
+      font-weight: 700;
+      margin-bottom: 2px;
+      text-transform: uppercase;
+    }
+    .grid {
+      display: grid;
+      gap: 10px;
+    }
+    .mini {
+      border-top: 1px solid var(--line);
+      padding-top: 10px;
+    }
+    .mini h3 {
+      margin: 0 0 6px;
+      font-size: 0.86rem;
+    }
+    ul {
+      margin: 0;
+      padding-left: 18px;
+    }
+    li {
+      margin: 4px 0;
+      color: #263044;
+      font-size: 0.92rem;
+    }
+    .empty {
+      color: var(--muted);
+      padding: 32px 8px;
+      text-align: center;
+    }
+    .notice, footer {
+      color: var(--muted);
+      font-size: 0.82rem;
+    }
+    .notice {
+      background: #fff7ed;
+      border: 1px solid #fed7aa;
+      border-radius: var(--radius);
+      margin-bottom: 12px;
+      padding: 10px;
+    }
+    footer {
+      border-top: 1px solid var(--line);
+      margin-top: 24px;
+      padding: 16px 4px 30px;
+    }
+    @media (min-width: 720px) {
+      .controls {
+        grid-template-columns: 1fr auto;
+        align-items: center;
+      }
+      .search { grid-column: 1 / -1; }
+      .cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .summary { grid-template-columns: repeat(5, 1fr); }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="topbar">
+      <h1>Market Insights Public Brief</h1>
+      <div class="meta">Updated <span id="updated"></span></div>
+    </div>
+    <div class="controls">
+      <input id="search" class="search" type="search" placeholder="검색: AI, 반도체, 금리, stablecoin">
+      <div class="segments" aria-label="View filters">
+        <button type="button" data-kind="all" aria-pressed="true">전체</button>
+        <button type="button" data-kind="theme" aria-pressed="false">Themes</button>
+        <button type="button" data-kind="sector" aria-pressed="false">Sectors</button>
+      </div>
+      <div class="chips" aria-label="Confidence filters">
+        <button type="button" data-confidence="all" aria-pressed="true">확신도 전체</button>
+        <button type="button" data-confidence="높음" aria-pressed="false">높음</button>
+        <button type="button" data-confidence="중간" aria-pressed="false">중간</button>
+        <button type="button" data-confidence="낮음" aria-pressed="false">낮음</button>
+      </div>
+    </div>
+  </header>
+  <main>
+    <div class="notice">Sanitized public synthesis. No source transcripts, raw notes, or long quotations are reproduced.</div>
+    <section class="summary" id="summary"></section>
+    <div id="cards" class="cards"></div>
+    <div id="empty" class="empty" hidden>조건에 맞는 인사이트가 없습니다.</div>
+    <footer>Public sanitized synthesis from private notes. No raw transcripts or source text reproduced. Not investment advice.</footer>
+  </main>
+  <script id="payload" type="application/json">{"updated": "2026-05-17 02:19 KST", "public": true, "cards": [{"kind": "theme", "name": "ai_agent_adoption", "label": "AI 에이전트·코딩 도구 침투", "stance": "긍정적", "confidence": "중간", "status": "정리됨", "recent": "개인 AI 운영체제/GBrain 워크플로우와 기업 현장 도입 논쟁이 에이전트 침투 가설을 선명하게 만듦", "nextCheck": "에이전트 투자 회수, 코딩 에이전트 반복 사용, 기업 업무 연결, Palantir/OpenAI/Anthropic의 실제 도입 사례", "current": "AI 에이전트 침투는 AI 수익화가 실제 업무로 내려오는지를 보는 본거지 카드다. 핵심은 모델 성능 발표가 아니라 코딩, 리서치, 금융, 과학, 기업 업무에서 사람이 반복하던 작업을 얼마나 안정적으로 대신하고, 그것이 유료 사용으로 이어지는지다. 최근 Garry Tan식 개인 AI 운영체제/GBrain 워크플로우와 Palantir 포장지 논쟁은 같은 방향을 가리킨다. 승자는 \"AI\"라는 이름을 붙인 앱이 아니라, 사용자의 반복 작업·데이터·권한·평가 과정을 장악해 AI 에이전트를 운영체제처럼 만드는 쪽이다.", "hypothesisRows": ["- **기본 시나리오**: 코딩과 리서치 업무에서 에이전트가 단순 보조 도구를 넘어 일을 맡기는 레이어로 침투한다.", "- **좋게 풀리는 경우**: 기업 내부 데이터, 권한, 감사 기록, 업무 조율까지 붙으면서 AI 앱·플랫폼의 반복 매출과 교체 비용이 커진다.", "- **나쁘게 풀리는 경우**: 모델 성능이 좋아지고 가격이 내려가면서 앱의 차별성이 희석되고, 기업의 투자 회수가 유료 좌석 확대로 이어지지 않는다."], "recentRows": ["- 2026-05-10: Garry Tan 개인 AI 운영체제/GBrain 워크플로우", "- 2026-05-10: Palantir 포장지 논쟁"], "monitorRows": ["- 코딩 에이전트 유료 사용과 반복 사용: 에이전트가 신기한 장난감에서 실제 업무 도구로 이동하는지 확인", "- 기업 AI 반복 매출과 고객 유지율: 업무 효율 개선이 실제 매출로 바뀌는지 확인"], "riskRows": ["- 에이전트 사용량은 늘지만 유료 전환과 반복 사용이 따라오지 않는다.", "- 기업 AI가 시범 사용에 머물고 실제 업무 운영으로 들어가지 못한다."], "evidenceRows": []}, {"kind": "theme", "name": "ai_meltup_bubble", "label": "AI 멜트업 / 버블 논쟁", "stance": "긍정/과열 공존", "confidence": "중간", "status": "정리됨", "recent": "AI 대형주 쏠림, 메모리 급등, 1999/1973 두 시계 프레임이 동시에 작동", "nextCheck": "상승 종목 확산, 신용시장 신호, AI 투자 회수, 유가 충격 전이, 개인 옵션 거래", "current": "AI 급등장 가설은 아직 살아 있지만 점점 더 많은 투자자가 같은 방향을 보고 있다. 성장축은 강하다. AI 설비투자, 메모리/HBM, 전력 인프라, 에이전트 도입은 실제 수요와 수주잔고를 만들고 있다. 문제는 가격과 자금조달이다. AI 대형주 쏠림, 반도체지수 과열, 개인의 콜옵션 거래, 비상장 AI 자산 담보 가치 하락, 데이터센터 회사채 조달은 모두 사이클 후반 냄새를 낸다. 지금은 단순히 좋다/나쁘다가 아니라 \"성장 서사는 유지하되 유동성과 신용시장의 약한 고리를 계속 확인하는 구간\"이다.", "hypothesisRows": ["- **기본 시나리오**: AI 설비투자와 실적 모멘텀이 위험자산 선호를 유지하지만, 주도주는 좁고 변동성은 커진다.", "- **좋게 풀리는 경우**: 생산성 개선과 투자 회수가 숫자로 확인되고, 상승이 소수 종목에서 더 넓은 시장으로 퍼진다.", "- **나쁘게 풀리는 경우**: AI 투자 회수 의심, 신용시장 스트레스, 유가·물가 충격, 과밀 포지션 청산이 겹치며 큰 조정으로 바뀐다."], "recentRows": ["- 2026-05-10: 메모리 모멘텀 흔들림", "- 2026-05-09: 1999년과 1973년 두 시계"], "monitorRows": ["- 상승 종목 확산: 급등장이 소수 대형주만의 장세인지, 시장 전체로 퍼지는지 확인", "- 신용스프레드와 AI 담보 가치: 주식시장의 낙관과 대출시장의 경계가 벌어지는지 확인"], "riskRows": ["- 빅테크가 AI 투자 계획을 낮추고 공급망 수주잔고가 동시에 흔들린다.", "- AI 기술 발전은 빠르지만 실제 매출 확산이 투자 속도를 따라가지 못한다."], "evidenceRows": []}, {"kind": "theme", "name": "bigtech_ipo_supply", "label": "빅테크 IPO 수급 (SpaceX, OpenAI, Anthropic)", "stance": "관찰 중", "confidence": "낮음", "status": "정리됨", "recent": "Mega private AI/space companies may become public-market supply and passive-flow events", "nextCheck": "IPO filing, secondary valuation, index rule changes, passive inclusion timetable", "current": "빅테크 IPO supply 가설는 AI melt-up의 수급 리스크를 보는 card다. SpaceX, OpenAI, Anthropic 같은 초대형 비상장사가 상장하면 새로운 성장 자산이 열리는 동시에 기존 AI mega-cap의 수급/valuation을 압박할 수 있다. 아직은 확정 이벤트보다 optionality에 가깝다. 그래서 owner 판단은 `관찰 중`이다. 실제 filing, secondary pricing, index inclusion rule 변화가 나올 때 signal 강도가 올라간다.", "hypothesisRows": ["- **기본 시나리오**: mega private tech의 상장 기대가 tender/secondary valuation과 public comps에 영향을 준다.", "- **좋게 풀리는 경우**: IPO가 AI risk appetite를 확장하고 passive inclusion이 신규 수요를 만든다.", "- **나쁘게 풀리는 경우**: 대규모 신규 공급이 기존 AI winners의 scarcity premium을 낮추고 수급 부담을 만든다."], "recentRows": ["- 2026-05-08: SpaceX/OpenAI/Anthropic supply estimate", "- 2026-05-05: S&P/Nasdaq index rule changes"], "monitorRows": ["- IPO filing / S-1: 가설가 rumor에서 event로 전환", "- Secondary/tender valuation: public comps에 미치는 압력 확인"], "riskRows": ["- 주요 mega private IPO가 지연되거나 valuation이 크게 낮아진다.", "- passive inclusion 기대가 이미 선반영됐지만 실제 유동주식/편입 비중이 작다."], "evidenceRows": []}, {"kind": "theme", "name": "confidential_ai_compute", "label": "Confidential AI Compute", "stance": "필요성은 높으나 value capture 미정", "confidence": "낮음", "status": "정리됨", "recent": "AI adoption may be limited by privacy of inference, memory, retrieval, and tool-use context rather than model quality alone", "nextCheck": "enterprise confidential inference demand, cloud/model provider products, Arcium/DeCC paid usage, latency/cost benchmarks", "current": "AI가 더 똑똑해질수록 사용자는 더 민감한 맥락을 AI에게 맡기게 된다. 지갑 내역, 투자 판단, 건강 기록, 계약서, 세금 자료, 회사 내부 문서, 개인 관계 같은 정보가 AI agent의 입력값이 되면, adoption 병목은 모델 성능만이 아니라 \"누가 내 데이터를 볼 수 있는가\"가 된다. Confidential AI compute는 이 병목을 푸는 장기 인프라 후보군이다. 다만 \"confidential inference가 필요하다\"와 \"특정 crypto encrypted-compute protocol이 돈을 번다\"는 별도 명제다. 실제 가치 포착은 모델 사업자, 클라우드, 칩/TEE, enterprise security, on-device AI, 또는 DeCC 네트워크 중 어디로든 갈 수 있다.", "hypothesisRows": ["- **기본 시나리오**: enterprise와 개인 AI agent가 민감 데이터를 다루면서 confidential inference, private memory, audit/permission layer 수요가 커진다.", "- **좋게 풀리는 경우**: TEE/MPC/FHE/secure enclave가 AI inference stack에 통합되고, 보안이 AI adoption의 차별화 요소가 된다.", "- **나쁘게 풀리는 경우**: 성능/비용/UX가 맞지 않아 대부분의 수요가 기존 cloud privacy contract, no-training policy, on-device AI로 흡수된다."], "recentRows": ["- 2026-05-16: Confidential AI inference frame"], "monitorRows": ["- Enterprise confidential inference products: 실제 구매자가 privacy-preserving AI를 요구하는지 확인", "- Latency/cost benchmark: confidential inference가 대형 모델에 실용적인지 확인"], "riskRows": ["- 기업과 개인이 no-training policy와 기존 cloud contract만으로 충분하다고 판단한다.", "- TEE 기반 centralized cloud가 MPC/FHE/DeCC보다 훨씬 저렴하고 빠르게 시장을 선점한다."], "evidenceRows": []}, {"kind": "theme", "name": "geopolitics_middle_east", "label": "지정학·중동·호르무즈", "stance": "관찰 중", "confidence": "중간", "status": "정리됨", "recent": "Hormuz and oil shock risk remain a delayed macro risk for AI risk-on", "nextCheck": "oil, shipping insurance, inflation pass-through, military escalation/de-escalation", "current": "중동/호르무즈 card는 AI risk-on의 외생 충격을 추적하는 tactical risk card다. 사건 단위 변동성이 크고, 24~48시간 안에 협상과 공습 headline이 뒤집히는 구간이라 단정적 방향성보다 transmission channel을 보는 게 중요하다. 핵심은 유가 자체보다 유가·운임·보험료가 CPI/PPI와 소비로 전이되는 시차다. 즉각적인 주가 반응보다 1~4분기 뒤 실물 데이터에 찍히는 delayed shock을 봐야 한다.", "hypothesisRows": ["- **기본 시나리오**: headline volatility는 높지만 전면 봉쇄/장기 shock은 피한다.", "- **좋게 풀리는 경우**: 항행 정상화와 협상 진전으로 oil risk premium이 내려가며 risk-on을 돕는다.", "- **나쁘게 풀리는 경우**: 호르무즈/홍해 shock이 유가, 운임, 보험료를 통해 inflation과 demand destruction으로 전이된다."], "recentRows": ["- 2026-05-09: 1999 vs 1973 frame", "- 2026-05-06: 협상 중 공습/유조선 공격 보도"], "monitorRows": ["- WTI/Brent: inflation and demand shock의 1차 신호", "- Shipping insurance / freight: supply chain cost pass-through 확인"], "riskRows": ["- 호르무즈 정상화 기대가 깨지고 봉쇄/군사 충돌이 장기화된다.", "- 유가 shock이 CPI/PPI와 소비 둔화로 후행 전이된다."], "evidenceRows": []}, {"kind": "theme", "name": "hyperscaler_capex", "label": "빅테크 AI 설비투자 사이클", "stance": "긍정적이나 실행 확인 필요", "confidence": "중간", "status": "정리됨", "recent": "AI 설비투자가 GPU/HBM에서 전력, 냉각, Dell 배포, ESS, 자금조달로 확산", "nextCheck": "빅테크 투자 계획, 부채 조달, Dell/FLNC 수주잔고와 마진, 전력 연결 지연", "current": "빅테크 AI 설비투자는 AI 인프라 사이클의 본거지 카드다. 처음에는 GPU와 HBM이 핵심 병목이었지만, 이제는 서버 랙을 통째로 설계하는 능력, 네트워크, 광통신, 전력, 냉각, 에너지저장장치(ESS), 데이터센터 자금조달까지 병목이 넓어지고 있다. 긍정적인 방향은 아직 강하다. 다만 이제는 \"얼마나 크게 투자한다\"는 발표보다, 실제 주문이 매출·이익·현금흐름으로 바뀌는지가 더 중요하다. 내부 현금으로 감당하던 투자가 회사채나 대출 의존으로 넘어가면 사이클 후반 신호로 봐야 한다.", "hypothesisRows": ["- **기본 시나리오**: 빅테크의 AI 설비투자는 2026~2027년에도 반도체, 전력, 냉각, 서버 장비 수요를 받쳐준다.", "- **좋게 풀리는 경우**: AI Factory가 기업·정부·대학·병원 현장으로 내려가면서 Dell, 전력 장비, 냉각, ESS, 광통신 같은 실행 레이어가 재평가된다.", "- **나쁘게 풀리는 경우**: AI에서 버는 돈이 투자 속도를 따라가지 못하고, 부채 조달 비용과 전력 병목 때문에 공급망 주문이 흔들린다."], "recentRows": ["- 2026-05-10: FLNC/ESS 전력 완충 장치", "- 2026-04-22: Dell/NVIDIA 현장 배포 레이어"], "monitorRows": ["- 빅테크 AI 투자 계획: 공급망 수요가 계속 보이는지 확인하는 핵심 지표", "- 설비투자/잉여현금흐름과 회사채 발행: 내부 현금으로 버티는지, 빚을 내야 하는 구간으로 넘어가는지 확인"], "riskRows": ["- 빅테크가 AI 설비투자 계획을 낮추고, 공급망의 수주잔고도 동시에 약해진다.", "- 금리가 높아져 데이터센터를 짓기 위한 회사채·대출 비용이 부담으로 바뀐다."], "evidenceRows": []}, {"kind": "theme", "name": "korea_discount", "label": "한국 디스카운트 / 가치주", "stance": "긍정적", "confidence": "중간", "status": "정리됨", "recent": "Korea re-rating is broader than memory, but memory beta and FX still dominate index quality", "nextCheck": "FX, foreign net buying, value-up law follow-through, EWY flow, non-memory EPS breadth", "current": "한국 discount 가설는 단순 저평가가 아니라 investor base가 바뀌는지를 보는 card다. 1차 KOSPI beta인 반도체·HBM·방산·조선·원전은 이미 많이 반영됐고, 2차 alpha는 governance 변화, 지주사 NAV 할인, cycle reversal candidate에 남아 있다. 다만 한국 시장은 삼성·SK하이닉스 concentration과 원/달러에 크게 좌우된다. 한국을 사는 것과 memory beta를 사는 것을 분리해서 봐야 한다.", "hypothesisRows": ["- **기본 시나리오**: value-up/governance reform과 글로벌 capex 수혜가 한국 discount를 점진적으로 줄인다.", "- **좋게 풀리는 경우**: 외국인 수급, 원화 안정, non-memory EPS breadth, activist pressure가 함께 작동한다.", "- **나쁘게 풀리는 경우**: KOSPI가 memory crowded trade로만 소비되고, governance reform이 headline에 그친다."], "recentRows": ["- 2026-05-10: Goldman/Nelson Korea EPS + KOSPI 9000 frame", "- 2026-05-10: EWY volume and memory flow"], "monitorRows": ["- 원/달러: foreign flow and multiple quality", "- 외국인 KOSPI/EWY flow: global capital이 Korea 가설를 사는지 확인"], "riskRows": ["- KOSPI 리레이팅이 memory crowded beta로만 남고 breadth가 확산되지 않는다.", "- 원화 약세와 외국인 매도가 EPS 개선을 압도한다."], "evidenceRows": []}, {"kind": "theme", "name": "memory_supercycle", "label": "메모리·HBM 슈퍼사이클", "stance": "긍정적이나 붐빔", "confidence": "중간", "status": "정리됨", "recent": "2026-05-09 memory-led semiconductor risk-on with momentum unwind warning", "nextCheck": "MU/SNDK 급등분 유지, DRAM/HBM ASP와 margin, EWY/원달러 안정, 2027 supply additions", "current": "메모리·HBM 가설는 여전히 강하다. AI 가속기 출하, agentic inference 확대, HBM/DDR5 공급 제약이 맞물리며 시장은 메모리를 단순 사이클주가 아니라 AI 인프라 병목 자산으로 재평가하고 있다. 다만 가격 반응은 이미 매우 빠르다. MU·SNDK 급등, DRAM ETF flow, 옵션/모멘텀 crowding은 bull case를 강화하는 동시에 단기 air pocket 위험도 키운다. 지금은 가설를 버리는 구간이 아니라, 추격보다 ASP·margin·FX·ETF breadth로 2차 확인을 기다리는 구간으로 본다.", "hypothesisRows": ["- **기본 시나리오**: HBM/DDR5 tightness와 AI capex가 2026~2027 메모리 실적을 지지한다. 메모리는 AI 인프라의 2차 병목으로 재평가된다.", "- **좋게 풀리는 경우**: HBM sold-out, 장기계약, DRAM/NAND 가격 상승, 한국/미국 메모리 수급 유입이 이어지며 multiple이 구조주 쪽으로 재평가된다.", "- **나쁘게 풀리는 경우**: 2027~2029 신규 fab, 중국 DDR5 진입, 고객 재고 조정, KV/cache 효율화 오해 또는 실제 hardware order 둔화가 겹치면 사이클주 평균회귀가 빠르게 온다."], "recentRows": ["- 2026-05-10: Goldman/DONS momentum unwind", "- 2026-05-09: Memory-led semiconductor risk-on"], "monitorRows": ["- DRAM/HBM ASP와 gross margin: shortage 서사가 실제 실적으로 전환되는지 확인", "- MU·SNDK 급등분 유지: 단기 risk-on이 지속 가능한 수급인지 확인"], "riskRows": ["- 다음 실적에서 메모리 가격 기대가 강한데도 margin과 guidance가 따라오지 못한다.", "- 2027~2029 신규 fab과 중국 DDR5 공급이 고객 재고 조정과 동시에 들어온다."], "evidenceRows": []}, {"kind": "theme", "name": "quantum_computing", "label": "양자컴퓨팅", "stance": "긍정적이나 과열 경계", "confidence": "낮음", "status": "정리됨", "recent": "McKinsey 2026 보고서와 IonQ 1Q26 실적이 양자컴퓨팅의 연구실→상업화 이동을 확인", "nextCheck": "IonQ 수주잔고/RPO, Rigetti·QUBT 1Q26 실적, D-Wave 5월 12일 실적, Google·Microsoft·IBM 로드맵 검증", "current": "양자컴퓨팅은 2026년 현재 \"언젠가 올 기술\"에서 \"초기 상업화가 숫자로 보이기 시작한 기술\"로 이동 중이다. McKinsey는 2025년 전 세계 양자컴퓨팅 기업 매출이 10억 달러를 넘었고, 2028년에는 44억 달러까지 커질 수 있다고 본다. IonQ는 1Q26 매출과 수주잔고가 크게 늘며 이 변화를 가장 직접적으로 보여준다. 다만 투자 관점에서는 기술 진보와 주가 기대치 사이의 거리가 핵심 리스크다. 현재 수요는 기업 전체 IT 예산의 주류라기보다 정부, 연구기관, 금융, 제약, 소재, 물류의 선행 실험·시스템 판매·클라우드 사용에 가깝다. 따라서 이 테마는 \"AI처럼 이미 현금흐름을 크게 만드는 메가트렌드\"라기보다, AI 인프라 위에 붙는 장기 선택지이자 고변동 옵션으로 보는 편이 맞다.", "hypothesisRows": ["- **기본 시나리오**: 양자컴퓨팅은 독립 서버 시장이 아니라 고성능 컴퓨팅(HPC), GPU, 클라우드, AI와 결합한 하이브리드 컴퓨팅 레이어로 상업화된다.", "- **좋게 풀리는 경우**: IonQ 같은 선도 업체의 시스템 판매와 클라우드 사용이 반복 매출로 이어지고, 금융·제약·소재·물류에서 작은 개선이라도 실제 업무 흐름에 박힌다.", "- **나쁘게 풀리는 경우**: 기술 로드맵은 계속 발표되지만 오류 보정, 제조, 냉각, 제어 전자장치, 소프트웨어 통합 병목 때문에 매출이 파일럿과 정부 계약에 머문다."], "recentRows": ["- 2026-05-11: Rigetti와 QUBT가 1Q26 실적 발표 예정", "- 2026-05-06: IonQ 1Q26 매출 6,470만 달러, 전년 대비 755% 성장, RPO 4.7억 달러, 연간 매출 가이던스 2.6~2.7억 달러"], "monitorRows": ["- IonQ 매출, RPO, 조정 EBITDA 손실: 상업화와 현금 소진이 동시에 보이는 대표 순수 양자 지표", "- Rigetti, D-Wave, QUBT 실적: IonQ만의 특수 사례인지 섹터 전반의 수요인지 확인"], "riskRows": ["- pure-play 업체의 매출 증가가 일회성 시스템 판매에 머물고 반복 사용·클라우드 사용량이 따라오지 않는다.", "- 정부 계약과 연구기관 발표는 늘지만 기업 업무 흐름 안에 들어가는 사례가 제한적이다."], "evidenceRows": []}, {"kind": "theme", "name": "stablecoin_payment_rails", "label": "스테이블코인 결제 레일", "stance": "제도권 흡수 수혜", "confidence": "중간", "status": "정리됨", "recent": "Coinbase, Circle, Visa, and Mastercard now show measurable stablecoin/payment rail activity, while ETH remains more reserve/collateral than direct customer interface", "nextCheck": "COIN stablecoin/Base revenue, CRCL RLDC margin, Visa settlement run-rate, MA/BVNK close, ETH value accrual metrics", "current": "스테이블코인은 기존 카드망과 은행을 단순히 대체하기보다, 제도권 결제사가 디지털 달러 흐름을 흡수하는 새 레일이 될 가능성이 있다. 사용자는 체인이나 ETH를 직접 만지지 않고 카드처럼 쓰기를 원하고, Visa·Mastercard·Coinbase·Circle 같은 운영자는 그 경험을 포장하면서 settlement, custody, issuance, flow routing에서 가치를 포착할 수 있다. 이 관점에서는 \"Ethereum 네트워크의 성공\"과 \"ETH holder의 초과수익\"을 분리해서 봐야 한다. L2와 계정 추상화는 네트워크 사용량을 키우지만, 동시에 ETH를 사용자 경험에서 숨긴다. ETH가 사라진다는 뜻은 아니고, 고성장 기술 자산보다 중립 담보·정산 자산에 가까워질 수 있다는 가설이다. 현재 1차 후보군은 `COIN`,...", "hypothesisRows": ["- **기본 시나리오**: 미국 규제 명확화와 스테이블코인 채택이 Coinbase, Circle, Visa, Mastercard 같은 운영 레이어의 fee pool을 키운다.", "- **좋게 풀리는 경우**: 퍼블릭 체인 settlement가 커지고, 결제사·거래소·스테이블코인 발행사가 사용자 접점을 장악하며 반복 수수료를 만든다. 이 경우 ETH보다 운영 레이어 equity가 더 직접적으로 cash flow를 포착할 수 있다.", "- **나쁘게 풀리는 경우**: 규제는 열리지만 economics가 낮은 margin으로 수렴하거나, 은행 폐쇄망이 퍼블릭 체인의 가치 포착을 제한한다."], "recentRows": ["- 2026-05-16: Ethereum success vs ETH value capture frame", "- 2026-05-16: Operating layer cash-flow screen"], "monitorRows": ["- COIN stablecoin/Base economics: Coinbase가 ETH 생태계의 고객 접점과 분배 레이어를 장악하는지 확인", "- CRCL USDC circulation and RLDC margin: Circle이 단순 발행사를 넘어 디지털 달러 네트워크가 되는지 확인"], "riskRows": ["- ETH burn, staking yield, collateral demand가 L2/stablecoin 사용량 증가와 함께 충분히 커져 ETH holder가 가장 직접적인 수혜자가 된다.", "- Visa·Circle·Coinbase의 stablecoin 관련 revenue가 유의미하게 늘지 않고, 결제/발행 economics가 commoditized margin으로 수렴한다."], "evidenceRows": []}, {"kind": "theme", "name": "tokenization_rwa", "label": "RWA 토큰화 / 실물자산 온체인화", "stance": "관찰 중", "confidence": "낮음", "status": "정리됨", "recent": "RWA moved from experiment toward regulated infrastructure, but liquidity capture remains unproven", "nextCheck": "CLARITY Senate path, Korea STO first issuance, Ondo TVL/revenue, Chainlink CCIP usage, stablecoin settlement rails", "current": "RWA 토큰화는 부동산, 국채, 사모신용 같은 현실 자산의 소유권을 블록체인 위에서 사고팔 수 있게 만드는 흐름이다. 이제 단순 기술 실험은 지나갔고, 핵심 병목은 \"법적으로 진짜 소유권으로 인정되는가\", \"기관투자자가 안심하고 쓸 수 있는가\", \"사고 싶을 때 사고 팔고 싶을 때 팔 수 있는가\"로 이동했다. 강한 점은 BlackRock, Franklin, Apollo, KKR 같은 대형 금융기관이 직접 들어왔다는 것이다. 약한 점은 운용자산 규모가 커졌다고 해서 곧바로 거래가 활발하거나 돈을 많이 버는 구조라는 뜻은 아니라는 점이다. 그래서 지금은 적극 강세보다 `관찰 중`에 가깝다.", "hypothesisRows": ["- **기본 시나리오**: 단기 국채, 민간 신용, 토큰화 펀드부터 기관투자자 사용이 늘어난다.", "- **좋게 풀리는 경우**: 규제와 기술 표준이 정리되고, BlackRock·Ondo·Chainlink·Ethereum 계열이 실제 수수료와 거래량을 가져간다.", "- **나쁘게 풀리는 경우**: 자산 규모는 커지지만 거래가 활발하지 않고, 수수료 수익도 약하며, 은행 전용 폐쇄망이 퍼블릭 블록체인의 성장 여지를 제한한다."], "recentRows": ["- 2026-05-09: RWA 전환점 분석", "- 2026-05-09: RWA 투자 분석"], "monitorRows": ["- 미국 CLARITY 법안 / 한국 STO 제도: 기관투자자가 들어올 수 있는 법적 문이 열리는지 확인", "- 토큰화 국채·사모신용 규모: 이 분야가 커지는지 보는 첫 지표"], "riskRows": ["- 토큰화된 자산 규모는 커지지만 실제 보유자 수, 거래 횟수, 수수료 수익이 늘지 않는다.", "- 은행들이 자기들만 쓰는 폐쇄형 시스템을 만들고, 퍼블릭 블록체인이 가져갈 수수료 기회가 줄어든다."], "evidenceRows": []}, {"kind": "theme", "name": "us_fiscal_debt", "label": "미국 부채·재정·매크로", "stance": "유동성 리스크 경계", "confidence": "중간", "status": "정리됨", "recent": "Treasury supply, 30Y yield, Bessent liquidity reset, and AI capex funding interact with liquidity", "nextCheck": "30Y yield, dollar, Treasury issuance, bank loan growth, credit spreads", "current": "미국 부채·재정 card는 Growth 가설의 liquidity constraint를 보는 owner card다. AI capex와 reshoring은 성장축을 제공하지만, Treasury supply, 장기금리, dollar, credit spreads가 valuation과 funding cost를 결정한다. Bessent식 liquidity regulation reset은 QE가 아니라 은행 대차대조표 활용도 개선에 가깝다. 따라서 하반기 핵심은 Fed cut headline보다 bank loan growth와 credit creation이 실제로 재가동되는지다.", "hypothesisRows": ["- **기본 시나리오**: 장기금리와 재정 부담은 risk asset multiple의 상단을 제한하지만, bank regulation reset이 credit channel을 일부 완화한다.", "- **좋게 풀리는 경우**: inflation 둔화, dollar 약세, long-end yield 안정, bank lending 회복이 Growth + Liquidity 조합을 만든다.", "- **나쁘게 풀리는 경우**: Treasury supply, oil/inflation shock, 30Y yield spike, credit spread widening이 AI risk-on을 압박한다."], "recentRows": ["- 2026-05-09: Bessent liquidity reset / Warsh Fed frame", "- 2026-05-09: AI capex + reflation frame"], "monitorRows": ["- 10Y/30Y yield: valuation discount rate", "- Dollar index: global liquidity and Korea flow"], "riskRows": ["- 30Y yield가 급등하고 dollar 강세가 동반된다.", "- inflation/oil shock으로 Fed easing 기대가 후퇴한다."], "evidenceRows": []}, {"kind": "sector", "name": "consumer_discretionary", "label": "임의소비재 (Consumer Discretionary)", "stance": "관찰 중", "confidence": "낮음", "status": "정리됨", "recent": "Consumer is a Hartnett humiliation bucket but real demand signals remain 혼재", "nextCheck": "employment, real income, consumer credit, 낮음-income demand, AMZN logistics impact", "current": "임의소비재는 현재 AI infra 대비 우선순위가 낮다. Hartnett의 humiliation bucket으로는 순환매 후보지만, 저소득층 소비 둔화와 유가/신용 부담이 동시에 보여서 아직은 `관찰 중`이다. AMZN ASCS는 섹터 내부에서 더 구체적인 구조 변화다. 소비재 전체보다 물류/3PL value pool 재편으로 따로 보는 편이 낫다.", "hypothesisRows": ["- **기본 시나리오**: risk-on과 real income 안정이 일부 discretionary demand를 지지한다.", "- **좋게 풀리는 경우**: 낮음-income pressure가 완화되고 humiliation bucket으로 순환매가 확산된다.", "- **나쁘게 풀리는 경우**: 고금리, 유가, consumer credit stress가 spending을 압박한다."], "recentRows": ["- 2026-05-09: MCD 2Q warning", "- 2026-05-08: Hartnett humiliation bucket"], "monitorRows": ["- Low-income demand: 소비 하단의 stress 확인", "- Consumer credit: discretionary demand의 funding condition"], "riskRows": ["- consumer CEO commentary가 둔화를 계속 확인한다.", "- humiliation bucket 가설가 earnings 개선 없이 value trap으로 남는다."], "evidenceRows": []}, {"kind": "sector", "name": "consumer_staples", "label": "필수소비재 (Consumer Staples)", "stance": "방어적", "confidence": "낮음", "status": "정리됨", "recent": "K-Food export and Korea value-up are the only active alpha angles", "nextCheck": "margin, volume, pricing power, K-Food export, valuation spread", "current": "필수소비재는 현재 active alpha보다 방어적 hedge 성격이 강하다. 다만 한국에서는 K-Food export, 미국 가격 프리미엄, 가치주 재평가가 일부 종목의 별도 catalyst가 될 수 있다.", "hypothesisRows": ["- **기본 시나리오**: macro volatility가 커질 때 방어적 allocation 역할을 한다.", "- **좋게 풀리는 경우**: K-Food export, pricing power, margin recovery가 동시에 확인된다.", "- **나쁘게 풀리는 경우**: valuation이 방어성을 선반영한 상태에서 volume/margin이 둔화된다."], "recentRows": ["- 2026-05-01: Korea value hunter examples"], "monitorRows": ["- K-Food export: 한국 staples alpha 확인", "- Gross margin: 원가/환율 부담 확인"], "riskRows": ["- 방어적 premium은 높지만 volume과 margin이 약하다.", "- 원가/환율 부담을 가격 전가하지 못한다."], "evidenceRows": []}, {"kind": "sector", "name": "energy", "label": "에너지 (Energy)", "stance": "긍정/부정 혼재", "confidence": "중간", "status": "정리됨", "recent": "Oil/Hormuz shock can hedge AI risk-on, but demand destruction and inflation pass-through are the main risk", "nextCheck": "oil, OPEC spare capacity, SPR/storage, shipping insurance, energy equity guidance", "current": "에너지는 AI risk-on의 hedge이면서 동시에 macro kill switch가 될 수 있다. 유가 상승은 energy equity에 단기 우호적일 수 있지만, 일정 수준 이상에서는 CPI/PPI와 demand destruction을 통해 전체 risk asset에 부담이 된다. 따라서 energy card는 단순 긍정적 commodity call보다 oil shock transmission monitor에 가깝다.", "hypothesisRows": ["- **기본 시나리오**: 지정학 premium이 energy sector를 지지하지만 전면 supply shock은 피한다.", "- **좋게 풀리는 경우**: oil price와 energy earnings가 강하고, demand destruction은 제한적이다.", "- **나쁘게 풀리는 경우**: 유가 shock이 inflation과 consumption shock으로 전이되어 energy 외 시장을 압박한다."], "recentRows": ["- 2026-05-06: Maersk cost pass-through", "- 2026-05-05: Hormuz 24h reversal"], "monitorRows": ["- WTI/Brent: sector earnings and inflation risk", "- OPEC spare capacity / storage: shock absorber 확인"], "riskRows": ["- 유가 상승이 energy earnings보다 consumer/inflation shock으로 먼저 작동한다.", "- central banks turn hawkish because of energy inflation."], "evidenceRows": []}, {"kind": "sector", "name": "financials", "label": "금융 (Financials)", "stance": "신용 재가동 + stablecoin rails", "confidence": "중간", "status": "정리됨", "recent": "Stablecoin rails now have measurable cash-flow candidates across COIN, CRCL, V, and MA, while banks/RWA remain broader financial optionality", "nextCheck": "loan growth, SLOOS, credit losses, regulation details, COIN stablecoin/Base revenue, CRCL RLDC margin, V/MA settlement traction", "current": "금융 섹터는 하반기 liquidity unlock의 직접 수혜 후보이지만, 같은 금융 안에서도 은행 대출, 데이터센터 credit, RWA/tokenization, 배당주/통신 proxy가 섞여 있다. 핵심은 regulation reset이 실제 loan growth와 ROE 개선으로 이어지는지다. 단순 금리 인하보다 신용 재가동이 중요하다. 동시에 AI 데이터센터 대출 유동화와 RWA는 새로운 fee pool이지만, sentiment가 꺾이면 credit risk가 빨리 드러날 수 있다.", "hypothesisRows": ["- **기본 시나리오**: bank regulation reset과 value-up이 금융주 multiple을 지지한다.", "- **좋게 풀리는 경우**: loan growth 회복, credit loss 안정, RWA/crypto regulation clarity가 동시에 열린다.", "- **나쁘게 풀리는 경우**: 경기 둔화형 금리 인하, credit losses, data center debt stress가 은행 re-rating을 막는다."], "recentRows": ["- 2026-05-09: Bessent liquidity reset", "- 2026-05-09: RWA institutional adoption"], "monitorRows": ["- Bank loan growth / SLOOS: credit channel 재가동 확인", "- Credit losses: 경기 둔화형 easing인지 구분"], "riskRows": ["- regulation reset이 대출 증가가 아니라 buyback/asset inflation으로만 흐른다.", "- credit losses가 상승해 은행 NIM/ROE 개선을 상쇄한다."], "evidenceRows": []}, {"kind": "sector", "name": "industrials_defense", "label": "방산·조선·로보틱스 (Defense, Shipbuilding & Robotics)", "stance": "긍정적", "confidence": "중간", "status": "정리됨", "recent": "Defense AI, Korean defense/shipbuilding leadership, robotics and space backlog all support the sector", "nextCheck": "defense budget, export contracts, RKLB backlog, Palantir/DoD workflow split, robotics diffusion", "current": "방산·조선·로보틱스는 AI infra와 별도의 structural capex 축이다. 한국 방산/조선은 이미 1차 leadership으로 자리잡았고, Physical AI/robotics와 우주/방산 IPO는 다음 growth layer다. 최근 Palantir Maven 논쟁은 국방 AI가 single platform 독점이 아니라 mission workflow별로 분화될 가능성을 보여준다. 이 섹터는 geopolitical budget + AI/robotics diffusion을 같이 봐야 한다.", "hypothesisRows": ["- **기본 시나리오**: 방산 예산, 한국 수출, 우주/로보틱스 backlog가 multi-year demand를 만든다.", "- **좋게 풀리는 경우**: defense AI, autonomous systems, shipbuilding/MRO, robotics가 한 cycle로 묶여 re-rating된다.", "- **나쁘게 풀리는 경우**: 예산 정책, export delay, robotics diffusion lag, China supply chain dependency가 growth를 늦춘다."], "recentRows": ["- 2026-05-10: Palantir Maven debate", "- 2026-05-09: RKLB backlog and launch contract"], "monitorRows": ["- Defense budget / export contracts: demand visibility", "- Korean shipbuilding/MRO orders: Korea re-rating 확인"], "riskRows": ["- 방산/조선 수주가 headline에 그치고 margin/cash conversion이 약하다.", "- robotics는 demo는 많지만 safety, cost, service network 때문에 deployment가 지연된다."], "evidenceRows": []}, {"kind": "sector", "name": "materials", "label": "소재·화학 (Materials)", "stance": "관찰 중", "confidence": "중간", "status": "정리됨", "recent": "Materials are a 30-year underweight humiliation bucket with AI/defense/capex metal demand optionality", "nextCheck": "commodity demand sizing, SLX/XLB breakout, China cycle, AI capex metal orders", "current": "소재는 AI/칩 hubris의 반대편에 있는 humiliation bucket이다. S&P 500 내 materials 비중이 30년 저점권까지 내려왔고, AI capex·국방비·자원 민족주의·주택 부족·위안화 강세가 동시에 소재 순환매 가능성을 만든다. 다만 가설는 아직 sizing 검증이 필요하다. 데이터센터가 metal-heavy인 것은 맞지만, 글로벌 steel/copper/aluminum 전체 수요를 움직일 정도인지 확인해야 한다.", "hypothesisRows": ["- **기본 시나리오**: materials는 AI crowded trade의 barbell partner이자 nominal GDP boom 후반 순환매 후보.", "- **좋게 풀리는 경우**: AI capex, defense, housing, reshoring이 실제 metal/chemical order로 전환되며 비중 mean reversion이 온다.", "- **나쁘게 풀리는 경우**: China/property cycle이 약하고 AI metal demand 규모가 과장되어 materials 2%가 value trap으로 남는다."], "recentRows": ["- 2026-05-08: Hartnett Flow Show materials 2%", "- 2026-05-08: AI metal-heavy buildout"], "monitorRows": ["- SLX/XLB price action: materials rotation confirmation", "- Copper/steel/aluminum demand: AI/defense capex 실물화 확인"], "riskRows": ["- materials 2% 저점이 mean reversion이 아니라 structural decline로 확인된다.", "- AI metal demand가 headline보다 작고 China cycle이 계속 약하다."], "evidenceRows": []}, {"kind": "sector", "name": "power_utilities", "label": "전력·유틸리티 (Power & Data Center Utilities)", "stance": "긍정적이나 일부 과열", "confidence": "중간", "status": "정리됨", "recent": "FLNC/ESS가 AI 데이터센터의 전력 대기시간과 전력 품질 문제를 푸는 인프라로 재분류", "nextCheck": "FLNC 계약의 실제 주문 전환, 이익률, 소프트웨어·서비스 매출, VRT/CAT 이익률, 전력망 연결 지연", "current": "전력·유틸리티는 AI 데이터센터가 실제로 돌아가게 만드는 물리 병목을 보는 섹터다. GPU와 HBM이 충분해도 전력망 연결, 송전 혼잡, 전압·주파수 안정성, 냉각, 비상 전력이 막히면 AI Factory는 제때 가동되지 못한다. FLNC/ESS는 이 가설의 최신 신호다. 더 이상 재생에너지 저장장치만으로 보는 것이 아니라, 데이터센터가 전기를 기다리는 시간을 줄이고 전력 품질을 안정시키는 완충 장치로 재분류되고 있다. 다만 장비 설치 사업은 이익률이 낮아질 수 있고 운전자본 부담도 크기 때문에, 수주잔고의 \"크기\"보다 \"질\"을 봐야 한다.", "hypothesisRows": ["- **기본 시나리오**: AI 데이터센터 전력 수요가 전력기기, 냉각, 발전기, ESS, 유틸리티 회사의 주문을 받쳐준다.", "- **좋게 풀리는 경우**: ESS 제어 소프트웨어, 냉각, 전력 장비가 장기 계약과 서비스 매출로 이어진다.", "- **나쁘게 풀리는 경우**: 전력망 지연이 수요를 만들기보다 데이터센터 건설 자체를 늦추고, 설치 업체의 이익률이 낮게 나온다."], "recentRows": ["- 2026-05-10: FLNC 수주잔고와 빅테크 기본계약", "- 2026-05-06: VRT/CAT 데이터센터 인프라"], "monitorRows": ["- FLNC 기본계약의 실제 주문 전환: ESS 가설이 실적이 되는지 확인", "- 매출총이익률과 운전자본: 설치 사업이 돈을 버는 구조인지 확인"], "riskRows": ["- FLNC의 수주잔고가 실제로는 이익이 낮은 장비 납품에 그친다.", "- 전력망 지연이 ESS 주문보다 데이터센터 투자 지연을 더 크게 만든다."], "evidenceRows": []}, {"kind": "sector", "name": "semiconductors", "label": "반도체 (Semiconductors)", "stance": "긍정적이나 과열", "confidence": "중간", "status": "정리됨", "recent": "SOX/memory melt-up and NVIDIA AI Factory full-stack 가설 remain strong but crowded", "nextCheck": "SOX breadth, HBM supply, NVDA/Dell numbers, foundry diversification, yield risk", "current": "반도체는 AI capex cycle의 1차 수혜 sector지만, 내부 owner insight는 분리해야 한다. NVIDIA AI Factory full-stack, HBM/memory, advanced packaging, foundry diversification, optical/networking은 서로 다른 병목이다. 현재 방향성은 긍정적지만 가격 위치는 overbought다. SOX와 memory winners가 빠르게 올랐기 때문에 breadth, margin, backlog, FX, yield risk를 같이 봐야 한다.", "hypothesisRows": ["- **기본 시나리오**: AI Factory build-out이 GPU, HBM, CPU, networking, packaging, foundry demand를 지지한다.", "- **좋게 풀리는 경우**: NVIDIA full-stack moat와 memory/HBM shortage가 sector multiple을 구조적으로 높인다.", "- **나쁘게 풀리는 경우**: capex ROI 의심, supply additions, foundry/yield setbacks, momentum unwind가 sector를 압박한다."], "recentRows": ["- 2026-05-10: Memory momentum unwind", "- 2026-05-09: Memory-led risk-on"], "monitorRows": ["- SOX breadth / 200DMA gap: overbought quality 확인", "- HBM supply/ASP/margin: memory owner 가설와 연결"], "riskRows": ["- 반도체 지수는 오르지만 breadth가 좁고 ETF/leverage flow만 남는다.", "- HBM/DRAM 가격 기대가 실적 margin으로 전환되지 않는다."], "evidenceRows": []}, {"kind": "sector", "name": "software_ai_services", "label": "소프트웨어·AI 서비스 (Software & AI Services)", "stance": "선별적", "confidence": "중간", "status": "정리됨", "recent": "Palantir 포장지 논쟁과 Anthropic 매출·이익률 데이터가 진짜 AI 소프트웨어 수익성을 가르는 중", "nextCheck": "반복 매출의 질, 고객 유지율, 업무 고착도, 이익률, PLTR 수주, 기업 AI의 실제 운영 전환", "current": "소프트웨어·AI 서비스는 AI가 실제 돈을 버는지 검증하는 전장이다. 인프라는 투자액과 수주잔고가 눈에 보이지만, 소프트웨어는 고객 업무가 정말 바뀌는지, 고객이 계속 쓰는지, 가격을 받을 힘이 있는지, 데이터와 권한 구조를 누가 장악하는지를 봐야 한다. Palantir 논쟁은 이 섹터의 핵심 질문을 잘 보여준다. 좋게 보면 LLM은 원유이고 Palantir는 기업이 쓸 수 있게 정제하는 공장이다. 나쁘게 보면 모델이 좋아질수록 Palantir는 비싼 포장지처럼 보일 수 있다. 이 차이가 높은 밸류에이션을 정당화할지 결정한다.", "hypothesisRows": ["- **기본 시나리오**: AI 소프트웨어 승자는 모델 자체보다 업무 흐름, 데이터, 권한, 감사 기록, 현장 도입 조직에서 해자를 만든다.", "- **좋게 풀리는 경우**: 반복 매출, 고객 유지율, 이익률, 사용량 기반 과금이 함께 좋아지며 AI 앱·플랫폼이 고마진 사업으로 바뀐다.", "- **나쁘게 풀리는 경우**: 모델 가격이 내려가고 오픈소스가 좋아지면서 앱 포장지에 높은 가격을 받기 어려워진다."], "recentRows": ["- 2026-05-10: Palantir 포장지 논쟁", "- 2026-05-05: Anthropic 반복 매출·이익률"], "monitorRows": ["- 반복 매출과 고객 유지율: 고객이 계속 돈을 내고 쓰는지 확인", "- 매출총이익률과 추론 비용: AI 사용 비용을 감당하면서 돈을 버는지 확인"], "riskRows": ["- AI 소프트웨어 사용은 늘지만 반복 매출, 고객 유지율, 이익률이 따라오지 않는다.", "- 모델 회사가 데이터 연결과 업무 흐름 레이어까지 직접 흡수한다."], "evidenceRows": []}, {"kind": "sector", "name": "tech_hardware", "label": "기술 하드웨어 (Technology Hardware)", "stance": "긍정적", "confidence": "중간", "status": "정리됨", "recent": "Dell이 PC/OEM 업체에서 NVIDIA AI Factory 현장 배포 레이어로 재분류", "nextCheck": "Dell AI 수주잔고, 이익률, 취소 위험, 액체냉각, 서비스 매출, Apple 온디바이스 AI 수요", "current": "기술 하드웨어는 Apple의 온디바이스 AI와 Dell의 AI Factory 현장 배포라는 두 축으로 본다. Apple은 모델 경쟁에서는 후발이지만 기기와 플랫폼 통제력, 전력 효율이 강점이다. Dell은 단순 PC/OEM 업체가 아니라 NVIDIA 생태계의 AI 서버 설치·운영 파트너로 재평가될 수 있다. 현재 더 강한 신호는 Dell 쪽이다. AI Factory는 칩만으로 완성되지 않는다. 서버 랙 구성, 냉각, 기업 영업 채널, 설치·운영 서비스가 같이 붙어야 한다.", "hypothesisRows": ["- **기본 시나리오**: 하드웨어는 AI 모델 경쟁의 주변부가 아니라, AI를 실제 현장과 기기에서 쓰게 만드는 레이어로 재평가된다.", "- **좋게 풀리는 경우**: Dell AI 수주잔고와 Apple 온디바이스 AI 수요가 매출과 이익률로 확인된다.", "- **나쁘게 풀리는 경우**: Dell AI 서버는 이익률 낮은 조립·납품에 그치고, Apple의 기기 AI 전략은 클라우드 모델 경쟁에 밀린다."], "recentRows": ["- 2026-04-22: Dell/NVIDIA AI Factory 가설", "- 2026-05-05: Apple 온디바이스 AI 플랫폼"], "monitorRows": ["- Dell AI 수주잔고와 출하: 현장 배포 레이어 재평가 검증", "- Dell AI 서버 이익률: 이익 낮은 납품 사업인지 확인"], "riskRows": ["- Dell AI 수주잔고는 크지만 이익률과 현금 회수가 약하고 취소 위험이 높다.", "- NVIDIA/Dell 협력이 헤드라인에 그치고 공동 영업·표준 설계로 이어지지 않는다."], "evidenceRows": []}]}</script>
+  <script>
+    const data = JSON.parse(document.getElementById("payload").textContent);
+    const state = { kind: "all", confidence: "all", query: "" };
+    const cardsEl = document.getElementById("cards");
+    const emptyEl = document.getElementById("empty");
+    const updatedEl = document.getElementById("updated");
+    updatedEl.textContent = data.updated;
+
+    function setPressed(selector, attr, value) {
+      document.querySelectorAll(selector).forEach((button) => {
+        button.setAttribute("aria-pressed", String(button.dataset[attr] === value));
+      });
+    }
+
+    function metric(label, value) {
+      return `<div class="metric"><strong>${value}</strong><span>${label}</span></div>`;
+    }
+
+    function renderSummary(filtered) {
+      const themes = filtered.filter((card) => card.kind === "theme").length;
+      const sectors = filtered.filter((card) => card.kind === "sector").length;
+      const mid = filtered.filter((card) => card.confidence === "중간").length;
+      const low = filtered.filter((card) => card.confidence === "낮음").length;
+      document.getElementById("summary").innerHTML = [
+        metric("visible", filtered.length),
+        metric("themes", themes),
+        metric("sectors", sectors),
+        metric("중간 확신", mid),
+        metric("낮은 확신", low),
+      ].join("");
+    }
+
+    function escapeHtml(value) {
+      return String(value ?? "").replace(/[&<>"']/g, (char) => ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#39;",
+      }[char]));
+    }
+
+    function list(title, rows) {
+      if (!rows || rows.length === 0) return "";
+      return `<div class="mini"><h3>${escapeHtml(title)}</h3><ul>${rows.map((row) => `<li>${escapeHtml(row.replace(/^- /, ""))}</li>`).join("")}</ul></div>`;
+    }
+
+    function cardHtml(card, index) {
+      const open = index < 3 ? " open" : "";
+      return `<article data-kind="${card.kind}" data-confidence="${escapeHtml(card.confidence)}"${open}>
+        <details${open}>
+          <summary>
+            <div class="card-head">
+              <div>
+                <h2>${escapeHtml(card.label)}</h2>
+                <div class="stance">${escapeHtml(card.stance)} · 확신도 ${escapeHtml(card.confidence)}</div>
+              </div>
+              <i class="chevron" aria-hidden="true"></i>
+            </div>
+          </summary>
+          <div class="body">
+            <div class="signal">
+              <span class="label">최근 신호</span>
+              <p>${escapeHtml(card.recent)}</p>
+              <span class="label">다음 확인</span>
+              <p>${escapeHtml(card.nextCheck)}</p>
+            </div>
+            <p>${escapeHtml(card.current)}</p>
+            <div class="grid">
+              ${list("핵심 가설", card.hypothesisRows)}
+              ${list("최근 변화", card.recentRows)}
+              ${list("확인 지표", card.monitorRows)}
+              ${list("틀릴 조건", card.riskRows)}
+              ${data.public ? "" : list("근거 메모", card.evidenceRows)}
+            </div>
+          </div>
+        </details>
+      </article>`;
+    }
+
+    function filteredCards() {
+      const query = state.query.trim().toLowerCase();
+      return data.cards.filter((card) => {
+        if (state.kind !== "all" && card.kind !== state.kind) return false;
+        if (state.confidence !== "all" && card.confidence !== state.confidence) return false;
+        if (!query) return true;
+        const haystack = [
+          card.label,
+          card.stance,
+          card.confidence,
+          card.recent,
+          card.nextCheck,
+          card.current,
+          ...(card.hypothesisRows || []),
+          ...(card.recentRows || []),
+          ...(card.monitorRows || []),
+          ...(card.riskRows || []),
+          ...(card.evidenceRows || []),
+        ].join(" ").toLowerCase();
+        return haystack.includes(query);
+      });
+    }
+
+    function render() {
+      const filtered = filteredCards();
+      renderSummary(filtered);
+      cardsEl.innerHTML = filtered.map(cardHtml).join("");
+      emptyEl.hidden = filtered.length > 0;
+    }
+
+    document.querySelectorAll("[data-kind]").forEach((button) => {
+      button.addEventListener("click", () => {
+        state.kind = button.dataset.kind;
+        setPressed("[data-kind]", "kind", state.kind);
+        render();
+      });
+    });
+    document.querySelectorAll("[data-confidence]").forEach((button) => {
+      button.addEventListener("click", () => {
+        state.confidence = button.dataset.confidence;
+        setPressed("[data-confidence]", "confidence", state.confidence);
+        render();
+      });
+    });
+    document.getElementById("search").addEventListener("input", (event) => {
+      state.query = event.target.value;
+      render();
+    });
+    render();
+  </script>
+</body>
+</html>

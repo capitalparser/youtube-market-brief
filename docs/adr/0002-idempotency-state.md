@@ -23,6 +23,7 @@
       "processed_at": "2026-05-07T07:14:32+09:00",
       "channel_id": "UCxxx",
       "outcome": "ok | skipped_no_caption | failed",
+      "skip_reason": "no_captions | disabled | geo_blocked | api_changed | ip_blocked | timeout | null",
       "md_path": "00_Wiki/youtube/aekyung_invest/2026-05-07__title.md"
     }
   },
@@ -45,6 +46,7 @@
 ## 결과
 
 - 동일 video_id 재투입 시 skip 가능
+- terminal caption skip(`no_captions`, `disabled`, `geo_blocked`)은 완료 처리하고 transient skip(`ip_blocked`, `api_changed`, `timeout`)은 다음 실행에서 재시도
 - daily brief 재생성 방지 (`daily.{date}.brief_sent`)
 - 부분 실패 후 재실행 시 처리분만 skip — 잔여는 정상 처리
 - atomic write로 process kill 시에도 state 비파괴

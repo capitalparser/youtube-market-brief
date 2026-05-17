@@ -7,6 +7,10 @@ from youtube_market_brief.domain.types import (
     KeyInsight,
     LLMMeta,
     RedTeamItem,
+    TickerMention,
+    TranscriptSummary,
+    VideoAnalysis,
+    VideoMeta,
 )
 
 
@@ -67,3 +71,62 @@ def test_daily_brief_md_empty_tag_union_yields_empty_lists():
     fm = _parse_fm(md)
     assert fm["insight_sector_tags"] == []
     assert fm["red_team_sector_tags"] == []
+
+
+def test_daily_rollup_preserves_sector_tag_for_weekly_links():
+    from youtube_market_brief.domain.daily_brief import compute_rollup, compute_weekly_rollup
+
+    video = VideoMeta(
+        video_id="v1",
+        channel_id="UC1",
+        channel_name="Channel",
+        channel_slug="channel",
+        title="Video",
+        published_at_utc=datetime(2026, 5, 11, tzinfo=UTC),
+        url="https://youtu.be/v1",
+    )
+    analysis = VideoAnalysis(
+        video=video,
+        transcript_summary=TranscriptSummary(
+            headline_3line=("a", "b", "c"),
+            key_insights=(
+                KeyInsight(text="semis", sector_tags=("semiconductors",), theme_tags=()),
+            ),
+            red_team=(),
+            chars_used=100,
+            was_truncated=False,
+        ),
+        tickers=(
+            TickerMention(
+                symbol="NVDA",
+                display="NVIDIA",
+                in_watchlist=True,
+                direction="긍정적",
+                reasoning="AI capex",
+                quotes=("quote",),
+                confidence="high",
+                sector_tag="semiconductors",
+            ),
+        ),
+        watchlist_hits=("NVDA",),
+        tier="deep",
+        tags=("youtube",),
+        llm_meta=LLMMeta(model="test", duration_ms=1),
+        generated_at=datetime(2026, 5, 11, tzinfo=UTC),
+    )
+    rollup = compute_rollup((analysis,))
+    assert rollup[0].sector_tag == "semiconductors"
+
+    brief = DailyBrief(
+        date=date(2026, 5, 11),
+        market_read="m",
+        key_insights=analysis.transcript_summary.key_insights,
+        red_team=(),
+        ticker_rollup=rollup,
+        videos=(video,),
+        llm_meta=LLMMeta(model="test", duration_ms=1),
+    )
+    weekly = compute_weekly_rollup((brief,), week_start=date(2026, 5, 11))
+    assert weekly is not None
+    assert weekly.tickers[0].sector_tag == "semiconductors"
+    assert weekly.sectors[0].related_tickers == ("NVDA",)
