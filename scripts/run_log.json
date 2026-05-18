@@ -1,5 +1,5 @@
 {
-  "run_at": "2026-05-18T00:00:00+09:00",
+  "run_at": "2026-05-18T12:04:00+09:00",
   "steps": {
     "collect": {
       "status": "blocked",
@@ -27,7 +27,7 @@
     },
     "telegram": {
       "status": "blocked",
-      "reason": "api.telegram.org not in network allowlist (HTTP 403); no files to send anyway",
+      "reason": "api.telegram.org not in network allowlist; no files to send anyway",
       "sent": 0,
       "failed": 0
     },
