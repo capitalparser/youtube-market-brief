@@ -1,5 +1,5 @@
 {
-  "run_at": "2026-05-19T09:08:40+09:00",
+  "run_at": "2026-05-19T10:30:00+09:00",
   "steps": {
     "collect": {
       "status": "blocked",
@@ -23,7 +23,7 @@
     "backlog": {
       "status": "empty",
       "unsent_count": 0,
-      "note": "data/ directory does not exist; no local video MDs to process"
+      "note": "data/ directory has no video MDs"
     },
     "telegram": {
       "status": "blocked",
