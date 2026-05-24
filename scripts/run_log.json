@@ -1,11 +1,19 @@
 {
-  "run_at": "2026-05-24T09:00:00+09:00",
+  "run_at": "2026-05-24T15:11:01.580061+09:00",
   "steps": {
     "collect": {
       "status": "blocked",
       "reason": "youtube.com not in network allowlist (HTTP 403 on all RSS feeds)",
       "new_videos": 0,
-      "channels_attempted": ["@hkglobalmarket", "@MK_Invest", "@kpunch", "@wallst_wars", "@오늘부터회계사", "@eo_korea", "@DemoDaySV"],
+      "channels_attempted": [
+        "@hkglobalmarket",
+        "@MK_Invest",
+        "@kpunch",
+        "@wallst_wars",
+        "@오늘부터회계사",
+        "@eo_korea",
+        "@DemoDaySV"
+      ],
       "errors": [
         "rss:@hkglobalmarket:HTTP Error 403: Forbidden",
         "rss:@MK_Invest:HTTP Error 403: Forbidden",
