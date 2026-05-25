@@ -1,9 +1,9 @@
 {
-  "run_at": "2026-05-25T15:10:48.975157+09:00",
+  "run_at": "2026-05-25T18:10:39.000000+09:00",
   "steps": {
     "collect": {
       "status": "blocked",
-      "reason": "youtube.com not in network allowlist (HTTP 403 on all RSS feeds)",
+      "reason": "youtube.com not in network allowlist (HTTP 403 host_not_allowed on all RSS feeds)",
       "new_videos": 0,
       "channels_attempted": [
         "@hkglobalmarket",
@@ -35,7 +35,7 @@
     },
     "telegram": {
       "status": "blocked",
-      "reason": "api.telegram.org not in network allowlist; no files to send anyway",
+      "reason": "api.telegram.org not in network allowlist (HTTP 403); no files to send anyway",
       "sent": 0,
       "failed": 0
     },
@@ -44,5 +44,5 @@
     }
   },
   "agent_run_at": "2026-05-25",
-  "note": "Network-restricted sandbox: YouTube RSS and Telegram API both return host_not_allowed. Full pipeline runs in GitHub Actions (digest.yml) where YOUTUBE_API_KEY, TELEGRAM_BOT_TOKEN secrets and open network are available."
+  "note": "Network-restricted sandbox: YouTube RSS and Telegram API both return host_not_allowed (403). Full pipeline runs in GitHub Actions (digest.yml) where YOUTUBE_API_KEY, TELEGRAM_BOT_TOKEN secrets and open network are available."
 }
