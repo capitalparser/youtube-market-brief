@@ -1,5 +1,5 @@
 {
-    "run_at": "2026-05-26T09:00:00.000000+09:00",
+    "run_at": "2026-05-27T00:00:00.000000+09:00",
     "steps": {
         "collect": {
             "status": "blocked",
@@ -43,6 +43,6 @@
             "status": "pushed"
         }
     },
-    "agent_run_at": "2026-05-26",
+    "agent_run_at": "2026-05-27",
     "note": "Network-restricted sandbox: YouTube RSS and Telegram API both return host_not_allowed (403). Full pipeline runs in GitHub Actions (digest.yml) where YOUTUBE_API_KEY, TELEGRAM_BOT_TOKEN secrets and open network are available."
 }
