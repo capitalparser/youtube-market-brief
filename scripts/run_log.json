@@ -1,48 +1,48 @@
 {
-  "run_at": "2026-05-25T18:10:39.000000+09:00",
-  "steps": {
-    "collect": {
-      "status": "blocked",
-      "reason": "youtube.com not in network allowlist (HTTP 403 host_not_allowed on all RSS feeds)",
-      "new_videos": 0,
-      "channels_attempted": [
-        "@hkglobalmarket",
-        "@MK_Invest",
-        "@kpunch",
-        "@wallst_wars",
-        "@오늘부터회계사",
-        "@eo_korea",
-        "@DemoDaySV"
-      ],
-      "errors": [
-        "rss:@hkglobalmarket:HTTP Error 403: Forbidden",
-        "rss:@MK_Invest:HTTP Error 403: Forbidden",
-        "rss:@kpunch:HTTP Error 403: Forbidden",
-        "rss:@wallst_wars:HTTP Error 403: Forbidden",
-        "rss:@오늘부터회계사:HTTP Error 403: Forbidden",
-        "rss:@eo_korea:HTTP Error 403: Forbidden",
-        "rss:@DemoDaySV:HTTP Error 403: Forbidden"
-      ]
+    "run_at": "2026-05-26T09:10:06.080874+09:00",
+    "steps": {
+        "collect": {
+            "status": "blocked",
+            "reason": "youtube.com not in network allowlist (HTTP 403 host_not_allowed on all RSS feeds)",
+            "new_videos": 0,
+            "channels_attempted": [
+                "@hkglobalmarket",
+                "@MK_Invest",
+                "@kpunch",
+                "@wallst_wars",
+                "@오늘부터회계사",
+                "@eo_korea",
+                "@DemoDaySV"
+            ],
+            "errors": [
+                "rss:@hkglobalmarket:HTTP Error 403: Forbidden",
+                "rss:@MK_Invest:HTTP Error 403: Forbidden",
+                "rss:@kpunch:HTTP Error 403: Forbidden",
+                "rss:@wallst_wars:HTTP Error 403: Forbidden",
+                "rss:@오늘부터회계사:HTTP Error 403: Forbidden",
+                "rss:@eo_korea:HTTP Error 403: Forbidden",
+                "rss:@DemoDaySV:HTTP Error 403: Forbidden"
+            ]
+        },
+        "enrich": {
+            "status": "skipped",
+            "reason": "no new files from collector"
+        },
+        "backlog": {
+            "status": "empty",
+            "unsent_count": 0,
+            "note": "data/ directory has no video MDs — no files ever collected in this sandbox"
+        },
+        "telegram": {
+            "status": "blocked",
+            "reason": "api.telegram.org not in network allowlist (HTTP 403); no files to send anyway",
+            "sent": 0,
+            "failed": 0
+        },
+        "commit": {
+            "status": "pushed"
+        }
     },
-    "enrich": {
-      "status": "skipped",
-      "reason": "no new files from collector"
-    },
-    "backlog": {
-      "status": "empty",
-      "unsent_count": 0,
-      "note": "data/ directory has no video MDs — no files ever collected in this sandbox"
-    },
-    "telegram": {
-      "status": "blocked",
-      "reason": "api.telegram.org not in network allowlist (HTTP 403); no files to send anyway",
-      "sent": 0,
-      "failed": 0
-    },
-    "commit": {
-      "status": "pushed"
-    }
-  },
-  "agent_run_at": "2026-05-25",
-  "note": "Network-restricted sandbox: YouTube RSS and Telegram API both return host_not_allowed (403). Full pipeline runs in GitHub Actions (digest.yml) where YOUTUBE_API_KEY, TELEGRAM_BOT_TOKEN secrets and open network are available."
+    "agent_run_at": "2026-05-26",
+    "note": "Network-restricted sandbox: YouTube RSS and Telegram API both return host_not_allowed (403). Full pipeline runs in GitHub Actions (digest.yml) where YOUTUBE_API_KEY, TELEGRAM_BOT_TOKEN secrets and open network are available."
 }
