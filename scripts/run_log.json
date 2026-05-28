@@ -1,5 +1,5 @@
 {
-    "run_at": "2026-05-28T12:11:00.000000+09:00",
+    "run_at": "2026-05-29T03:11:25.282903+09:00",
     "steps": {
         "collect": {
             "status": "blocked",
@@ -35,14 +35,11 @@
         },
         "telegram": {
             "status": "blocked",
-            "reason": "api.telegram.org not in network allowlist (HTTP 403); no files to send anyway",
+            "reason": "api.telegram.org not in network allowlist; no files to send anyway",
             "sent": 0,
             "failed": 0
-        },
-        "commit": {
-            "status": "pushed"
         }
     },
-    "agent_run_at": "2026-05-28",
-    "note": "Network-restricted sandbox: YouTube RSS and Telegram API both return 403 (host_not_allowed). Full pipeline runs in GitHub Actions where YOUTUBE_API_KEY, TELEGRAM_BOT_TOKEN secrets and open network are available."
+    "agent_run_at": "2026-05-29",
+    "note": "Network-restricted sandbox: YouTube RSS and Telegram API both return 403. Full pipeline runs in GitHub Actions where secrets and open network are available."
 }
