@@ -1,5 +1,5 @@
 {
-    "run_at": "2026-05-31T00:00:00.000000+09:00",
+    "run_at": "2026-05-31T15:30:00.000000+09:00",
     "steps": {
         "collect": {
             "status": "blocked",
@@ -31,7 +31,7 @@
         "backlog": {
             "status": "empty",
             "unsent_count": 0,
-            "note": "data/ directory has no video MDs — no files ever collected in this sandbox"
+            "note": "data/ directory has no video MDs — no files collected in this sandbox session"
         },
         "telegram": {
             "status": "blocked",
