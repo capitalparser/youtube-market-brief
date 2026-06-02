@@ -1,5 +1,5 @@
 {
-    "run_at": "2026-06-02T07:00:00+09:00",
+    "run_at": "2026-06-02T09:00:00+09:00",
     "steps": {
         "collect": {
             "status": "blocked",
@@ -38,6 +38,10 @@
             "reason": "no files to send (network also blocks api.telegram.org)",
             "sent": 0,
             "failed": 0
+        },
+        "workflow_dispatch": {
+            "status": "blocked",
+            "reason": "POST /actions/workflows/digest.yml/dispatches: 403 Resource not accessible by integration"
         }
     },
     "last_agent_run_at": "2026-06-02",
