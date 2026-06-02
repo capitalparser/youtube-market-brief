@@ -1,9 +1,9 @@
 {
-    "run_at": "2026-06-02T09:00:00+09:00",
+    "run_at": "2026-06-02T18:08:00+00:00",
     "steps": {
         "collect": {
             "status": "blocked",
-            "reason": "youtube.com not in network allowlist (HTTP 403 on all RSS feeds)",
+            "reason": "youtube.com not in network allowlist (HTTP 403 x-deny-reason: host_not_allowed on all RSS feeds)",
             "new_videos": 0,
             "channels_attempted": [
                 "@hkglobalmarket",
@@ -42,8 +42,19 @@
         "workflow_dispatch": {
             "status": "blocked",
             "reason": "POST /actions/workflows/digest.yml/dispatches: 403 Resource not accessible by integration"
+        },
+        "gha_last_run_check": {
+            "status": "inspected",
+            "run_id": 26838482083,
+            "run_at": "2026-06-02T18:02:01Z",
+            "result": "success (exit 0) but 0 videos processed",
+            "gha_discovered": 9,
+            "gha_processed": 0,
+            "gha_skipped": 9,
+            "gha_skip_reason": "yt-dlp returning 'Sign in to confirm you're not a bot' for all 9 videos — YouTube cookies in YOUTUBE_COOKIE_FILE secret have expired",
+            "action_required": "Refresh YOUTUBE_COOKIE_FILE secret with a valid Netscape-format cookies.txt exported from a logged-in browser session"
         }
     },
     "last_agent_run_at": "2026-06-02",
-    "note": "Network-restricted sandbox: YouTube RSS and Telegram API both return 403 (Host not in allowlist). GHA workflow dispatch also returns 403 (integration permission). Full pipeline runs automatically via GitHub Actions (digest.yml) on schedule cron 0 22/3/9/14 * * * where YOUTUBE_API_KEY, TELEGRAM_BOT_TOKEN secrets and open network are available."
+    "note": "Network-restricted sandbox: YouTube RSS and Telegram API both return 403 (host_not_allowed). GHA workflow dispatch also returns 403 (integration permission). Full pipeline runs via GitHub Actions (digest.yml) on schedule — but as of this run ALL transcript fetches are failing because the YOUTUBE_COOKIE_FILE secret contains expired cookies. 9 new videos were discovered but 0 processed. ACTION NEEDED: export fresh YouTube cookies from browser and update the YOUTUBE_COOKIE_FILE Actions secret."
 }
