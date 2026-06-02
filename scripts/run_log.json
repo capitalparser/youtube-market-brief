@@ -1,5 +1,5 @@
 {
-    "run_at": "2026-06-02T00:20:00+09:00",
+    "run_at": "2026-06-02T07:00:00+09:00",
     "steps": {
         "collect": {
             "status": "blocked",
@@ -35,12 +35,11 @@
         },
         "telegram": {
             "status": "skipped",
-            "reason": "no files to send",
+            "reason": "no files to send (network also blocks api.telegram.org)",
             "sent": 0,
             "failed": 0
         }
     },
     "last_agent_run_at": "2026-06-02",
-    "gha_fix": "Fixed digest.yml: 07:00 KST run now pulls vault MDs from Drive before aggregate-only (was failing because MDs written by intraday runs were in Drive but not pulled back)",
-    "note": "Network-restricted sandbox: YouTube RSS and Telegram API both return 403. Full pipeline runs in GitHub Actions (digest.yml) on schedule cron 0 22/3/9/14 * * * where YOUTUBE_API_KEY, TELEGRAM_BOT_TOKEN secrets and open network are available."
+    "note": "Network-restricted sandbox: YouTube RSS and Telegram API both return 403 (Host not in allowlist). GHA workflow dispatch also returns 403 (integration permission). Full pipeline runs automatically via GitHub Actions (digest.yml) on schedule cron 0 22/3/9/14 * * * where YOUTUBE_API_KEY, TELEGRAM_BOT_TOKEN secrets and open network are available."
 }
