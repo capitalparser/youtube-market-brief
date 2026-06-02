@@ -1,5 +1,5 @@
 {
-    "run_at": "2026-06-01T15:10:00+09:00",
+    "run_at": "2026-06-02T00:20:00+09:00",
     "steps": {
         "collect": {
             "status": "blocked",
@@ -34,12 +34,13 @@
             "note": "data/ directory has no video MDs — no files collected in this sandbox session"
         },
         "telegram": {
-            "status": "blocked",
-            "reason": "api.telegram.org not in network allowlist; no files to send anyway",
+            "status": "skipped",
+            "reason": "no files to send",
             "sent": 0,
             "failed": 0
         }
     },
-    "last_agent_run_at": "2026-06-01",
+    "last_agent_run_at": "2026-06-02",
+    "gha_fix": "Fixed digest.yml: 07:00 KST run now pulls vault MDs from Drive before aggregate-only (was failing because MDs written by intraday runs were in Drive but not pulled back)",
     "note": "Network-restricted sandbox: YouTube RSS and Telegram API both return 403. Full pipeline runs in GitHub Actions (digest.yml) on schedule cron 0 22/3/9/14 * * * where YOUTUBE_API_KEY, TELEGRAM_BOT_TOKEN secrets and open network are available."
 }
