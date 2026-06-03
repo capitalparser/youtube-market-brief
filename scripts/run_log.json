@@ -1,5 +1,5 @@
 {
-    "run_at": "2026-06-03T06:09:49+00:00",
+    "run_at": "2026-06-04T00:00:00+09:00",
     "steps": {
         "collect": {
             "status": "blocked",
@@ -31,7 +31,7 @@
         "backlog": {
             "status": "empty",
             "unsent_count": 0,
-            "note": "data/ directory has no video MDs — no files collected in this sandbox session"
+            "note": "data/ directory has no video MDs — network blocks prevent collection in this sandbox"
         },
         "telegram": {
             "status": "skipped",
@@ -39,22 +39,18 @@
             "sent": 0,
             "failed": 0
         },
-        "workflow_dispatch": {
-            "status": "blocked",
-            "reason": "POST /actions/workflows/digest.yml/dispatches: 403 Resource not accessible by integration"
-        },
-        "gha_last_run_check": {
+        "gha_latest_run_check": {
             "status": "inspected",
-            "run_id": 26838482083,
-            "run_at": "2026-06-02T18:02:01Z",
-            "result": "success (exit 0) but 0 videos processed",
-            "gha_discovered": 9,
+            "run_id": 26887063041,
+            "run_at": "2026-06-03T13:13:16Z",
+            "conclusion": "success (exit 0) but 0 videos processed",
+            "gha_discovered": 1,
             "gha_processed": 0,
-            "gha_skipped": 9,
-            "gha_skip_reason": "yt-dlp returning 'Sign in to confirm you're not a bot' for all 9 videos — YouTube cookies in YOUTUBE_COOKIE_FILE secret have expired",
-            "action_required": "Refresh YOUTUBE_COOKIE_FILE secret with a valid Netscape-format cookies.txt exported from a logged-in browser session"
+            "gha_skipped_no_caption": 1,
+            "gha_skip_reason": "yt-dlp returning 'Sign in to confirm you're not a bot' for video qkVwaySx3pg — YOUTUBE_COOKIES secret present (29 lines, 25 youtube.com entries) but cookies are expired",
+            "action_required": "Export fresh Netscape-format cookies.txt from a logged-in YouTube browser session and update the YOUTUBE_COOKIES Actions secret"
         }
     },
-    "last_agent_run_at": "2026-06-03",
-    "note": "Network-restricted sandbox: YouTube RSS and Telegram API both return 403 (host_not_allowed) — confirmed again on 2026-06-03. GHA workflow dispatch also returns 403 (integration permission). Full pipeline runs via GitHub Actions (digest.yml) on schedule — but ALL transcript fetches are still failing because the YOUTUBE_COOKIE_FILE secret contains expired cookies. ACTION NEEDED: export fresh YouTube cookies from browser and update the YOUTUBE_COOKIE_FILE Actions secret."
+    "last_agent_run_at": "2026-06-04",
+    "note": "Network-restricted sandbox: YouTube RSS and Telegram API both return 403 (host_not_allowed). GHA pipeline runs on schedule but transcript fetching is failing — YOUTUBE_COOKIES secret has expired cookies. GHA run 26887063041 (2026-06-03 22:13 KST) discovered 1 video (qkVwaySx3pg) but could not fetch transcript. ACTION NEEDED: refresh the YOUTUBE_COOKIES Actions secret with fresh cookies exported from a logged-in browser."
 }
