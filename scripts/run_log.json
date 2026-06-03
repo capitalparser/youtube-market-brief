@@ -1,5 +1,5 @@
 {
-    "run_at": "2026-06-02T18:08:00+00:00",
+    "run_at": "2026-06-03T06:09:49+00:00",
     "steps": {
         "collect": {
             "status": "blocked",
@@ -55,6 +55,6 @@
             "action_required": "Refresh YOUTUBE_COOKIE_FILE secret with a valid Netscape-format cookies.txt exported from a logged-in browser session"
         }
     },
-    "last_agent_run_at": "2026-06-02",
-    "note": "Network-restricted sandbox: YouTube RSS and Telegram API both return 403 (host_not_allowed). GHA workflow dispatch also returns 403 (integration permission). Full pipeline runs via GitHub Actions (digest.yml) on schedule — but as of this run ALL transcript fetches are failing because the YOUTUBE_COOKIE_FILE secret contains expired cookies. 9 new videos were discovered but 0 processed. ACTION NEEDED: export fresh YouTube cookies from browser and update the YOUTUBE_COOKIE_FILE Actions secret."
+    "last_agent_run_at": "2026-06-03",
+    "note": "Network-restricted sandbox: YouTube RSS and Telegram API both return 403 (host_not_allowed) — confirmed again on 2026-06-03. GHA workflow dispatch also returns 403 (integration permission). Full pipeline runs via GitHub Actions (digest.yml) on schedule — but ALL transcript fetches are still failing because the YOUTUBE_COOKIE_FILE secret contains expired cookies. ACTION NEEDED: export fresh YouTube cookies from browser and update the YOUTUBE_COOKIE_FILE Actions secret."
 }
