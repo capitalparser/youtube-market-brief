@@ -1,5 +1,5 @@
 {
-    "run_at": "2026-06-04T09:00:00+09:00",
+    "run_at": "2026-06-04T21:15:00+09:00",
     "steps": {
         "collect": {
             "status": "blocked",
@@ -42,38 +42,47 @@
         "gha_status": {
             "inspected_runs": [
                 {
+                    "run_id": 26949792348,
+                    "run_at": "2026-06-04T11:47:48Z",
+                    "type": "intraday run (0 9 * * *) — videos only, no brief",
+                    "discovered": 4,
+                    "processed": 0,
+                    "skipped_no_caption": 4,
+                    "brief_generated": false,
+                    "drive_push": "OK (state.json pushed; 00_Wiki/youtube push skipped — no MDs produced)",
+                    "conclusion": "success (exit 0)",
+                    "video_ids_discovered": [
+                        "mv-rVXNIiTo",
+                        "nOWqv6L4Nl4",
+                        "yZSl0_lPnYA",
+                        "bfbFnk0pqHk"
+                    ],
+                    "skip_reason": "yt-dlp: Sign in to confirm you're not a bot — YOUTUBE_COOKIES secret is expired"
+                },
+                {
+                    "run_id": 26936779724,
+                    "run_at": "2026-06-04T07:12:50Z",
+                    "type": "intraday — videos only",
+                    "conclusion": "success (exit 0)"
+                },
+                {
                     "run_id": 26920197674,
                     "run_at": "2026-06-03T23:43:50Z",
                     "type": "07:00 KST daily — yesterday catch-up + brief for 2026-06-03",
                     "discovered": 0,
                     "processed": 0,
-                    "skipped_no_caption": 0,
-                    "skipped_short": 2,
                     "brief_generated": true,
                     "brief_sent_telegram": true,
                     "telegram_message_id": 309,
-                    "vault_mds_used": 12,
-                    "drive_push": "FAILED — storageQuotaExceeded (service account has no storage quota)",
-                    "conclusion": "success (exit 0)"
-                },
-                {
-                    "run_id": 26904325729,
-                    "run_at": "2026-06-03T18:19:12Z",
-                    "type": "intraday — videos only",
-                    "discovered": 3,
-                    "processed": 0,
-                    "skipped_no_caption": 3,
-                    "brief_generated": false,
-                    "drive_push": "FAILED — directory not found (no MDs produced)",
                     "conclusion": "success (exit 0)"
                 }
             ],
             "action_required": [
-                "CRITICAL: Google Drive push failing with storageQuotaExceeded on every run. Service account does not have Drive storage quota. Fix: migrate rclone target to a Shared Drive (Team Drive) where the service account is a member, or configure OAuth delegation for a personal account instead.",
-                "SECONDARY: 3 intraday videos (2026-06-03T18:19 run) had no captions (skipped_no_caption=3). Confirm YOUTUBE_COOKIES secret is fresh — expired cookies cause yt-dlp to skip captionless videos."
+                "CRITICAL: YOUTUBE_COOKIES secret is expired — yt-dlp fails with 'Sign in to confirm you're not a bot' on every video. All 4 videos discovered on 2026-06-04 were skipped. Fix: re-export fresh cookies from a logged-in YouTube browser session and update the YOUTUBE_COOKIES_RAW GitHub Actions secret.",
+                "SECONDARY: config/watchlist.yaml not found on Drive (rclone: directory not found). Pipeline runs with empty watchlist (auto-discovery only). Upload watchlist.yaml to the Drive root if watchlist matching is needed."
             ]
         }
     },
     "last_agent_run_at": "2026-06-04",
-    "note": "Sandbox: YouTube RSS and Telegram API both blocked (HTTP 403). GHA pipeline runs on schedule and Telegram delivery works. BLOCKING ISSUE: Google Drive push fails with storageQuotaExceeded on every run — MDs are generated but not persisted to Drive, so the next run cannot pull them back. NEEDED: migrate rclone Drive target to a Shared Drive where the service account has quota."
+    "note": "Sandbox: YouTube RSS and Telegram API both blocked (HTTP 403). GHA pipeline runs on schedule. CRITICAL BLOCKER: YOUTUBE_COOKIES secret is expired — yt-dlp gets 'Sign in to confirm you're not a bot' on all videos (4 skipped today). Re-export cookies from browser and update YOUTUBE_COOKIES_RAW secret to restore transcript collection."
 }
