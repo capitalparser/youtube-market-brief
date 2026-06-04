@@ -1,5 +1,5 @@
 {
-    "run_at": "2026-06-04T21:15:00+09:00",
+    "run_at": "2026-06-05T02:00:00+09:00",
     "steps": {
         "collect": {
             "status": "blocked",
@@ -42,6 +42,26 @@
         "gha_status": {
             "inspected_runs": [
                 {
+                    "run_id": 26966190956,
+                    "run_at": "2026-06-04T16:48:35Z",
+                    "type": "intraday run (0 14 * * *) — videos only, no brief",
+                    "discovered": 6,
+                    "processed": 0,
+                    "skipped_no_caption": 6,
+                    "brief_generated": false,
+                    "drive_push": "rclone failed — 00_Wiki/youtube directory not found (no MDs produced); state.json push OK",
+                    "conclusion": "success (exit 0)",
+                    "video_ids_discovered": [
+                        "mv-rVXNIiTo",
+                        "nOWqv6L4Nl4",
+                        "yZSl0_lPnYA",
+                        "bfbFnk0pqHk",
+                        "O7Gkf2llIP8",
+                        "d8Uxeqq7bpA"
+                    ],
+                    "skip_reason": "yt-dlp: Sign in to confirm you're not a bot — YOUTUBE_COOKIES secret is still expired"
+                },
+                {
                     "run_id": 26949792348,
                     "run_at": "2026-06-04T11:47:48Z",
                     "type": "intraday run (0 9 * * *) — videos only, no brief",
@@ -49,7 +69,6 @@
                     "processed": 0,
                     "skipped_no_caption": 4,
                     "brief_generated": false,
-                    "drive_push": "OK (state.json pushed; 00_Wiki/youtube push skipped — no MDs produced)",
                     "conclusion": "success (exit 0)",
                     "video_ids_discovered": [
                         "mv-rVXNIiTo",
@@ -58,12 +77,6 @@
                         "bfbFnk0pqHk"
                     ],
                     "skip_reason": "yt-dlp: Sign in to confirm you're not a bot — YOUTUBE_COOKIES secret is expired"
-                },
-                {
-                    "run_id": 26936779724,
-                    "run_at": "2026-06-04T07:12:50Z",
-                    "type": "intraday — videos only",
-                    "conclusion": "success (exit 0)"
                 },
                 {
                     "run_id": 26920197674,
@@ -78,11 +91,12 @@
                 }
             ],
             "action_required": [
-                "CRITICAL: YOUTUBE_COOKIES secret is expired — yt-dlp fails with 'Sign in to confirm you're not a bot' on every video. All 4 videos discovered on 2026-06-04 were skipped. Fix: re-export fresh cookies from a logged-in YouTube browser session and update the YOUTUBE_COOKIES_RAW GitHub Actions secret.",
-                "SECONDARY: config/watchlist.yaml not found on Drive (rclone: directory not found). Pipeline runs with empty watchlist (auto-discovery only). Upload watchlist.yaml to the Drive root if watchlist matching is needed."
+                "CRITICAL: YOUTUBE_COOKIES secret is still expired — yt-dlp fails with 'Sign in to confirm you're not a bot' on every video. 6 videos discovered on 2026-06-05 were all skipped (mv-rVXNIiTo, nOWqv6L4Nl4, yZSl0_lPnYA, bfbFnk0pqHk, O7Gkf2llIP8, d8Uxeqq7bpA). Fix: re-export fresh cookies from a logged-in YouTube browser session and update the YOUTUBE_COOKIES_RAW GitHub Actions secret.",
+                "SECONDARY: config/watchlist.yaml not found on Drive. Pipeline runs with empty watchlist (auto-discovery only). Upload watchlist.yaml to the Drive root if watchlist matching is needed.",
+                "INFO: Node.js 20 actions deprecation warning — actions/checkout@v4 and astral-sh/setup-uv@v3 will be forced to Node.js 24 starting June 16th, 2026. Update workflow to use newer action versions before that date."
             ]
         }
     },
-    "last_agent_run_at": "2026-06-04",
-    "note": "Sandbox: YouTube RSS and Telegram API both blocked (HTTP 403). GHA pipeline runs on schedule. CRITICAL BLOCKER: YOUTUBE_COOKIES secret is expired — yt-dlp gets 'Sign in to confirm you're not a bot' on all videos (4 skipped today). Re-export cookies from browser and update YOUTUBE_COOKIES_RAW secret to restore transcript collection."
+    "last_agent_run_at": "2026-06-05",
+    "note": "Sandbox: YouTube RSS and Telegram API both blocked (HTTP 403). GHA pipeline runs on schedule but is fully blocked on transcript collection. CRITICAL BLOCKER: YOUTUBE_COOKIES secret is expired — yt-dlp gets 'Sign in to confirm you're not a bot' on all 6 videos discovered today. Re-export cookies from browser and update YOUTUBE_COOKIES_RAW secret to restore transcript collection. Backlog of uncaptured videos is accumulating (4 on 2026-06-04, 6 on 2026-06-05)."
 }
