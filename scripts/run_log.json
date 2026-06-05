@@ -1,5 +1,5 @@
 {
-    "run_at": "2026-06-05T21:00:00+09:00",
+    "run_at": "2026-06-06T06:05:00+09:00",
     "steps": {
         "collect": {
             "status": "blocked",
@@ -42,6 +42,32 @@
         "gha_status": {
             "inspected_runs": [
                 {
+                    "run_id": 27026920533,
+                    "run_at": "2026-06-05T16:27:07Z",
+                    "type": "intraday run (0 14 * * *) — videos only, no brief",
+                    "discovered": 12,
+                    "processed": 0,
+                    "skipped_no_caption": 12,
+                    "brief_generated": false,
+                    "drive_push": "rclone failed — 00_Wiki/youtube directory not found (no MDs produced); state.json push succeeded",
+                    "conclusion": "success (exit 0)",
+                    "skip_reason": "yt-dlp: Sign in to confirm you're not a bot — YOUTUBE_COOKIES_RAW secret is expired",
+                    "video_ids_discovered": [
+                        "8po_Mp0QPxs",
+                        "bgZr7iwWAVA",
+                        "kKAIW2cEmmU",
+                        "5bl6E1vnm7o",
+                        "MzlDbKE7ihw",
+                        "SHEsSCIfIus",
+                        "zXpb_h0EVxU",
+                        "QO3elC7kNOo",
+                        "SED4krmMsMo",
+                        "pkVq_ATN3zU",
+                        "5aJ6XdWQTLo",
+                        "-nLbaBqq7YU"
+                    ]
+                },
+                {
                     "run_id": 27013509774,
                     "run_at": "2026-06-05T11:58:34Z",
                     "type": "intraday run (0 14 * * *) — videos only, no brief",
@@ -49,7 +75,6 @@
                     "processed": 0,
                     "skipped_no_caption": 16,
                     "brief_generated": false,
-                    "drive_push": "rclone failed — 00_Wiki/youtube directory not found (no MDs produced); state.json push succeeded",
                     "conclusion": "success (exit 0)",
                     "skip_reason": "yt-dlp: Sign in to confirm you're not a bot — YOUTUBE_COOKIES_RAW secret is expired"
                 },
@@ -95,12 +120,12 @@
                 }
             ],
             "action_required": [
-                "CRITICAL: YOUTUBE_COOKIES_RAW secret is expired — yt-dlp fails with 'Sign in to confirm you're not a bot' on every video. 16 videos discovered on 2026-06-05 were all skipped. Fix: re-export fresh cookies from a logged-in YouTube browser session and update the YOUTUBE_COOKIES_RAW GitHub Actions secret.",
+                "CRITICAL: YOUTUBE_COOKIES_RAW secret is expired — yt-dlp fails with 'Sign in to confirm you're not a bot' on every video. 12 videos discovered for 2026-06-06 were all skipped. Fix: re-export fresh cookies from a logged-in YouTube browser session and update the YOUTUBE_COOKIES_RAW GitHub Actions secret.",
                 "SECONDARY: config/watchlist.yaml not found on Drive. Pipeline runs with empty watchlist (auto-discovery only). Upload watchlist.yaml to the Drive root if watchlist matching is needed.",
                 "INFO: Node.js 20 actions deprecation — actions/checkout@v4 and astral-sh/setup-uv@v3 will be forced to Node.js 24 starting June 16th, 2026. Update workflow action versions before that date."
             ]
         }
     },
-    "last_agent_run_at": "2026-06-05",
-    "note": "Sandbox network blocks both youtube.com and api.telegram.org (HTTP 403 on all requests). No new videos collected, no Telegram alerts sent. GHA pipeline running on schedule (4 runs today) but fully blocked on transcript collection due to expired YOUTUBE_COOKIES_RAW secret. 16 videos discovered today, 0 processed. ACTION REQUIRED: re-export fresh YouTube cookies from browser and update YOUTUBE_COOKIES_RAW GitHub Actions secret."
+    "last_agent_run_at": "2026-06-06",
+    "note": "Sandbox network blocks both youtube.com and api.telegram.org (HTTP 403 on all requests). No new videos collected, no Telegram alerts sent. GHA pipeline running on schedule but fully blocked on transcript collection due to expired YOUTUBE_COOKIES_RAW secret. 12 videos discovered for 2026-06-06, 0 processed. ACTION REQUIRED: re-export fresh YouTube cookies from browser and update YOUTUBE_COOKIES_RAW GitHub Actions secret."
 }
