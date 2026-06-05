@@ -1,5 +1,5 @@
 {
-    "run_at": "2026-06-05T02:00:00+09:00",
+    "run_at": "2026-06-05T13:00:00+09:00",
     "steps": {
         "collect": {
             "status": "blocked",
@@ -34,8 +34,8 @@
             "note": "data/ directory has no video MDs — network blocks prevent collection in this sandbox"
         },
         "telegram": {
-            "status": "skipped",
-            "reason": "no files to send (network also blocks api.telegram.org in this sandbox)",
+            "status": "blocked",
+            "reason": "api.telegram.org not in network allowlist (HTTP 403)",
             "sent": 0,
             "failed": 0
         },
@@ -98,5 +98,5 @@
         }
     },
     "last_agent_run_at": "2026-06-05",
-    "note": "Sandbox: YouTube RSS and Telegram API both blocked (HTTP 403). GHA pipeline runs on schedule but is fully blocked on transcript collection. CRITICAL BLOCKER: YOUTUBE_COOKIES secret is expired — yt-dlp gets 'Sign in to confirm you're not a bot' on all 6 videos discovered today. Re-export cookies from browser and update YOUTUBE_COOKIES_RAW secret to restore transcript collection. Backlog of uncaptured videos is accumulating (4 on 2026-06-04, 6 on 2026-06-05)."
+    "note": "Sandbox network blocks both youtube.com and api.telegram.org (HTTP 403 on all requests). No new videos collected, no Telegram alerts sent. GHA pipeline running on schedule but fully blocked on transcript collection due to expired YOUTUBE_COOKIES_RAW secret. Backlog of uncaptured videos accumulating (4 on 2026-06-04, 6 on 2026-06-05). ACTION REQUIRED: re-export fresh YouTube cookies from browser and update YOUTUBE_COOKIES_RAW GitHub Actions secret."
 }
