@@ -148,7 +148,7 @@ def fetch_transcript(video_id: str) -> tuple[str, str, bool]:
     if not TRANSCRIPT_AVAILABLE:
         return "", "unknown", False
     try:
-        tlist = YouTubeTranscriptApi.list_transcripts(video_id)
+        tlist = YouTubeTranscriptApi().list(video_id)
         transcript = None
         for lang in PREFERRED_LANGS:
             try:
