@@ -1,5 +1,5 @@
 {
-    "run_at": "2026-06-06T09:15:00+09:00",
+    "run_at": "2026-06-06T10:00:00+09:00",
     "steps": {
         "collect": {
             "status": "blocked",
@@ -38,10 +38,6 @@
             "reason": "api.telegram.org not in network allowlist (HTTP 403)",
             "sent": 0,
             "failed": 0
-        },
-        "script_fix": {
-            "status": "applied",
-            "description": "Fixed yt_collector_remote.py: YouTubeTranscriptApi.list_transcripts(id) → YouTubeTranscriptApi().list(id) for youtube-transcript-api v1.2.4 compatibility"
         },
         "gha_status": {
             "inspected_runs": [
@@ -130,6 +126,6 @@
             ]
         }
     },
-    "last_agent_run_at": "2026-06-06T09:15:00+09:00",
-    "note": "2026-06-06 09:15 KST run: Sandbox network policy blocks both youtube.com and api.telegram.org (HTTP 403 'Host not in allowlist'). No new videos collected, no Telegram alerts sent. Applied code fix: yt_collector_remote.py now uses YouTubeTranscriptApi().list() (v1.2.4 compatible API). Root cause of GHA pipeline failure: YOUTUBE_COOKIES_RAW secret is expired — all transcript fetches fail with yt-dlp 'Sign in to confirm not a bot'. ACTION REQUIRED: re-export fresh YouTube cookies from browser and update YOUTUBE_COOKIES_RAW GitHub Actions secret."
+    "last_agent_run_at": "2026-06-06T10:00:00+09:00",
+    "note": "2026-06-06 10:00 KST run: Sandbox network policy blocks both youtube.com and api.telegram.org (HTTP 403 'Host not in allowlist'). No new videos collected, no Telegram alerts sent. Backlog empty — no unsent MD files in data/. ROOT CAUSE of GHA pipeline failure remains: YOUTUBE_COOKIES_RAW secret is expired — all yt-dlp transcript fetches fail with 'Sign in to confirm you're not a bot'. ACTION REQUIRED: re-export fresh YouTube cookies from browser and update YOUTUBE_COOKIES_RAW GitHub Actions secret."
 }
