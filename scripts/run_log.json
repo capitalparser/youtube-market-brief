@@ -1,9 +1,9 @@
 {
-    "run_at": "2026-06-07T00:00:00+09:00",
+    "run_at": "2026-06-07T09:00:00+09:00",
     "steps": {
         "collect": {
             "status": "blocked",
-            "reason": "youtube.com not in network allowlist (HTTP 403 on all RSS feeds and transcript API calls from this sandbox)",
+            "reason": "youtube.com not in network allowlist (HTTP 403 on all RSS feeds from this sandbox)",
             "new_videos": 0,
             "channels_attempted": [
                 "@hkglobalmarket",
@@ -31,7 +31,7 @@
         "backlog": {
             "status": "empty",
             "unsent_count": 0,
-            "note": "data/ directory has no video MDs — network blocks prevent collection in this sandbox"
+            "note": "data/ directory does not exist — network blocks prevent collection in this sandbox"
         },
         "telegram": {
             "status": "blocked",
@@ -126,6 +126,6 @@
             ]
         }
     },
-    "last_agent_run_at": "2026-06-07T00:00:00+09:00",
-    "note": "2026-06-07 run: Sandbox network policy continues to block both youtube.com and api.telegram.org (HTTP 403 'Host not in allowlist'). No new videos collected, no Telegram alerts sent. Backlog empty — data/ directory does not exist. ROOT CAUSE of GHA pipeline failure remains: YOUTUBE_COOKIES_RAW secret is expired — all yt-dlp transcript fetches fail with 'Sign in to confirm you're not a bot'. ACTION REQUIRED: (1) Re-export fresh YouTube cookies from browser and update YOUTUBE_COOKIES_RAW GitHub Actions secret. (2) Update GitHub Actions to Node.js 24 before June 16, 2026 deprecation deadline."
+    "last_agent_run_at": "2026-06-07T09:00:00+09:00",
+    "note": "2026-06-07 09:00 KST run: Sandbox network policy continues to block both youtube.com and api.telegram.org (HTTP 403). All 7 channel RSS feeds blocked. No new videos collected, no Telegram alerts sent. Backlog empty — data/ directory does not exist. ROOT CAUSE of GHA pipeline failure: YOUTUBE_COOKIES_RAW secret is expired. ACTION REQUIRED: (1) Re-export fresh YouTube cookies and update YOUTUBE_COOKIES_RAW GitHub Actions secret. (2) Update GitHub Actions to Node.js 24 before June 16, 2026 deprecation deadline."
 }
