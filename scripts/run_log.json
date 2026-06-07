@@ -126,6 +126,6 @@
             ]
         }
     },
-    "last_agent_run_at": "2026-06-07T15:04:03+09:00",
-    "note": "2026-06-07 15:04 KST run: Sandbox network policy continues to block both youtube.com and api.telegram.org (HTTP 403). All 7 channel RSS feeds blocked. No new videos collected, no Telegram alerts sent. Backlog empty — data/ directory does not exist. ROOT CAUSE of GHA pipeline failure: YOUTUBE_COOKIES_RAW secret is expired. ACTION REQUIRED: (1) Re-export fresh YouTube cookies and update YOUTUBE_COOKIES_RAW GitHub Actions secret. (2) Update GitHub Actions to Node.js 24 before June 16, 2026 deprecation deadline."
+    "last_agent_run_at": "2026-06-07T16:30:00+09:00",
+    "note": "2026-06-07 16:30 KST run: Sandbox network policy blocks both youtube.com and api.telegram.org (HTTP 403). All 7 channel RSS feeds blocked. No new videos collected, no Telegram alerts sent. Backlog empty — data/ directory does not exist. ROOT CAUSE of GHA pipeline failure: YOUTUBE_COOKIES_RAW secret is expired. ACTION REQUIRED: (1) Re-export fresh YouTube cookies and update YOUTUBE_COOKIES_RAW GitHub Actions secret. (2) Update GitHub Actions to Node.js 24 before June 16, 2026 deprecation deadline."
 }
