@@ -1,5 +1,5 @@
 {
-    "run_at": "2026-06-08T06:05:14+09:00",
+    "run_at": "2026-06-08T21:06:05+09:00",
     "steps": {
         "collect": {
             "status": "blocked",
@@ -126,6 +126,6 @@
             ]
         }
     },
-    "last_agent_run_at": "2026-06-08T06:05:14+09:00",
-    "note": "2026-06-08 06:05 KST run: Sandbox network policy blocks both youtube.com and api.telegram.org (HTTP 403). All 7 channel RSS feeds blocked. No new videos collected, no Telegram alerts sent. Backlog empty — data/ directory does not exist. ROOT CAUSE of GHA pipeline failure: YOUTUBE_COOKIES_RAW secret is expired. ACTION REQUIRED: (1) Re-export fresh YouTube cookies and update YOUTUBE_COOKIES_RAW GitHub Actions secret. (2) Update GitHub Actions to Node.js 24 before June 16, 2026 deprecation deadline."
+    "last_agent_run_at": "2026-06-08T21:06:05+09:00",
+    "note": "2026-06-08 21:06 KST: Sandbox network blocks both youtube.com and api.telegram.org (HTTP 403). All 7 channel RSS feeds blocked. No new videos collected, no Telegram alerts sent. GHA pipeline also blocked — YOUTUBE_COOKIES_RAW secret expired (yt-dlp fails with 'Sign in to confirm you're not a bot'). ACTION REQUIRED: (1) Re-export fresh YouTube cookies and update YOUTUBE_COOKIES_RAW GitHub Actions secret. (2) Update GHA actions to Node.js 24 before June 16, 2026 deprecation deadline."
 }
