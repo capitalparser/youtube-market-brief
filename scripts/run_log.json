@@ -1,5 +1,5 @@
 {
-    "run_at": "2026-06-10T03:03:37+09:00",
+    "run_at": "2026-06-10T11:00:00+09:00",
     "steps": {
         "collect": {
             "status": "blocked",
@@ -38,6 +38,13 @@
             "reason": "api.telegram.org not in network allowlist (HTTP 403 host_not_allowed)",
             "sent": 0,
             "failed": 0
+        },
+        "gha_fixes": {
+            "status": "applied",
+            "changes": [
+                ".github/workflows/digest.yml: actions/checkout@v4 → @v6, astral-sh/setup-uv@v3 → @v7 (Node.js 24 support, deadline June 16 2026)",
+                ".github/workflows/ci.yml: actions/checkout@v4 → @v6, astral-sh/setup-uv@v3 → @v7 (Node.js 24 support, deadline June 16 2026)"
+            ]
         },
         "gha_status": {
             "inspected_runs": [
@@ -120,12 +127,12 @@
                 }
             ],
             "action_required": [
-                "CRITICAL: YOUTUBE_COOKIES_RAW secret is expired — yt-dlp fails with 'Sign in to confirm you're not a bot' on every video. Fix: re-export fresh cookies from a logged-in YouTube browser session and update the YOUTUBE_COOKIES_RAW GitHub Actions secret.",
+                "CRITICAL: YOUTUBE_COOKIES secret is expired — yt-dlp fails with 'Sign in to confirm you're not a bot' on every video. Fix: re-export fresh cookies from a logged-in YouTube browser session and update the YOUTUBE_COOKIES GitHub Actions secret.",
                 "SECONDARY: config/watchlist.yaml not found on Drive. Pipeline runs with empty watchlist (auto-discovery only). Upload watchlist.yaml to the Drive root if watchlist matching is needed.",
-                "INFO: Node.js 20 actions deprecation — actions/checkout@v4 and astral-sh/setup-uv@v3 will be forced to Node.js 24 starting June 16th, 2026. Update workflow action versions before that date."
+                "DONE: Node.js 24 actions upgrade applied — actions/checkout@v6 and astral-sh/setup-uv@v7 in both workflow files (was @v4/@v3)."
             ]
         }
     },
-    "last_agent_run_at": "2026-06-10T03:03:37+09:00",
-    "note": "2026-06-10T03:03 KST: Sandbox network blocks both youtube.com and api.telegram.org (HTTP 403 host_not_allowed). All 7 channel RSS feeds blocked. No new videos collected, no Telegram alerts sent. GHA pipeline also blocked — YOUTUBE_COOKIES_RAW secret expired (yt-dlp: Sign in to confirm you're not a bot). ACTION REQUIRED: (1) Re-export fresh YouTube cookies and update YOUTUBE_COOKIES_RAW GitHub Actions secret. (2) Update GHA actions to Node.js 24 before June 16, 2026 deprecation deadline."
+    "last_agent_run_at": "2026-06-10T11:00:00+09:00",
+    "note": "2026-06-10T11:00 KST: Sandbox network blocks both youtube.com and api.telegram.org (HTTP 403 host_not_allowed). All 7 channel RSS feeds blocked. No new videos collected, no Telegram alerts sent. GHA pipeline also blocked — YOUTUBE_COOKIES secret expired (yt-dlp: Sign in to confirm you're not a bot). FIXED: upgraded GHA actions to Node.js 24 (actions/checkout@v6, astral-sh/setup-uv@v7) in both digest.yml and ci.yml before June 16, 2026 deprecation deadline. ACTION REQUIRED: Re-export fresh YouTube cookies and update YOUTUBE_COOKIES GitHub Actions secret."
 }
