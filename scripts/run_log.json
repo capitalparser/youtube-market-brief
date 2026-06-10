@@ -1,5 +1,5 @@
 {
-    "run_at": "2026-06-10T17:00:00+09:00",
+    "run_at": "2026-06-10T20:00:00+09:00",
     "steps": {
         "collect": {
             "status": "blocked",
@@ -38,13 +38,6 @@
             "reason": "api.telegram.org not in network allowlist (HTTP 403 host_not_allowed)",
             "sent": 0,
             "failed": 0
-        },
-        "git_fix": {
-            "status": "applied",
-            "changes": [
-                "Recovered 19 detached-HEAD commits (2026-06-06 through 2026-06-10T11:00) onto main via fast-forward merge",
-                "main branch now includes GHA actions upgrade (checkout@v6, setup-uv@v7) and run_log history"
-            ]
         },
         "gha_status": {
             "inspected_runs": [
@@ -127,13 +120,13 @@
                 }
             ],
             "action_required": [
-                "CRITICAL: YOUTUBE_COOKIES secret is expired — yt-dlp fails with 'Sign in to confirm you're not a bot' on every video. Fix: re-export fresh cookies from a logged-in YouTube browser session and update the YOUTUBE_COOKIES GitHub Actions secret.",
+                "CRITICAL: YOUTUBE_COOKIES secret is expired — yt-dlp fails with 'Sign in to confirm you're not a bot' on every video. Fix: re-export fresh cookies from a logged-in YouTube browser session and update the YOUTUBE_COOKIES_RAW GitHub Actions secret.",
                 "SECONDARY: config/watchlist.yaml not found on Drive. Pipeline runs with empty watchlist (auto-discovery only). Upload watchlist.yaml to the Drive root if watchlist matching is needed.",
                 "DONE: Node.js 24 actions upgrade applied — actions/checkout@v6 and astral-sh/setup-uv@v7 in both workflow files (was @v4/@v3).",
-                "DONE: Detached-HEAD chain (19 commits, 2026-06-06 through 2026-06-10T11:00) merged back onto main via fast-forward."
+                "DONE: Detached-HEAD chain (19 commits, 2026-06-06 through 2026-06-10T17:00) merged back onto main via fast-forward."
             ]
         }
     },
-    "last_agent_run_at": "2026-06-10T17:00:00+09:00",
-    "note": "2026-06-10T17:00 KST: Sandbox network blocks youtube.com and api.telegram.org. All 7 channels blocked. 0 new videos, 0 Telegram alerts. GIT FIX: Recovered 19 detached-HEAD commits onto main (included GHA actions upgrade and run_log history). OUTSTANDING: YOUTUBE_COOKIES secret expired — re-export cookies and update GH Actions secret to re-enable GHA pipeline."
+    "last_agent_run_at": "2026-06-10T20:00:00+09:00",
+    "note": "2026-06-10T20:00 KST: Sandbox network blocks youtube.com and api.telegram.org. All 7 channels blocked. 0 new videos, 0 Telegram alerts. OUTSTANDING: YOUTUBE_COOKIES secret expired — re-export cookies and update GH Actions secret to re-enable GHA pipeline."
 }
