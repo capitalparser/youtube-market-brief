@@ -1,9 +1,9 @@
 {
-    "run_at": "2026-06-11T15:12:40.830407+09:00",
+    "run_at": "2026-06-11T16:30:00+09:00",
     "steps": {
         "collect": {
             "status": "blocked",
-            "reason": "youtube.com not in network allowlist (HTTP 403 host_not_allowed on all RSS feeds from sandbox)",
+            "reason": "youtube.com not in network allowlist (HTTP 403 on all RSS feeds from sandbox)",
             "new_videos": 0,
             "channels_attempted": [
                 "@hkglobalmarket",
@@ -127,6 +127,6 @@
             ]
         }
     },
-    "last_agent_run_at": "2026-06-11T15:12:40.830407+09:00",
+    "last_agent_run_at": "2026-06-11T16:30:00+09:00",
     "note": "2026-06-11: Sandbox network blocks youtube.com and api.telegram.org. All 7 channels blocked (HTTP 403). 0 new videos, 0 Telegram alerts. OUTSTANDING: YOUTUBE_COOKIES_RAW secret expired in GHA — re-export cookies and update secret to re-enable pipeline."
 }
