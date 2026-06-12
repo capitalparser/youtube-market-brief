@@ -1,5 +1,5 @@
 {
-    "run_at": "2026-06-12T15:10:12.104743+09:00",
+    "run_at": "2026-06-13T00:00:00+09:00",
     "steps": {
         "collect": {
             "status": "blocked",
@@ -35,7 +35,7 @@
         },
         "telegram": {
             "status": "blocked",
-            "reason": "api.telegram.org not in network allowlist (HTTP 403)",
+            "reason": "api.telegram.org not reachable from sandbox (HTTP 403 / connection refused)",
             "sent": 0,
             "failed": 0
         },
@@ -48,6 +48,6 @@
             ]
         }
     },
-    "last_agent_run_at": "2026-06-12T15:10:12.104743+09:00",
-    "note": "2026-06-12: Sandbox network blocks youtube.com and api.telegram.org. All 7 channels blocked (HTTP 403). 0 new videos, 0 Telegram alerts. OUTSTANDING: YOUTUBE_COOKIES_RAW secret expired in GHA — re-export cookies and update secret to re-enable pipeline."
+    "last_agent_run_at": "2026-06-13T00:00:00+09:00",
+    "note": "2026-06-13: Sandbox network blocks youtube.com and api.telegram.org. All 7 channels blocked (HTTP 403). 0 new videos, 0 Telegram alerts. OUTSTANDING: YOUTUBE_COOKIES_RAW secret expired in GHA — re-export cookies and update secret to re-enable pipeline."
 }
