@@ -1,5 +1,5 @@
 {
-    "run_at": "2026-06-12T00:08:00+09:00",
+    "run_at": "2026-06-12T15:10:12.104743+09:00",
     "steps": {
         "collect": {
             "status": "blocked",
@@ -40,93 +40,14 @@
             "failed": 0
         },
         "gha_status": {
-            "inspected_runs": [
-                {
-                    "run_id": 27026920533,
-                    "run_at": "2026-06-05T16:27:07Z",
-                    "type": "intraday run (0 14 * * *) — videos only, no brief",
-                    "discovered": 12,
-                    "processed": 0,
-                    "skipped_no_caption": 12,
-                    "brief_generated": false,
-                    "drive_push": "rclone failed — 00_Wiki/youtube directory not found (no MDs produced); state.json push succeeded",
-                    "conclusion": "success (exit 0)",
-                    "skip_reason": "yt-dlp: Sign in to confirm you're not a bot — YOUTUBE_COOKIES_RAW secret is expired",
-                    "video_ids_discovered": [
-                        "8po_Mp0QPxs",
-                        "bgZr7iwWAVA",
-                        "kKAIW2cEmmU",
-                        "5bl6E1vnm7o",
-                        "MzlDbKE7ihw",
-                        "SHEsSCIfIus",
-                        "zXpb_h0EVxU",
-                        "QO3elC7kNOo",
-                        "SED4krmMsMo",
-                        "pkVq_ATN3zU",
-                        "5aJ6XdWQTLo",
-                        "-nLbaBqq7YU"
-                    ]
-                },
-                {
-                    "run_id": 27013509774,
-                    "run_at": "2026-06-05T11:58:34Z",
-                    "type": "intraday run (0 14 * * *) — videos only, no brief",
-                    "discovered": 16,
-                    "processed": 0,
-                    "skipped_no_caption": 16,
-                    "brief_generated": false,
-                    "conclusion": "success (exit 0)",
-                    "skip_reason": "yt-dlp: Sign in to confirm you're not a bot — YOUTUBE_COOKIES_RAW secret is expired"
-                },
-                {
-                    "run_id": 27000406391,
-                    "run_at": "2026-06-05T06:56:23Z",
-                    "type": "07:00 KST daily — yesterday catch-up + brief",
-                    "discovered": 0,
-                    "processed": 0,
-                    "brief_generated": false,
-                    "conclusion": "success (exit 0)",
-                    "skip_reason": "yt-dlp: Sign in to confirm you're not a bot — YOUTUBE_COOKIES_RAW secret is expired"
-                },
-                {
-                    "run_id": 26966190956,
-                    "run_at": "2026-06-04T16:48:35Z",
-                    "type": "intraday run (0 14 * * *) — videos only, no brief",
-                    "discovered": 6,
-                    "processed": 0,
-                    "skipped_no_caption": 6,
-                    "brief_generated": false,
-                    "conclusion": "success (exit 0)",
-                    "video_ids_discovered": [
-                        "mv-rVXNIiTo",
-                        "nOWqv6L4Nl4",
-                        "yZSl0_lPnYA",
-                        "bfbFnk0pqHk",
-                        "O7Gkf2llIP8",
-                        "d8Uxeqdu7bpA"
-                    ],
-                    "skip_reason": "yt-dlp: Sign in to confirm you're not a bot — YOUTUBE_COOKIES_RAW secret is expired"
-                },
-                {
-                    "run_id": 26920197674,
-                    "run_at": "2026-06-03T23:43:50Z",
-                    "type": "07:00 KST daily — yesterday catch-up + brief for 2026-06-03",
-                    "discovered": 0,
-                    "processed": 0,
-                    "brief_generated": true,
-                    "brief_sent_telegram": true,
-                    "telegram_message_id": 309,
-                    "conclusion": "success (exit 0)"
-                }
-            ],
             "action_required": [
                 "CRITICAL: YOUTUBE_COOKIES secret is expired — yt-dlp fails with 'Sign in to confirm you're not a bot' on every video. Fix: re-export fresh cookies from a logged-in YouTube browser session and update the YOUTUBE_COOKIES_RAW GitHub Actions secret.",
-                "SECONDARY: config/watchlist.yaml not found on Drive. Pipeline runs with empty watchlist (auto-discovery only). Upload watchlist.yaml to the Drive root if watchlist matching is needed.",
-                "DONE: Node.js 24 actions upgrade applied — actions/checkout@v6 and astral-sh/setup-uv@v7 in both workflow files (was @v4/@v3).",
-                "DONE: Detached-HEAD chain (19 commits, 2026-06-06 through 2026-06-10T17:00) merged back onto main via fast-forward."
+                "SECONDARY: config/watchlist.yaml not found on Drive. Pipeline runs with empty watchlist (auto-discovery only).",
+                "DONE: Node.js 24 actions upgrade applied.",
+                "DONE: Detached-HEAD chain merged back onto main via fast-forward."
             ]
         }
     },
-    "last_agent_run_at": "2026-06-12T00:08:00+09:00",
+    "last_agent_run_at": "2026-06-12T15:10:12.104743+09:00",
     "note": "2026-06-12: Sandbox network blocks youtube.com and api.telegram.org. All 7 channels blocked (HTTP 403). 0 new videos, 0 Telegram alerts. OUTSTANDING: YOUTUBE_COOKIES_RAW secret expired in GHA — re-export cookies and update secret to re-enable pipeline."
 }
