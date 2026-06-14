@@ -1,5 +1,5 @@
 {
-    "run_at": "2026-06-14T00:07:00+09:00",
+    "run_at": "2026-06-14T06:00:00+09:00",
     "steps": {
         "collect": {
             "status": "blocked",
@@ -31,7 +31,7 @@
         "backlog": {
             "status": "empty",
             "unsent_count": 0,
-            "note": "data/ directory has no video MDs — network blocks prevent collection in this sandbox"
+            "note": "data/ directory does not exist — no video MDs accumulated yet. Network policy blocks YouTube collection in this sandbox."
         },
         "telegram": {
             "status": "blocked",
@@ -40,27 +40,17 @@
             "failed": 0
         },
         "gha_status": {
-            "last_run": {
-                "run_id": 27448557093,
-                "run_at": "2026-06-12T23:16:53Z",
-                "kst": "2026-06-13T08:16:53+09:00",
-                "type": "07:00 KST — yesterday catch-up + brief for 2026-06-12",
-                "discovered": 25,
-                "processed": 0,
-                "skipped_no_caption": 20,
-                "skipped_idempotent": 5,
-                "failed": 0,
-                "brief_generated": false,
-                "conclusion": "success (exit 0)",
-                "skip_reason": "yt-dlp: Sign in to confirm you're not a bot — YOUTUBE_COOKIES secret is still expired"
+            "node_upgrade": {
+                "status": "done",
+                "completed_at": "2026-06-10",
+                "detail": "actions/checkout@v4→@v6, astral-sh/setup-uv@v3→@v7 in both digest.yml and ci.yml. Node.js 24-compatible before June 16 deadline."
             },
             "action_required": [
-                "CRITICAL: YOUTUBE_COOKIES_RAW secret is still expired — yt-dlp fails on every video (25 discovered on 2026-06-12, 0 processed). Re-export fresh cookies from a logged-in YouTube browser session and update the YOUTUBE_COOKIES_RAW GitHub Actions secret. All transcript extraction has been blocked since at least 2026-06-04.",
-                "SECONDARY: config/watchlist.yaml not found on Drive. Pipeline runs with empty watchlist (auto-discovery only). Upload watchlist.yaml to Drive root if watchlist matching is needed.",
-                "URGENT: actions/checkout@v4 and astral-sh/setup-uv@v3 use Node.js 20. GitHub forces Node.js 24 on June 16, 2026 (2 days away). Update action versions to Node.js 24-compatible releases before then to avoid workflow breakage."
+                "CRITICAL: YOUTUBE_COOKIES_RAW secret is still expired — yt-dlp fails on every video. Re-export fresh cookies from a logged-in YouTube browser session and update the YOUTUBE_COOKIES_RAW GitHub Actions secret. All transcript extraction has been blocked since at least 2026-06-04.",
+                "SECONDARY: config/watchlist.yaml not found on Drive. Pipeline runs with empty watchlist (auto-discovery only). Upload watchlist.yaml to Drive root if watchlist matching is needed."
             ]
         }
     },
-    "last_agent_run_at": "2026-06-14T00:07:00+09:00",
-    "note": "2026-06-14 00:07 KST: Sandbox network blocks youtube.com and api.telegram.org (HTTP 403 on all external hosts except pypi.org). 0 new videos, 0 Telegram alerts. GHA pipeline running on schedule but fully blocked on transcript collection — YOUTUBE_COOKIES_RAW secret has been expired since at least 2026-06-04. Backlog: 25+ uncaptured videos. URGENT: Node.js 20→24 forced upgrade on GitHub Actions in 2 days (June 16). ACTION REQUIRED: (1) re-export fresh YouTube cookies and update YOUTUBE_COOKIES_RAW secret, (2) update workflow action versions for Node.js 24 compatibility."
+    "last_agent_run_at": "2026-06-14T06:00:00+09:00",
+    "note": "2026-06-14 06:00 KST: Sandbox network blocks youtube.com and api.telegram.org (HTTP 403 on all external hosts). 0 new videos, 0 Telegram alerts. GHA Node.js upgrade already completed 2026-06-10. Main blocker: YOUTUBE_COOKIES_RAW secret expired — update it to unblock transcript collection on GHA."
 }
